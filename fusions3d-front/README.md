@@ -1,5 +1,7 @@
 # Fusions3D — Frontend
 
+> **← Volver al README principal:** [`README.md`](../README.md)
+
 SPA desarrollada con **Angular 20** para la plataforma **Fusions3D**, tienda de objetos
 impresos en 3D. Consume la API REST del proyecto `fusions3d-back`.
 
@@ -90,6 +92,7 @@ src/
 │   │       ├── components/
 │   │       │   ├── impresion-card/      # Card (imagen, título, precio)
 │   │       │   ├── impresion-grid/      # Grid de cards
+│   │       │   ├── impresion-table/     # Tabla de impresiones
 │   │       │   └── impresion-form/      # Formulario reactivo reutilizable
 │   │       ├── pages/
 │   │       │   ├── impresiones-list/    # Listar
@@ -99,8 +102,11 @@ src/
 │   │       └── impresions.routes.ts
 │   ├── app.config.ts                # Providers (router, HttpClient + interceptors)
 │   ├── app.routes.ts                # Rutas raíz con lazy loading
+│   ├── app.spec.ts                  # Tests unitarios
 │   └── app.ts                       # Componente raíz
-└── index.html
+├── index.html
+├── main.ts
+└── styles.css
 ```
 
 ## 🛣️ Rutas

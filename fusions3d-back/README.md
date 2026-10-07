@@ -1,5 +1,7 @@
 # Fusions3D API
 
+> **← Volver al README principal:** [`README.md`](../README.md)
+
 API REST backend para **Fusions3D**, una tienda de impresiones 3D.
 
 ## Stack
@@ -7,35 +9,47 @@ API REST backend para **Fusions3D**, una tienda de impresiones 3D.
 - Node.js 20+
 - Express.js
 - MongoDB + Mongoose
+- Zod (validación)
+- Helmet (seguridad)
 - CORS
+- Morgan (logging)
 - dotenv
-- Nodemon
+- slugify
+- Nodemon (desarrollo)
 
 ## Arquitectura
 
+Patrón **Repository + Service + Controller** (arquitectura en capas).
+
 ```text
-fusions3d-api/
+fusions3d-back/
 ├── src/
+│   ├── config/
+│   │   └── database.js              # Conexión a MongoDB
 │   ├── controllers/
-│   │   └── print.controller.js
+│   │   └── print.controller.js      # Controlador de impresiones
+│   ├── middlewares/
+│   │   ├── error.middleware.js      # Manejo de errores centralizado
+│   │   └── validation.middleware.js # Validación con Zod
 │   ├── modules/
-│   │   ├── database.js
 │   │   └── print/
-│   │       └── print.model.js
+│   │       └── print.model.js       # Modelo Mongoose (Print)
 │   ├── repositories/
-│   │   └── print.repository.js
+│   │   └── print.repository.js      # Acceso a datos (CRUD)
 │   ├── routes/
-│   │   └── print.routes.js
+│   │   └── print.routes.js          # Definición de rutas
+│   ├── schemas/
+│   │   └── print.schema.js          # Esquemas Zod (validación)
 │   ├── services/
-│   │   └── print.service.js
+│   │   └── print.service.js         # Lógica de negocio
 │   ├── utils/
-│   │   ├── app.error.js
-│   │   └── error.handler.js
-│   └── app.js
+│   │   ├── app.error.js             # Clase AppError personalizada
+│   │   └── slug.util.js             # Generador de slugs único
+│   └── app.js                       # Punto de entrada
 ├── .env.example
 ├── .gitignore
 ├── package.json
-├── POSTMAN.md
+├── seed.js
 └── README.md
 ```
 
@@ -45,14 +59,17 @@ Colección MongoDB: `impresiones`.
 
 | Campo | Tipo | Requerido | Descripción |
 |---|---|---:|---|
-| `uuid` | String | Sí | UUID estándar, generado automáticamente |
 | `nombre` | String | Sí | Nombre de la impresión |
 | `descripcion` | String | Sí | Descripción |
 | `precio_venta` | Number | Sí | Precio de venta |
 | `precio_coste` | Number | Sí | Coste de fabricación |
 | `tiempo_impresion` | Number | Sí | Tiempo de impresión en minutos |
+| `slug` | String | Sí | Slug único generado desde el nombre |
+| `activo` | Boolean | Sí | Si la impresión está activa |
+| `imagen` | String | No | URL de imagen (preparado para el futuro) |
+| `deletedAt` | Date | No | Fecha de borrado lógico (null si está activa) |
 
-El UUID se genera con `crypto.randomUUID()`, se valida contra el formato UUID y es único e inmutable.
+El **slug** se genera automáticamente con `slugify` a partir del nombre y se verifica que sea único en la base de datos.
 
 ## Instalación
 
@@ -73,7 +90,7 @@ Configura:
 ```env
 PORT=3000
 MONGODB_URI=mongodb://localhost:27017/fusions3d
-CORS_ORIGIN=http://localhost:3000
+CORS_ORIGIN=http://localhost:4200
 NODE_ENV=development
 ```
 
@@ -83,7 +100,7 @@ Arrancar en desarrollo:
 npm run dev
 ```
 
-Arrancar:
+Arrancar en producción:
 
 ```bash
 npm start
@@ -91,21 +108,33 @@ npm start
 
 La API estará disponible en `http://localhost:3000`.
 
+### Seed de datos (opcional)
+
+```bash
+node seed.js
+```
+
 ## Endpoints
 
 | Método | Endpoint | Acción |
 |---|---|---|
 | GET | `/health` | Health check |
-| GET | `/api/v1/impresiones` | Listar impresiones |
-| GET | `/api/v1/impresiones/:uuid` | Obtener una impresión |
-| POST | `/api/v1/impresiones` | Crear impresión |
-| PUT | `/api/v1/impresiones/:uuid` | Actualizar impresión |
-| DELETE | `/api/v1/impresiones/:uuid` | Eliminar impresión |
+| GET | `/api/impresiones` | Listar impresiones |
+| GET | `/api/impresiones/soft-deleted` | Listar eliminadas |
+| GET | `/api/impresiones/active` | Listar activas |
+| GET | `/api/impresiones/inactive` | Listar inactivas |
+| GET | `/api/impresiones/slug/:slug` | Obtener por slug |
+| POST | `/api/impresiones` | Crear impresión |
+| GET | `/api/impresiones/:id` | Obtener por ID |
+| PATCH | `/api/impresiones/:id` | Actualizar impresión |
+| PATCH | `/api/impresiones/:id/active` | Activar/desactivar |
+| PATCH | `/api/impresiones/:id/soft-delete` | Eliminar (borrado lógico) |
+| PATCH | `/api/impresiones/:id/restore` | Restaurar |
 
 ## Crear una impresión
 
 ```http
-POST /api/v1/impresiones
+POST /api/impresiones
 Content-Type: application/json
 ```
 
@@ -119,7 +148,7 @@ Content-Type: application/json
 }
 ```
 
-El `uuid` no se envía: la API lo genera automáticamente.
+El `slug` no se envía: la API lo genera automáticamente.
 
 ## Respuestas
 
@@ -164,3 +193,7 @@ En producción es preferible definir el origen concreto del frontend.
 - No se ha añadido autenticación porque no forma parte del alcance solicitado.
 - `tiempo_impresion` está expresado en minutos.
 - Para sistemas contables estrictos, los precios pueden migrarse posteriormente a céntimos enteros o `Decimal128`.
+- **Soft delete:** las impresiones se marcan con `deletedAt` en lugar de eliminarse físicamente, permitiendo su restauración.
+- **Slugs:** se generan automáticamente desde el nombre con `slugify`, con verificación de unicidad.
+- **Validación:** todos los bodies y params se validan con esquemas Zod antes de llegar al controlador.
+- **Seguridad:** Helmet habilita headers HTTP seguros por defecto.
