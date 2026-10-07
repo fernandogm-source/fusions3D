@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #ff6000;
+  --color-brand-dark: #cc4d00;
+  --color-brand-light: #ff8a4c;
+  --color-surface: #0b1220;
+  --color-surface-raised: #111a2e;
+  --color-surface-card: #16213a;
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-slate-950 text-slate-200 antialiased;
+}
+
+/* ---------- SweetAlert2: tema oscuro Fusions3D ---------- */
+.swal2-popup.fusions3d-swal {
+  @apply rounded-2xl border border-slate-700 shadow-2xl;
+  background: #111a2e;
+  color: #e2e8f0;
+}
+
+.swal2-popup.fusions3d-swal .swal2-title {
+  color: #f1f5f9;
+}
+
+.swal2-popup.fusions3d-swal .swal2-html-container {
+  color: #cbd5e1;
+}
+
+.swal2-popup.fusions3d-swal .swal2-confirm {
+  @apply rounded-lg px-5 py-2.5 font-semibold;
+  background: #ff6000;
+  box-shadow: none;
+}
+
+.swal2-popup.fusions3d-swal .swal2-confirm:hover {
+  background: #cc4d00;
+}
+
+.swal2-popup.fusions3d-swal .swal2-cancel {
+  @apply rounded-lg px-5 py-2.5 font-semibold;
+  background: #334155;
+  box-shadow: none;
+}
+
+.swal2-popup.fusions3d-swal .swal2-cancel:hover {
+  background: #475569;
+}

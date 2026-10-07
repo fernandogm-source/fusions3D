@@ -1,0 +1,26 @@
+{
+  "name": "fusions3d-api",
+  "version": "1.0.0",
+  "description": "API REST para Fusions3D, tienda de impresiones 3D",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "nodemon src/app.js",
+    "start": "node src/app.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.3.0",
+    "mongoose": "^8.9.5",
+    "morgan": "^1.12.1",
+    "slugify": "^1.6.9",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

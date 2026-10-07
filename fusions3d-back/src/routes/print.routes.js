@@ -1,0 +1,20 @@
+const express = require('express');
+const controller = require('../controllers/print.controller');
+const { validate } = require('../middlewares/validation.middleware');
+const { createPrintSchema, updatePrintSchema, activeSchema, idParamSchema, slugParamSchema } = require('../schemas/print.schema');
+
+const router = express.Router();
+
+router.get('/', controller.getAll);
+router.get('/soft-deleted', controller.getSoftDeleted);
+router.get('/active', controller.getActive);
+router.get('/inactive', controller.getInactive);
+router.get('/slug/:slug', validate(slugParamSchema, 'params'), controller.getBySlug);
+router.post('/', validate(createPrintSchema), controller.create);
+router.get('/:id', validate(idParamSchema, 'params'), controller.getById);
+router.patch('/:id', validate(idParamSchema, 'params'), validate(updatePrintSchema), controller.update);
+router.patch('/:id/active', validate(idParamSchema, 'params'), controller.setActive);
+router.patch('/:id/soft-delete', validate(idParamSchema, 'params'), controller.softDelete);
+router.patch('/:id/restore', validate(idParamSchema, 'params'), controller.restore);
+
+module.exports = router;
