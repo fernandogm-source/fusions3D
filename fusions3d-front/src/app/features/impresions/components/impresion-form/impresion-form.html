@@ -2,185 +2,95 @@
   [formGroup]="form"
   (ngSubmit)="onSubmit()"
   novalidate
-  class="mx-auto flex max-w-2xl flex-col gap-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8"
+  class="card mx-auto flex max-w-3xl flex-col gap-6 p-6 sm:p-8"
 >
   <!-- Nombre -->
-  <div class="flex flex-col gap-1.5">
-    <label for="nombre" class="text-sm font-semibold text-slate-200">
-      Nombre <span class="text-[#ff6000]" aria-hidden="true">*</span>
+  <div class="flex flex-col gap-2">
+    <label for="name" class="label">
+      Nombre <span class="text-brand" aria-hidden="true">*</span>
     </label>
     <input
-      id="nombre"
+      id="name"
       type="text"
-      formControlName="nombre"
+      formControlName="name"
       maxlength="150"
       placeholder="Soporte para móvil"
-      [attr.aria-invalid]="hasError('nombre')"
-      aria-describedby="nombre-error"
-      class="rounded-lg border bg-slate-950/70 px-4 py-2.5 text-slate-100 placeholder-slate-600 outline-none transition focus:ring-2"
-      [class]="hasError('nombre')
-        ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/30'
-        : 'border-slate-700 focus:border-[#ff6000] focus:ring-[#ff6000]/30'"
+      [attr.aria-invalid]="hasError('name')"
+      aria-describedby="name-error"
+      class="input"
+      [class.input-error]="hasError('name')"
     />
-    @if (errorMessage('nombre', 'El nombre'); as message) {
-      <p id="nombre-error" role="alert" class="text-sm text-red-400">{{ message }}</p>
+    @if (errorMessage('name', 'El nombre'); as message) {
+      <p id="name-error" role="alert" class="field-error">{{ message }}</p>
     }
   </div>
 
   <!-- Descripción -->
-  <div class="flex flex-col gap-1.5">
-    <label for="descripcion" class="text-sm font-semibold text-slate-200">
-      Descripción <span class="text-[#ff6000]" aria-hidden="true">*</span>
+  <div class="flex flex-col gap-2">
+    <label for="description" class="label">
+      Descripción <span class="text-brand" aria-hidden="true">*</span>
     </label>
     <textarea
-      id="descripcion"
-      formControlName="descripcion"
+      id="description"
+      formControlName="description"
       rows="4"
       maxlength="2000"
       placeholder="Describe la pieza, materiales recomendados, acabados…"
-      [attr.aria-invalid]="hasError('descripcion')"
-      aria-describedby="descripcion-error descripcion-count"
-      class="resize-y rounded-lg border bg-slate-950/70 px-4 py-2.5 text-slate-100 placeholder-slate-600 outline-none transition focus:ring-2"
-      [class]="hasError('descripcion')
-        ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/30'
-        : 'border-slate-700 focus:border-[#ff6000] focus:ring-[#ff6000]/30'"
+      [attr.aria-invalid]="hasError('description')"
+      aria-describedby="description-error description-count"
+      class="input resize-y"
+      [class.input-error]="hasError('description')"
     ></textarea>
-    <div class="flex items-center justify-between">
-      @if (errorMessage('descripcion', 'La descripción'); as message) {
-        <p id="descripcion-error" role="alert" class="text-sm text-red-400">{{ message }}</p>
+    <div class="flex items-center justify-between gap-4">
+      @if (errorMessage('description', 'La descripción'); as message) {
+        <p id="description-error" role="alert" class="field-error">{{ message }}</p>
       } @else {
         <span></span>
       }
-      <span id="descripcion-count" class="text-xs text-slate-500">
-        {{ form.get('descripcion')?.value?.length ?? 0 }}/2000
+      <span id="description-count" class="text-xs tabular-nums text-ink-faint">
+        {{ form.get('description')?.value?.length ?? 0 }}/2000
       </span>
     </div>
   </div>
 
-  <!-- Precios y tiempo -->
-  <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-    <div class="flex flex-col gap-1.5">
-      <label for="precio_venta" class="text-sm font-semibold text-slate-200">
-        Precio venta (€) <span class="text-[#ff6000]" aria-hidden="true">*</span>
-      </label>
-      <input
-        id="precio_venta"
-        type="number"
-        formControlName="precio_venta"
-        min="0"
-        step="0.01"
-        placeholder="12.50"
-        [attr.aria-invalid]="hasError('precio_venta')"
-        aria-describedby="precio_venta-error"
-        class="rounded-lg border bg-slate-950/70 px-4 py-2.5 text-slate-100 placeholder-slate-600 outline-none transition focus:ring-2"
-        [class]="hasError('precio_venta')
-          ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/30'
-          : 'border-slate-700 focus:border-[#ff6000] focus:ring-[#ff6000]/30'"
-      />
-      @if (errorMessage('precio_venta', 'El precio de venta'); as message) {
-        <p id="precio_venta-error" role="alert" class="text-sm text-red-400">{{ message }}</p>
-      }
-    </div>
-
-    <div class="flex flex-col gap-1.5">
-      <label for="precio_coste" class="text-sm font-semibold text-slate-200">
-        Precio coste (€) <span class="text-[#ff6000]" aria-hidden="true">*</span>
-      </label>
-      <input
-        id="precio_coste"
-        type="number"
-        formControlName="precio_coste"
-        min="0"
-        step="0.01"
-        placeholder="4.20"
-        [attr.aria-invalid]="hasError('precio_coste')"
-        aria-describedby="precio_coste-error"
-        class="rounded-lg border bg-slate-950/70 px-4 py-2.5 text-slate-100 placeholder-slate-600 outline-none transition focus:ring-2"
-        [class]="hasError('precio_coste')
-          ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/30'
-          : 'border-slate-700 focus:border-[#ff6000] focus:ring-[#ff6000]/30'"
-      />
-      @if (errorMessage('precio_coste', 'El precio de coste'); as message) {
-        <p id="precio_coste-error" role="alert" class="text-sm text-red-400">{{ message }}</p>
-      }
-    </div>
-
-    <div class="flex flex-col gap-1.5">
-      <label for="tiempo_impresion" class="text-sm font-semibold text-slate-200">
-        Tiempo (min) <span class="text-[#ff6000]" aria-hidden="true">*</span>
-      </label>
-      <input
-        id="tiempo_impresion"
-        type="number"
-        formControlName="tiempo_impresion"
-        min="0"
-        step="1"
-        placeholder="180"
-        [attr.aria-invalid]="hasError('tiempo_impresion')"
-        aria-describedby="tiempo_impresion-error"
-        class="rounded-lg border bg-slate-950/70 px-4 py-2.5 text-slate-100 placeholder-slate-600 outline-none transition focus:ring-2"
-        [class]="hasError('tiempo_impresion')
-          ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/30'
-          : 'border-slate-700 focus:border-[#ff6000] focus:ring-[#ff6000]/30'"
-      />
-      @if (errorMessage('tiempo_impresion', 'El tiempo de impresión'); as message) {
-        <p id="tiempo_impresion-error" role="alert" class="text-sm text-red-400">{{ message }}</p>
-      }
-    </div>
-  </div>
-
-  <!-- Estado e imagen -->
+  <!-- Categoría y estado -->
   <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-    <div class="flex flex-col gap-1.5">
-      <label for="status" class="text-sm font-semibold text-slate-200">
-        Estado <span class="text-[#ff6000]" aria-hidden="true">*</span>
+    <div class="flex flex-col gap-2">
+      <label for="categoryId" class="label">
+        Categoría <span class="text-brand" aria-hidden="true">*</span>
       </label>
       <select
-        id="status"
-        formControlName="status"
-        class="rounded-lg border border-slate-700 bg-slate-950/70 px-4 py-2.5 text-slate-100 outline-none transition focus:border-[#ff6000] focus:ring-2 focus:ring-[#ff6000]/30"
+        id="categoryId"
+        formControlName="categoryId"
+        class="input"
+        [class.input-error]="hasError('categoryId')"
       >
+        <option value="" disabled>Selecciona una categoría</option>
+        @for (category of categories(); track category._id) {
+          <option [value]="category._id">{{ category.name }}</option>
+        }
+      </select>
+      @if (hasError('categoryId')) {
+        <p role="alert" class="field-error">Selecciona una categoría.</p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="status" class="label">
+        Estado <span class="text-brand" aria-hidden="true">*</span>
+      </label>
+      <select id="status" formControlName="status" class="input">
         @for (option of statusOptions(); track option.value) {
           <option [value]="option.value">{{ option.label }}</option>
         }
       </select>
     </div>
-
-    <div class="flex flex-col gap-1.5">
-      <label for="imagen" class="text-sm font-semibold text-slate-200">
-        URL de imagen <span class="font-normal text-slate-500">(opcional)</span>
-      </label>
-      <input
-        id="imagen"
-        type="url"
-        formControlName="imagen"
-        placeholder="https://ejemplo.com/imagen.webp"
-        [attr.aria-invalid]="hasError('imagen')"
-        aria-describedby="imagen-error"
-        class="rounded-lg border bg-slate-950/70 px-4 py-2.5 text-slate-100 placeholder-slate-600 outline-none transition focus:ring-2"
-        [class]="hasError('imagen')
-          ? 'border-red-500/60 focus:border-red-500 focus:ring-red-500/30'
-          : 'border-slate-700 focus:border-[#ff6000] focus:ring-[#ff6000]/30'"
-      />
-      @if (errorMessage('imagen', 'La URL de la imagen'); as message) {
-        <p id="imagen-error" role="alert" class="text-sm text-red-400">{{ message }}</p>
-      }
-    </div>
   </div>
 
   <!-- Acciones -->
-  <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-    <a
-      [routerLink]="cancelUrl()"
-      class="rounded-lg border border-slate-700 px-5 py-2.5 text-center text-sm font-semibold text-slate-300 transition hover:bg-slate-800"
-    >
-      Cancelar
-    </a>
-    <button
-      type="submit"
-      [disabled]="submitting()"
-      class="rounded-lg bg-[#ff6000] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#cc4d00] focus:outline-none focus:ring-2 focus:ring-[#ff6000]/50 disabled:cursor-not-allowed disabled:opacity-50"
-    >
+  <div class="flex flex-col-reverse gap-3 border-t border-line pt-6 sm:flex-row sm:justify-end">
+    <a [routerLink]="cancelUrl()" class="btn btn-secondary">Cancelar</a>
+    <button type="submit" [disabled]="submitting()" class="btn btn-primary min-w-40">
       {{ submitting() ? 'Guardando…' : submitLabel() }}
     </button>
   </div>

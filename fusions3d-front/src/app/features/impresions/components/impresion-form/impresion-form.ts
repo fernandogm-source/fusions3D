@@ -1,6 +1,9 @@
-import { Component, computed, effect, inject, input, output } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { CategoriesService } from '../../../../core/services/categories.service';
+import { Category, PrintCategory } from '../../../../core/models/category.model';
 import {
   Impresion,
   ImpresionCreatePayload,
@@ -8,9 +11,8 @@ import {
 } from '../../../../core/models/impresion.model';
 import {
   getControlErrorMessage,
-  positiveNumberValidator,
-  urlValidator,
 } from '../../../../shared/utils/custom-validators';
+import { showError } from '../../../../shared/utils/alert.util';
 
 /**
  * Formulario reutilizable (Reactive Forms) para crear y editar impresiones.
@@ -24,6 +26,7 @@ import {
 })
 export class ImpresionForm {
   private readonly fb = inject(FormBuilder).nonNullable;
+  private readonly categoriesService = inject(CategoriesService);
 
   readonly initialValue = input<Impresion | null>(null);
   readonly submitLabel = input('Crear impresión');
@@ -33,6 +36,7 @@ export class ImpresionForm {
   readonly isEdit = input(false);
 
   readonly formSubmit = output<ImpresionCreatePayload>();
+  protected readonly categories = signal<PrintCategory[]>([]);
 
   protected readonly statusOptions = computed<{ value: ImpresionStatus; label: string }[]>(() => {
     const base = [
@@ -44,29 +48,27 @@ export class ImpresionForm {
   });
 
   protected readonly form = this.fb.group({
-    nombre: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
-    descripcion: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
-    precio_venta: [null as number | null, [Validators.required, positiveNumberValidator()]],
-    precio_coste: [null as number | null, [Validators.required, Validators.min(0)]],
-    tiempo_impresion: [null as number | null, [Validators.required, Validators.min(0)]],
+    name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
+    description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
+    categoryId: ['', [Validators.required]],
     status: ['draft' as ImpresionStatus, [Validators.required]],
-    imagen: ['', [urlValidator()]],
   });
 
   constructor() {
+    void firstValueFrom(this.categoriesService.getActive())
+      .then((categories: Category[]) => this.categories.set(categories))
+      .catch(() => showError('No se pudieron cargar las categorías.'));
+
     // Cuando llega el valor inicial (p. ej. carga asíncrona en edición),
     // rellenamos el formulario.
     effect(() => {
       const value = this.initialValue();
       if (value) {
         this.form.patchValue({
-          nombre: value.nombre,
-          descripcion: value.descripcion,
-          precio_venta: value.precio_venta,
-          precio_coste: value.precio_coste,
-          tiempo_impresion: value.tiempo_impresion,
+          name: value.name,
+          description: value.description,
+          categoryId: typeof value.categoryId === 'string' ? value.categoryId : value.categoryId?._id ?? '',
           status: value.status,
-          imagen: value.imagen ?? '',
         });
       }
     });
@@ -90,18 +92,11 @@ export class ImpresionForm {
     const raw = this.form.getRawValue();
 
     const payload: ImpresionCreatePayload = {
-      nombre: raw.nombre.trim(),
-      descripcion: raw.descripcion.trim(),
-      precio_venta: Number(raw.precio_venta),
-      precio_coste: Number(raw.precio_coste),
-      tiempo_impresion: Number(raw.tiempo_impresion),
+      name: raw.name.trim(),
+      description: raw.description.trim(),
+      categoryId: raw.categoryId,
       status: raw.status,
     };
-
-    const imagen = raw.imagen.trim();
-    if (imagen) {
-      payload.imagen = imagen;
-    }
 
     this.formSubmit.emit(payload);
   }

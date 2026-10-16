@@ -1,8 +1,7 @@
 /**
  * Genera una imagen placeholder SVG (data URI) determinística a partir
- * de una semilla (normalmente el slug de la impresión). La API actual
- * no persiste imágenes, así que las cards usan este placeholder cuando
- * la impresión no tiene `imagen`.
+ * de una semilla (normalmente el slug de la impresión). Se usa como
+ * fallback cuando la impresión aún no tiene imágenes asociadas.
  */
 const PALETTES: readonly [string, string][] = [
   ['#ff6000', '#431407'],

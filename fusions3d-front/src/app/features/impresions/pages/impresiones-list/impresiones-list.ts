@@ -1,22 +1,22 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 import { Impresion } from '../../../../core/models/impresion.model';
 import { ImpresionsStore } from '../../../../core/store/impresions.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
+import { TableSkeleton } from '../../../../shared/components/skeleton/table-skeleton/table-skeleton';
 import { confirmAction, showSuccess } from '../../../../shared/utils/alert.util';
 import { ImpresionTable } from '../../components/impresion-table/impresion-table';
 
 /** Página de listado: catálogo de impresiones 3D (vista de administración). */
 @Component({
   selector: 'app-impresiones-list',
-  imports: [RouterLink, NgxSkeletonLoaderModule, ImpresionTable, EmptyState, ErrorState],
+  imports: [RouterLink, TableSkeleton, ImpresionTable, EmptyState, ErrorState],
   templateUrl: './impresiones-list.html',
 })
 export class ImpresionesListPage {
   protected readonly store = inject(ImpresionsStore);
-  protected readonly skeletonItems = Array.from({ length: 6 });
+  protected readonly trashView = signal(false);
 
   constructor() {
     // Carga una sola vez: el store actúa como caché global
@@ -25,13 +25,18 @@ export class ImpresionesListPage {
 
   protected retry(): void {
     this.store.clearError();
-    void this.store.loadAll(true);
+    void (this.trashView() ? this.store.loadSoftDeleted(true) : this.store.loadAll(true));
+  }
+
+  protected setTrashView(value: boolean): void {
+    this.trashView.set(value);
+    void (value ? this.store.loadSoftDeleted(true) : this.store.loadAll(true));
   }
 
   protected async delete(impresion: Impresion): Promise<void> {
     const confirmed = await confirmAction({
       title: '¿Eliminar impresión?',
-      text: `"${impresion.nombre}" se eliminará (borrado lógico).`,
+      text: `"${impresion.name}" se eliminará (borrado lógico).`,
       confirmText: 'Sí, eliminar',
     });
     if (!confirmed) return;
@@ -51,5 +56,10 @@ export class ImpresionesListPage {
           : 'La impresión se ha activado.',
       );
     }
+  }
+
+  protected async restore(impresion: Impresion): Promise<void> {
+    const ok = await this.store.restore(impresion._id);
+    if (ok) showSuccess(`"${impresion.name}" se ha restaurado correctamente.`);
   }
 }

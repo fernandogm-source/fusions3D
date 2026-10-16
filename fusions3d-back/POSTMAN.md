@@ -1,26 +1,24 @@
-# Fusions3D API - Postman
+# Probar Fusions3D API con Postman
 
-Se incluye una colección importable en:
+Guía de peticiones para la API actual. No hay un JSON de colección Postman incluido en el repositorio.
 
-```text
-postman/Fusions3D.postman_collection.json
-```
+## Configuración
 
-## Variable
-
-En Postman utiliza:
+Define esta variable en Postman:
 
 ```text
 baseUrl = http://localhost:3000
 ```
 
-## 1. Health check
+Las rutas de negocio llevan el prefijo `/api`. Los ejemplos asumen que la API está iniciada y MongoDB conectado.
+
+## Health check
 
 ```http
 GET {{baseUrl}}/health
 ```
 
-Respuesta:
+Respuesta esperada:
 
 ```json
 {
@@ -30,78 +28,194 @@ Respuesta:
 }
 ```
 
-## 2. Listar impresiones
+## Crear datos relacionados
+
+### Crear categoría
 
 ```http
-GET {{baseUrl}}/api/v1/impresiones
-```
-
-## 3. Crear impresión
-
-```http
-POST {{baseUrl}}/api/v1/impresiones
+POST {{baseUrl}}/api/categories
 Content-Type: application/json
 ```
 
-Body:
-
 ```json
 {
-  "nombre": "Soporte para auriculares",
-  "descripcion": "Soporte de sobremesa para auriculares.",
-  "precio_venta": 19.99,
-  "precio_coste": 7.5,
-  "tiempo_impresion": 240
+  "name": "Accesorios de escritorio",
+  "status": "published"
 }
 ```
 
-Copia el `uuid` recibido en la respuesta.
+Guarda el `_id` devuelto para crear un print.
 
-## 4. Obtener una impresión
-
-```http
-GET {{baseUrl}}/api/v1/impresiones/{uuid}
-```
-
-## 5. Actualizar una impresión
+### Crear material
 
 ```http
-PUT {{baseUrl}}/api/v1/impresiones/{uuid}
+POST {{baseUrl}}/api/materials
 Content-Type: application/json
 ```
 
-Body:
+```json
+{ "name": "PLA" }
+```
+
+### Crear print
+
+```http
+POST {{baseUrl}}/api/prints
+Content-Type: application/json
+```
 
 ```json
 {
-  "nombre": "Soporte premium para auriculares",
-  "descripcion": "Versión reforzada para sobremesa.",
-  "precio_venta": 24.99,
-  "precio_coste": 9.25,
-  "tiempo_impresion": 300
+  "name": "Soporte para móvil",
+  "description": "Soporte de escritorio para teléfono móvil.",
+  "categoryId": "<CATEGORY_ID>",
+  "status": "published"
 }
 ```
 
-El `uuid` no se puede modificar.
+El backend genera el `slug`. Guarda el `_id` devuelto para crear una variante.
 
-## 6. Eliminar una impresión
+### Crear variante
 
 ```http
-DELETE {{baseUrl}}/api/v1/impresiones/{uuid}
+POST {{baseUrl}}/api/print-variants
+Content-Type: application/json
 ```
 
-## Orden recomendado de pruebas
+```json
+{
+  "printId": "<PRINT_ID>",
+  "sku": "SOPMOV-PLA-NEG",
+  "name": "Estándar - PLA Negro",
+  "materialId": "<MATERIAL_ID>",
+  "color": "Negro",
+  "salePrice": 12.5,
+  "costPrice": 4.2,
+  "printTime": 180
+}
+```
 
-1. `GET /health`
-2. `POST /api/v1/impresiones`
-3. `GET /api/v1/impresiones/{uuid}`
-4. `PUT /api/v1/impresiones/{uuid}`
-5. `GET /api/v1/impresiones`
-6. `DELETE /api/v1/impresiones/{uuid}`
+## Consultar recursos
 
-## Códigos de error principales
+```http
+GET {{baseUrl}}/api/prints
+GET {{baseUrl}}/api/categories
+GET {{baseUrl}}/api/materials
+GET {{baseUrl}}/api/print-variants
+GET {{baseUrl}}/api/roles
+GET {{baseUrl}}/api/users
+```
 
-- `400`: datos inválidos.
-- `404`: impresión o ruta no encontrada.
-- `409`: conflicto de UUID único.
+Consultas específicas:
+
+```http
+GET {{baseUrl}}/api/prints/slug/soporte-para-movil
+GET {{baseUrl}}/api/categories/slug/accesorios-de-escritorio
+GET {{baseUrl}}/api/print-variants/sku/SOPMOV-PLA-NEG
+GET {{baseUrl}}/api/print-variants/print/<PRINT_ID>
+GET {{baseUrl}}/api/prints/<PRINT_ID>
+```
+
+Los recursos también admiten `GET /active`, `GET /inactive` y `GET /soft-deleted`.
+
+## Actualizar y activar
+
+Los cambios de campos usan `PATCH` y solo requieren enviar los campos que se quieren actualizar:
+
+```http
+PATCH {{baseUrl}}/api/prints/<PRINT_ID>
+Content-Type: application/json
+```
+
+```json
+{ "name": "Soporte premium para móvil" }
+```
+
+El endpoint `PATCH /api/{resource}/<ID>/active` alterna el estado activo/inactivo y no requiere body:
+
+```http
+PATCH {{baseUrl}}/api/prints/<PRINT_ID>/active
+```
+
+También existe un endpoint específico para reemplazar roles de usuario:
+
+```http
+PATCH {{baseUrl}}/api/users/<USER_ID>/roles
+Content-Type: application/json
+```
+
+```json
+{ "roles": ["<ROLE_ID>"] }
+```
+
+## Borrado lógico y restauración
+
+Los recursos no se borran físicamente mediante la API:
+
+```http
+PATCH {{baseUrl}}/api/prints/<PRINT_ID>/soft-delete
+PATCH {{baseUrl}}/api/prints/<PRINT_ID>/restore
+GET   {{baseUrl}}/api/prints/soft-deleted
+```
+
+Los mismos sufijos (`/soft-delete`, `/restore`, `/soft-deleted`) están disponibles en los demás recursos.
+
+## Usuarios
+
+Crear usuario requiere nombre, email y contraseña de al menos ocho caracteres:
+
+```http
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "María García",
+  "email": "maria@example.com",
+  "password": "Cambiar123!",
+  "roles": ["<ROLE_ID>"],
+  "phone": "+34 600 000 000",
+  "addresses": [
+    {
+      "street": "Calle Mayor 1",
+      "city": "Madrid",
+      "postalCode": "28001",
+      "country": "España",
+      "isDefault": true
+    }
+  ]
+}
+```
+
+Las contraseñas se guardan con bcrypt y no se devuelven en las respuestas.
+
+## Respuestas y errores
+
+Éxito:
+
+```json
+{ "success": true, "data": {} }
+```
+
+Error:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Error de validación en los datos enviados",
+    "details": [{ "field": "name", "message": "El nombre es obligatorio" }]
+  }
+}
+```
+
+- `400`: datos inválidos o estado no permitido.
+- `404`: recurso o ruta no encontrada.
+- `409`: conflicto con un valor único ya existente.
 - `500`: error interno.
+
+## Seguridad
+
+La API actual no tiene autenticación ni autorización. No la expongas públicamente ni uses estos ejemplos con datos sensibles hasta proteger las rutas.

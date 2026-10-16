@@ -29,6 +29,7 @@ export class ImpresionsStore {
   private readonly _selectedImpresion = signal<Impresion | null>(null);
   /** Indica si el catálogo ya se ha cargado al menos una vez (caché) */
   private readonly _loaded = signal<boolean>(false);
+  private readonly _trashView = signal(false);
 
   // ---------- Estado público (readonly signals) ----------
   readonly impresions = this._impresions.asReadonly();
@@ -36,6 +37,7 @@ export class ImpresionsStore {
   readonly error = this._error.asReadonly();
   readonly selectedImpresion = this._selectedImpresion.asReadonly();
   readonly loaded = this._loaded.asReadonly();
+  readonly trashView = this._trashView.asReadonly();
 
   // ---------- Estado derivado (computed) ----------
   readonly total = computed(() => this._impresions().length);
@@ -65,13 +67,24 @@ export class ImpresionsStore {
    * usa `force = true` para recargar la caché.
    */
   async loadAll(force = false): Promise<void> {
-    if (this._loading() || (this._loaded() && !force)) return;
+    return this.loadView(false, force);
+  }
 
+  async loadSoftDeleted(force = false): Promise<void> {
+    return this.loadView(true, force);
+  }
+
+  private async loadView(trashView: boolean, force: boolean): Promise<void> {
+    if (this._loading() || (this._loaded() && this._trashView() === trashView && !force)) return;
+
+    this._trashView.set(trashView);
     this._loading.set(true);
     this._error.set(null);
 
     try {
-      const data = await firstValueFrom(this.impresionesService.getAll());
+      const data = await firstValueFrom(trashView
+        ? this.impresionesService.getSoftDeleted()
+        : this.impresionesService.getAll());
       this._impresions.set(data);
       this._loaded.set(true);
     } catch (error) {
@@ -148,9 +161,11 @@ export class ImpresionsStore {
   /** Alterna el estado activo/inactivo. Devuelve true si tiene éxito. */
   async toggleActive(id: string): Promise<boolean> {
     this._error.set(null);
+    const current = this._impresions().find((impresion) => impresion._id === id);
+    if (!current) return false;
 
     try {
-      const updated = await firstValueFrom(this.impresionesService.toggleActive(id));
+      const updated = await firstValueFrom(this.impresionesService.toggleActive(id, !current.isActive));
       this._impresions.update((list) => list.map((i) => (i._id === id ? updated : i)));
       this._selectedImpresion.update((sel) => (sel?._id === id ? updated : sel));
       return true;
@@ -167,6 +182,18 @@ export class ImpresionsStore {
     try {
       await firstValueFrom(this.impresionesService.softDelete(id));
       this._impresions.update((list) => list.filter((i) => i._id !== id));
+      return true;
+    } catch (error) {
+      this._error.set(getErrorMessage(error));
+      return false;
+    }
+  }
+
+  async restore(id: string): Promise<boolean> {
+    this._error.set(null);
+    try {
+      await firstValueFrom(this.impresionesService.restore(id));
+      await (this._trashView() ? this.loadSoftDeleted(true) : this.loadAll(true));
       return true;
     } catch (error) {
       this._error.set(getErrorMessage(error));

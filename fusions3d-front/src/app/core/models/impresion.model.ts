@@ -1,22 +1,21 @@
+import { PrintCategory } from './category.model';
+import { PrintImage } from './image.model';
+
 export type ImpresionStatus = 'published' | 'draft' | 'archived' | 'suspended';
 
 /**
  * Modelo de una impresión 3D tal y como la devuelve la API
- * (colección "impresiones" de MongoDB).
+ * (colección "prints" de MongoDB).
  */
 export interface Impresion {
   _id: string;
-  nombre: string;
-  descripcion: string;
-  precio_venta: number;
-  precio_coste: number;
-  /** Tiempo de impresión en minutos */
-  tiempo_impresion: number;
+  name: string;
+  description: string;
+  categoryId: string | PrintCategory | null;
   isActive: boolean;
   status: ImpresionStatus;
   slug: string;
-  /** URL de imagen opcional (el backend aún no la persiste) */
-  imagen?: string;
+  images?: PrintImage[];
   createdAt: string;
   updatedAt: string | null;
   deletedAt: string | null;
@@ -26,13 +25,10 @@ export interface Impresion {
  * Datos necesarios para crear una impresión.
  */
 export interface ImpresionCreatePayload {
-  nombre: string;
-  descripcion: string;
-  precio_venta: number;
-  precio_coste: number;
-  tiempo_impresion: number;
+  name: string;
+  description: string;
+  categoryId: string;
   status?: ImpresionStatus;
-  imagen?: string;
 }
 
 /**

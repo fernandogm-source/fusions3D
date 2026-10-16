@@ -1,37 +1,14 @@
 <!-- Volver -->
 <a
   routerLink="/impresiones"
-  class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-[#ff8a4c]"
+  class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-ink-muted transition-colors hover:text-brand-light"
 >
   <span aria-hidden="true">←</span> Volver al catálogo
 </a>
 
 <!-- Skeleton de carga -->
 @if (store.loading() && !store.selectedImpresion()) {
-  <div class="grid grid-cols-1 gap-8 lg:grid-cols-2" aria-busy="true" aria-label="Cargando impresión">
-    <ngx-skeleton-loader
-      count="1"
-      appearance="line"
-      [theme]="{ height: '380px', 'background-color': '#1e293b', 'border-radius': '1rem', margin: '0' }"
-    />
-    <div class="flex flex-col gap-4">
-      <ngx-skeleton-loader
-        count="1"
-        appearance="line"
-        [theme]="{ height: '36px', width: '60%', 'background-color': '#1e293b', 'border-radius': '0.5rem', margin: '0' }"
-      />
-      <ngx-skeleton-loader
-        count="4"
-        appearance="line"
-        [theme]="{ height: '16px', 'background-color': '#1e293b', 'border-radius': '0.5rem', 'margin-bottom': '0.5rem' }"
-      />
-      <ngx-skeleton-loader
-        count="1"
-        appearance="line"
-        [theme]="{ height: '44px', width: '30%', 'background-color': '#1e293b', 'border-radius': '0.5rem', margin: '0' }"
-      />
-    </div>
-  </div>
+  <app-detail-skeleton />
 }
 
 <!-- Error -->
@@ -47,82 +24,50 @@
 @if (store.selectedImpresion(); as impresion) {
   <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
     <!-- Imagen -->
-    <div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60">
+    <div class="card overflow-hidden p-0">
       <img
         [src]="imageUrl()"
-        [alt]="'Imagen de ' + impresion.nombre"
-        class="h-full w-full object-cover"
+        [alt]="'Imagen de ' + impresion.name"
+        class="aspect-[4/3] h-full w-full object-cover"
+        [class.grayscale]="!impresion.isActive && hasPhoto()"
       />
     </div>
 
     <!-- Información -->
-    <div class="flex flex-col gap-5">
-      <div class="flex flex-wrap items-center gap-3">
-        <h1 class="text-3xl font-extrabold tracking-tight text-slate-100">{{ impresion.nombre }}</h1>
-        <span class="rounded-full px-3 py-1 text-xs font-medium ring-1" [class]="statusClass()">
-          {{ statusLabel() }}
-        </span>
-        <span
-          class="rounded-full px-3 py-1 text-xs font-medium ring-1"
-          [class]="impresion.isActive
-            ? 'bg-sky-500/15 text-sky-400 ring-sky-500/30'
-            : 'bg-slate-500/15 text-slate-400 ring-slate-500/30'"
-        >
-          {{ impresion.isActive ? 'Activa' : 'Inactiva' }}
-        </span>
+    <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="badge" [class]="statusClass()">{{ statusLabel() }}</span>
+          <span class="badge" [class]="impresion.isActive ? 'badge-success' : 'badge-muted'">
+            {{ impresion.isActive ? 'Activa' : 'Inactiva' }}
+          </span>
+        </div>
+        <h1 class="page-title">{{ impresion.name }}</h1>
+        <p class="leading-relaxed text-ink-muted">{{ impresion.description }}</p>
       </div>
 
-      <p class="text-4xl font-extrabold text-[#ff6000]">
-        {{ impresion.precio_venta | currency: 'EUR' : 'symbol' : '1.2-2' : 'es' }}
-      </p>
-
-      <p class="leading-relaxed text-slate-300">{{ impresion.descripcion }}</p>
-
-      <dl class="grid grid-cols-2 gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 text-sm">
+      <dl class="card grid grid-cols-2 gap-5 p-5 text-sm">
         <div>
-          <dt class="text-slate-500">Precio de coste</dt>
-          <dd class="mt-1 font-semibold text-slate-200">
-            {{ impresion.precio_coste | currency: 'EUR' : 'symbol' : '1.2-2' : 'es' }}
-          </dd>
+          <dt class="text-ink-faint">Slug</dt>
+          <dd class="mt-1 font-mono text-xs text-ink-muted">{{ impresion.slug }}</dd>
         </div>
         <div>
-          <dt class="text-slate-500">Tiempo de impresión</dt>
-          <dd class="mt-1 font-semibold text-slate-200">{{ formatTiempo(impresion.tiempo_impresion) }}</dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">Slug</dt>
-          <dd class="mt-1 font-mono text-xs text-slate-400">{{ impresion.slug }}</dd>
-        </div>
-        <div>
-          <dt class="text-slate-500">Creada</dt>
-          <dd class="mt-1 font-semibold text-slate-200">
+          <dt class="text-ink-faint">Creada</dt>
+          <dd class="mt-1 font-semibold text-ink">
             {{ impresion.createdAt | date: 'dd/MM/yyyy HH:mm' : undefined : 'es' }}
           </dd>
         </div>
       </dl>
 
       <!-- Acciones -->
-      <div class="mt-2 flex flex-col gap-3 sm:flex-row">
-        <a
-          [routerLink]="['/impresiones', impresion.slug, 'editar']"
-          class="inline-flex flex-1 items-center justify-center rounded-lg bg-[#ff6000] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#cc4d00]"
-        >
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <a [routerLink]="['/impresiones', impresion.slug, 'editar']" class="btn btn-primary flex-1">
           Editar
         </a>
-        <button
-          type="button"
-          (click)="toggleActive()"
-          [disabled]="processing()"
-          class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-700 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        <button type="button" (click)="toggleActive()" [disabled]="processing()" class="btn btn-secondary flex-1">
           {{ impresion.isActive ? 'Desactivar' : 'Activar' }}
         </button>
-        <button
-          type="button"
-          (click)="delete()"
-          [disabled]="processing()"
-          class="inline-flex flex-1 items-center justify-center rounded-lg border border-red-900/60 bg-red-950/30 px-5 py-2.5 text-sm font-semibold text-red-400 transition hover:bg-red-950/60 disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        <button type="button" (click)="delete()" [disabled]="processing()" class="btn btn-danger flex-1">
           Eliminar
         </button>
       </div>

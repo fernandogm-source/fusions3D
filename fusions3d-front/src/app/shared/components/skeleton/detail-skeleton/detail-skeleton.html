@@ -1,0 +1,24 @@
+<div class="grid grid-cols-1 gap-8 lg:grid-cols-2" aria-busy="true" aria-label="Cargando impresión">
+  <ngx-skeleton-loader
+    count="1"
+    appearance="line"
+    [theme]="{ height: '380px', 'background-color': '#161e2e', 'border-radius': '1rem', margin: '0' }"
+  />
+  <div class="flex flex-col gap-4">
+    <ngx-skeleton-loader
+      count="1"
+      appearance="line"
+      [theme]="{ height: '36px', width: '60%', 'background-color': '#161e2e', 'border-radius': '0.5rem', margin: '0' }"
+    />
+    <ngx-skeleton-loader
+      count="4"
+      appearance="line"
+      [theme]="{ height: '16px', 'background-color': '#161e2e', 'border-radius': '0.5rem', 'margin-bottom': '0.5rem' }"
+    />
+    <ngx-skeleton-loader
+      count="1"
+      appearance="line"
+      [theme]="{ height: '44px', width: '30%', 'background-color': '#161e2e', 'border-radius': '0.5rem', margin: '0' }"
+    />
+  </div>
+</div>

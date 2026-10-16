@@ -1,0 +1,13 @@
+<section class="flex flex-col gap-8">
+  <div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <div><p class="text-sm font-medium text-brand-light">Administración</p><h1 class="page-title mt-1">{{ store.trashView() ? 'Papelera de categorías' : 'Categorías' }}</h1><p class="mt-2 text-sm text-ink-muted">{{ store.items().length }} categoría{{ store.items().length === 1 ? '' : 's' }} {{ store.trashView() ? 'eliminada' : 'registrada' }}{{ store.items().length === 1 ? '' : 's' }}</p></div>
+    <div class="flex gap-3">
+      @if (store.trashView()) { <button (click)="showTrash(false)" class="btn btn-secondary">Volver a categorías</button> }
+      @else { <button (click)="showTrash(true)" class="btn btn-secondary">Papelera</button><button (click)="openCreate()" class="btn btn-primary">+ Nueva categoría</button> }
+    </div>
+  </div>
+  @if (store.loading()) { <div class="card p-10 text-center text-ink-muted">Cargando categorías…</div> }
+  @else if (store.error()) { <app-error-state title="No se pudieron cargar las categorías" [message]="store.error()!" (retry)="retry()" /> }
+  @else if (!store.items().length) { <app-empty-state [title]="store.trashView() ? 'La papelera está vacía' : 'Todavía no hay categorías'" [message]="store.trashView() ? 'Las categorías eliminadas aparecerán aquí.' : 'Crea una categoría para organizar las impresiones.'">@if (!store.trashView()) { <button (click)="openCreate()" class="btn btn-primary">Crear categoría</button> }</app-empty-state> }
+  @else { <app-category-table [categories]="store.items()" [trashView]="store.trashView()" (remove)="remove($event)" (toggleActive)="toggle($event)" (restore)="restore($event)" /> }
+</section>

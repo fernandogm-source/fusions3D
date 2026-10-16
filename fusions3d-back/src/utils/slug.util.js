@@ -1,12 +1,12 @@
 const slugify = require('slugify');
-const Print = require('../modules/print/print.model');
+const Print = require('../models/print.model');
 
-async function generateSlug(text) {
+async function generateSlug(text, Model = Print) {
   const baseSlug = slugify(text, { lower: true, strict: true });
   let slug = baseSlug;
   let counter = 1;
 
-  while (await Print.exists({ slug })) {
+  while (await Model.exists({ slug })) {
     slug = `${baseSlug}-${counter}`;
     counter++;
   }

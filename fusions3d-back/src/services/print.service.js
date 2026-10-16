@@ -32,7 +32,7 @@ class PrintService {
   }
 
   async create(data) {
-    const slug = await generateSlug(data.nombre);
+    const slug = await generateSlug(data.name);
     return repository.create({ ...data, slug });
   }
 
@@ -42,8 +42,8 @@ class PrintService {
     delete cleanData.createdAt;
     delete cleanData.deletedAt;
 
-    if (cleanData.nombre) {
-      cleanData.slug = await generateSlug(cleanData.nombre);
+    if (cleanData.name) {
+      cleanData.slug = await generateSlug(cleanData.name);
     }
 
     cleanData.updatedAt = new Date();

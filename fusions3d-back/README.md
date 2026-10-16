@@ -1,91 +1,44 @@
 # Fusions3D API
 
-> **← Volver al README principal:** [`README.md`](../README.md)
-
-API REST backend para **Fusions3D**, una tienda de impresiones 3D.
+API REST de Fusions3D, desarrollada con Node.js, Express y MongoDB.
 
 ## Stack
 
 - Node.js 20+
-- Express.js
-- MongoDB + Mongoose
-- Zod (validación)
-- Helmet (seguridad)
-- CORS
-- Morgan (logging)
-- dotenv
-- slugify
-- Nodemon (desarrollo)
+- Express 4
+- MongoDB + Mongoose 8
+- Zod 4 para validar cuerpos y parámetros
+- Helmet, CORS y Morgan
+- `bcryptjs` para hash de contraseñas
+- `slugify` para slugs
 
 ## Arquitectura
 
-Patrón **Repository + Service + Controller** (arquitectura en capas).
+Cada recurso de negocio sigue el flujo **routes → controllers → services → repositories → models**. Los esquemas Zod se aplican en las rutas antes de invocar los controladores.
 
 ```text
-fusions3d-back/
-├── src/
-│   ├── config/
-│   │   └── database.js              # Conexión a MongoDB
-│   ├── controllers/
-│   │   └── print.controller.js      # Controlador de impresiones
-│   ├── middlewares/
-│   │   ├── error.middleware.js      # Manejo de errores centralizado
-│   │   └── validation.middleware.js # Validación con Zod
-│   ├── modules/
-│   │   └── print/
-│   │       └── print.model.js       # Modelo Mongoose (Print)
-│   ├── repositories/
-│   │   └── print.repository.js      # Acceso a datos (CRUD)
-│   ├── routes/
-│   │   └── print.routes.js          # Definición de rutas
-│   ├── schemas/
-│   │   └── print.schema.js          # Esquemas Zod (validación)
-│   ├── services/
-│   │   └── print.service.js         # Lógica de negocio
-│   ├── utils/
-│   │   ├── app.error.js             # Clase AppError personalizada
-│   │   └── slug.util.js             # Generador de slugs único
-│   └── app.js                       # Punto de entrada
-├── .env.example
-├── .gitignore
-├── package.json
-├── seed.js
-└── README.md
+src/
+├── config/       # Conexión a MongoDB
+├── controllers/  # Controladores HTTP por recurso
+├── middlewares/  # Validación Zod y errores
+├── models/       # Category, Image, Material, Print, PrintVariant, Role, User
+├── repositories/ # Consultas Mongoose
+├── routes/       # Rutas Express por recurso
+├── schemas/      # Esquemas Zod por recurso
+├── services/     # Reglas de negocio
+├── utils/        # AppError y generación de slugs
+└── app.js
 ```
 
-## Modelo de datos
+La aplicación registra seis recursos: `prints`, `categories`, `materials`, `print-variants`, `roles` y `users`. `Image` es actualmente un modelo asociado que se popula en algunos recursos; **no tiene rutas ni operaciones CRUD propias**.
 
-Colección MongoDB: `impresiones`.
-
-| Campo | Tipo | Requerido | Descripción |
-|---|---|---:|---|
-| `nombre` | String | Sí | Nombre de la impresión |
-| `descripcion` | String | Sí | Descripción |
-| `precio_venta` | Number | Sí | Precio de venta |
-| `precio_coste` | Number | Sí | Coste de fabricación |
-| `tiempo_impresion` | Number | Sí | Tiempo de impresión en minutos |
-| `slug` | String | Sí | Slug único generado desde el nombre |
-| `activo` | Boolean | Sí | Si la impresión está activa |
-| `imagen` | String | No | URL de imagen (preparado para el futuro) |
-| `deletedAt` | Date | No | Fecha de borrado lógico (null si está activa) |
-
-El **slug** se genera automáticamente con `slugify` a partir del nombre y se verifica que sea único en la base de datos.
-
-## Instalación
-
-Requisitos: Node.js 20+ y MongoDB local o MongoDB Atlas.
+## Instalación y ejecución
 
 ```bash
 npm install
 ```
 
-Copia `.env.example` a `.env`:
-
-```bash
-cp .env.example .env
-```
-
-Configura:
+Copia `.env.example` a `.env` y comprueba especialmente el origen CORS: para el frontend local debe ser `http://localhost:4200`.
 
 ```env
 PORT=3000
@@ -94,71 +47,29 @@ CORS_ORIGIN=http://localhost:4200
 NODE_ENV=development
 ```
 
-Arrancar en desarrollo:
+```bash
+npm run dev  # desarrollo con Nodemon
+npm start    # ejecución normal
+```
+
+La API se sirve en `http://localhost:3000`.
+
+## Seed de desarrollo
 
 ```bash
-npm run dev
+npm run seed
 ```
 
-Arrancar en producción:
+El seed inserta o actualiza datos de ejemplo para materiales, categorías, roles, impresiones, variantes, usuarios e imágenes. Cada print lleva una URL de foto pública de Pexels; categorías y variantes usan placeholders. Usa upserts y **no vacía ni borra las colecciones**, por lo que puede repetirse.
 
-```bash
-npm start
-```
-
-La API estará disponible en `http://localhost:3000`.
-
-### Seed de datos (opcional)
-
-```bash
-node seed.js
-```
-
-## Endpoints
-
-| Método | Endpoint | Acción |
-|---|---|---|
-| GET | `/health` | Health check |
-| GET | `/api/impresiones` | Listar impresiones |
-| GET | `/api/impresiones/soft-deleted` | Listar eliminadas |
-| GET | `/api/impresiones/active` | Listar activas |
-| GET | `/api/impresiones/inactive` | Listar inactivas |
-| GET | `/api/impresiones/slug/:slug` | Obtener por slug |
-| POST | `/api/impresiones` | Crear impresión |
-| GET | `/api/impresiones/:id` | Obtener por ID |
-| PATCH | `/api/impresiones/:id` | Actualizar impresión |
-| PATCH | `/api/impresiones/:id/active` | Activar/desactivar |
-| PATCH | `/api/impresiones/:id/soft-delete` | Eliminar (borrado lógico) |
-| PATCH | `/api/impresiones/:id/restore` | Restaurar |
-
-## Crear una impresión
-
-```http
-POST /api/impresiones
-Content-Type: application/json
-```
-
-```json
-{
-  "nombre": "Soporte para auriculares",
-  "descripcion": "Soporte de sobremesa para auriculares.",
-  "precio_venta": 19.99,
-  "precio_coste": 7.50,
-  "tiempo_impresion": 240
-}
-```
-
-El `slug` no se envía: la API lo genera automáticamente.
+En la primera ejecución crea `admin@fusions3d.local`. La contraseña inicial por defecto es `Admin123!`; para cambiarla, define `SEED_ADMIN_PASSWORD` en `.env` antes de sembrar. Las contraseñas de los usuarios de ejemplo también son exclusivamente para desarrollo. Los hashes se guardan con bcrypt.
 
 ## Respuestas
 
 Éxito:
 
 ```json
-{
-  "success": true,
-  "data": {}
-}
+{ "success": true, "data": {} }
 ```
 
 Error:
@@ -173,27 +84,60 @@ Error:
 }
 ```
 
-En desarrollo se añade el stack trace.
+Los errores de validación incluyen `error.details`. En desarrollo, el middleware añade el stack trace.
 
-## CORS
+## Endpoints
 
-CORS está habilitado mediante `cors`. El origen se controla mediante `CORS_ORIGIN`.
+Base URL: `http://localhost:3000`. Todos los recursos de negocio usan el prefijo `/api`.
 
-Para desarrollo puede utilizarse:
+### Comunes
 
-```env
-CORS_ORIGIN=*
-```
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/health` | Health check |
+| GET | `/api/{resource}` | Listar registros no eliminados |
+| GET | `/api/{resource}/active` | Listar activos |
+| GET | `/api/{resource}/inactive` | Listar inactivos |
+| GET | `/api/{resource}/soft-deleted` | Listar eliminados lógicamente |
+| POST | `/api/{resource}` | Crear |
+| GET | `/api/{resource}/:id` | Consultar por ObjectId |
+| PATCH | `/api/{resource}/:id` | Actualizar campos |
+| PATCH | `/api/{resource}/:id/active` | Alternar activo/inactivo |
+| PATCH | `/api/{resource}/:id/soft-delete` | Borrado lógico |
+| PATCH | `/api/{resource}/:id/restore` | Restaurar |
 
-En producción es preferible definir el origen concreto del frontend.
+`{resource}` puede ser `prints`, `categories`, `materials`, `print-variants`, `roles` o `users`. El endpoint `/:id/active` funciona como toggle y no requiere un body para las rutas actuales.
 
-## Decisiones
+### Rutas adicionales
 
-- No se han creado otras entidades de negocio: solo `impresiones`.
-- No se ha añadido autenticación porque no forma parte del alcance solicitado.
-- `tiempo_impresion` está expresado en minutos.
-- Para sistemas contables estrictos, los precios pueden migrarse posteriormente a céntimos enteros o `Decimal128`.
-- **Soft delete:** las impresiones se marcan con `deletedAt` en lugar de eliminarse físicamente, permitiendo su restauración.
-- **Slugs:** se generan automáticamente desde el nombre con `slugify`, con verificación de unicidad.
-- **Validación:** todos los bodies y params se validan con esquemas Zod antes de llegar al controlador.
-- **Seguridad:** Helmet habilita headers HTTP seguros por defecto.
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/api/prints/slug/:slug` | Consultar impresión por slug |
+| GET | `/api/categories/slug/:slug` | Consultar categoría por slug |
+| GET | `/api/print-variants/sku/:sku` | Consultar variante por SKU |
+| GET | `/api/print-variants/print/:printId` | Listar variantes de una impresión |
+| PATCH | `/api/users/:id/roles` | Reemplazar los roles de un usuario |
+
+### Modelos principales
+
+| Recurso | Campos principales |
+|---|---|
+| Print | `name`, `description`, `categoryId`, `slug`, `status`, `isActive`, `deletedAt` |
+| Category | `name`, `slug`, `status`, `isActive`, `deletedAt` |
+| Material | `name`, `isActive`, `deletedAt` |
+| PrintVariant | `printId`, `sku`, `name`, `materialId`, `color`, `salePrice`, `costPrice`, `printTime`, `isActive`, `deletedAt` |
+| Role | `name`, `isActive`, `deletedAt` |
+| User | `name`, `email`, `password` (hash), `roles`, `addresses`, `phone`, `isActive`, `deletedAt` |
+
+Las imágenes se asocian mediante `entityType` y `entityId`, y se devuelven pobladas en impresiones, categorías y variantes. No hay rutas para modificarlas todavía.
+
+## Notas importantes
+
+- Los slugs de impresiones y categorías se generan desde el nombre.
+- El borrado es lógico (`deletedAt`) y no elimina documentos físicamente.
+- Las contraseñas de usuario se hashean con bcrypt y no se incluyen en las consultas de lectura.
+- **No hay autenticación ni autorización**: todas las rutas, incluidas las de usuarios y roles, están expuestas. No desplegar públicamente hasta añadir controles de acceso.
+- `POSTMAN.md` contiene ejemplos de las rutas actuales. No se distribuye una colección JSON importable de Postman.
+- El backend no tiene tests configurados.
+
+> [← Volver al README principal](../README.md)

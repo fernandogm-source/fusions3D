@@ -1,64 +1,35 @@
 <!-- Cabecera -->
-<div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+<div class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
   <div>
-    <h1 class="text-3xl font-extrabold tracking-tight text-slate-100">
-      Catálogo de <span class="text-[#ff6000]">impresiones 3D</span>
+    <p class="text-sm font-medium text-brand-light">
+      @if (trashView()) { Papelera } @else { Catálogo }
+    </p>
+    <h1 class="page-title mt-1">
+      @if (trashView()) { Impresiones eliminadas } @else { Impresiones 3D }
     </h1>
-    <p class="mt-1 text-sm text-slate-400">
+    <p class="mt-2 text-sm text-ink-muted">
       @if (store.loading()) {
         Cargando catálogo…
       } @else {
-        {{ store.total() }} producto{{ store.total() === 1 ? '' : 's' }} disponible{{ store.total() === 1 ? '' : 's' }}
+        {{ store.total() }} producto{{ store.total() === 1 ? '' : 's' }} {{ trashView() ? 'en la papelera' : 'en el catálogo' }}
       }
     </p>
   </div>
-  <a
-    routerLink="/impresiones/nueva"
-    class="inline-flex items-center justify-center gap-2 rounded-lg bg-[#ff6000] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#cc4d00]"
-  >
-    <span aria-hidden="true">+</span> Nueva impresión
-  </a>
+  <div class="flex flex-wrap gap-3">
+    @if (trashView()) {
+      <button type="button" (click)="setTrashView(false)" class="btn btn-secondary">Volver al catálogo</button>
+    } @else {
+      <button type="button" (click)="setTrashView(true)" class="btn btn-secondary">Papelera</button>
+      <a routerLink="/impresiones/nueva" class="btn btn-primary">
+        <span aria-hidden="true" class="text-base leading-none">+</span> Nueva impresión
+      </a>
+    }
+  </div>
 </div>
 
 <!-- Skeletons mientras carga por primera vez -->
 @if (store.loading() && !store.loaded()) {
-  <div
-    class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60"
-    aria-busy="true"
-    aria-label="Cargando impresiones"
-  >
-    @for (item of skeletonItems; track $index) {
-      <div class="flex items-center gap-4 border-b border-slate-800/60 px-4 py-3 last:border-0">
-        <ngx-skeleton-loader
-          count="1"
-          appearance="line"
-          [theme]="{ height: '40px', width: '40px', 'background-color': '#1e293b', 'border-radius': '0.5rem', margin: '0' }"
-        />
-        <div class="flex flex-1 flex-col gap-2">
-          <ngx-skeleton-loader
-            count="1"
-            appearance="line"
-            [theme]="{ height: '14px', width: '40%', 'background-color': '#1e293b', 'border-radius': '0.5rem', margin: '0' }"
-          />
-          <ngx-skeleton-loader
-            count="1"
-            appearance="line"
-            [theme]="{ height: '10px', width: '25%', 'background-color': '#1e293b', 'border-radius': '0.5rem', margin: '0' }"
-          />
-        </div>
-        <ngx-skeleton-loader
-          count="1"
-          appearance="line"
-          [theme]="{ height: '14px', width: '60px', 'background-color': '#1e293b', 'border-radius': '0.5rem', margin: '0' }"
-        />
-        <ngx-skeleton-loader
-          count="1"
-          appearance="line"
-          [theme]="{ height: '22px', width: '70px', 'background-color': '#1e293b', 'border-radius': '9999px', margin: '0' }"
-        />
-      </div>
-    }
-  </div>
+  <app-table-skeleton [rows]="6" />
 }
 
 <!-- Error de la API -->
@@ -73,15 +44,12 @@
 <!-- Sin resultados -->
 @if (store.isEmpty() && !store.hasError()) {
   <app-empty-state
-    title="Todavía no hay impresiones"
-    message="Crea tu primera impresión 3D para empezar a vender."
+    [title]="trashView() ? 'La papelera está vacía' : 'Todavía no hay impresiones'"
+    [message]="trashView() ? 'Las impresiones eliminadas aparecerán aquí.' : 'Crea tu primera impresión 3D para empezar a vender.'"
   >
-    <a
-      routerLink="/impresiones/nueva"
-      class="mt-2 rounded-lg bg-[#ff6000] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#cc4d00]"
-    >
-      Crear impresión
-    </a>
+    @if (!trashView()) {
+      <a routerLink="/impresiones/nueva" class="btn btn-primary mt-2">Crear impresión</a>
+    }
   </app-empty-state>
 }
 
@@ -89,7 +57,9 @@
 @if (!store.loading() && !store.hasError() && !store.isEmpty()) {
   <app-impresion-table
     [impresions]="store.impresions()"
+    [deletedMode]="trashView()"
     (delete)="delete($event)"
     (toggleActive)="toggleActive($event)"
+    (restore)="restore($event)"
   />
 }

@@ -4,13 +4,13 @@ import { Impresion, ImpresionCreatePayload, ImpresionUpdatePayload } from '../mo
 import { ApiService } from './api.service';
 
 /**
- * Servicio de dominio para el recurso `/impresiones` de la API.
+ * Servicio de dominio para el recurso `/prints` de la API.
  * Encapsula los endpoints REST y devuelve modelos tipados.
  */
 @Injectable({ providedIn: 'root' })
 export class ImpresionesService {
   private readonly api = inject(ApiService);
-  private readonly resource = '/impresiones';
+  private readonly resource = '/prints';
 
   getAll(): Observable<Impresion[]> {
     return this.api.get<Impresion[]>(this.resource);
@@ -22,6 +22,10 @@ export class ImpresionesService {
 
   getInactive(): Observable<Impresion[]> {
     return this.api.get<Impresion[]>(`${this.resource}/inactive`);
+  }
+
+  getSoftDeleted(): Observable<Impresion[]> {
+    return this.api.get<Impresion[]>(`${this.resource}/soft-deleted`);
   }
 
   getById(id: string): Observable<Impresion> {
@@ -40,8 +44,8 @@ export class ImpresionesService {
     return this.api.patch<Impresion>(`${this.resource}/${id}`, payload);
   }
 
-  toggleActive(id: string): Observable<Impresion> {
-    return this.api.patch<Impresion>(`${this.resource}/${id}/active`, {});
+  toggleActive(id: string, active: boolean): Observable<Impresion> {
+    return this.api.patch<Impresion>(`${this.resource}/${id}/active`, { active });
   }
 
   softDelete(id: string): Observable<Impresion> {

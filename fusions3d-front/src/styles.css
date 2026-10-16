@@ -1,13 +1,35 @@
 @import "tailwindcss";
 
 @theme {
+  /* Marca */
   --color-brand: #ff6000;
-  --color-brand-dark: #cc4d00;
-  --color-brand-light: #ff8a4c;
-  --color-surface: #0b1220;
-  --color-surface-raised: #111a2e;
-  --color-surface-card: #16213a;
+  --color-brand-dark: #d95400;
+  --color-brand-light: #ff8f52;
+
+  /* Superficies */
+  --color-base: #0a0e17;
+  --color-surface: #101623;
+  --color-elevated: #161e2e;
+  --color-line: #1e2839;
+  --color-line-strong: #2a3549;
+
+  /* Texto */
+  --color-ink: #e9eef6;
+  --color-ink-muted: #9aa8bd;
+  --color-ink-faint: #64748b;
+
+  /* Estados */
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+
+  /* Tipografía */
   --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+
+  /* Sombras */
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 16px 36px -24px rgb(0 0 0 / 0.8);
+  --shadow-pop: 0 28px 64px -24px rgb(0 0 0 / 0.85);
 }
 
 html {
@@ -15,40 +37,146 @@ html {
 }
 
 body {
-  @apply bg-slate-950 text-slate-200 antialiased;
+  @apply bg-base text-ink antialiased;
+  font-feature-settings: "cv02", "cv03", "cv11";
 }
 
-/* ---------- SweetAlert2: tema oscuro Fusions3D ---------- */
+::selection {
+  background: rgb(255 96 0 / 0.35);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid rgb(255 96 0 / 0.7);
+  outline-offset: 2px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+@layer components {
+/* ---------- Componentes reutilizables ---------- */
+
+.card {
+  @apply rounded-2xl border border-line bg-surface shadow-card;
+}
+
+.btn {
+  @apply inline-flex cursor-pointer select-none items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.btn-primary {
+  @apply bg-brand text-white shadow-[0_10px_24px_-12px_rgb(255_96_0/0.9)] hover:bg-brand-dark hover:shadow-[0_14px_28px_-12px_rgb(255_96_0/0.95)] active:translate-y-px;
+}
+
+.btn-secondary {
+  @apply border border-line bg-elevated text-ink hover:border-line-strong hover:bg-surface;
+}
+
+.btn-ghost {
+  @apply text-ink-muted hover:bg-elevated hover:text-ink;
+}
+
+.btn-danger {
+  @apply border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20;
+}
+
+.input {
+  @apply w-full rounded-lg border border-line bg-base px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint outline-none transition-colors duration-200 focus:border-brand/60 focus:ring-4 focus:ring-brand/15;
+}
+
+.input-error {
+  @apply border-danger/60 focus:border-danger focus:ring-danger/15;
+}
+
+.label {
+  @apply text-sm font-medium text-ink-muted;
+}
+
+.field-error {
+  @apply text-xs font-medium text-danger;
+}
+
+.badge {
+  @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset;
+}
+
+.badge-success {
+  @apply bg-success/10 text-success ring-success/25;
+}
+
+.badge-warning {
+  @apply bg-warning/10 text-warning ring-warning/25;
+}
+
+.badge-danger {
+  @apply bg-danger/10 text-danger ring-danger/25;
+}
+
+.badge-brand {
+  @apply bg-brand/10 text-brand-light ring-brand/25;
+}
+
+.badge-muted {
+  @apply bg-elevated text-ink-muted ring-line-strong;
+}
+
+.table-head {
+  @apply border-b border-line bg-elevated/40 text-xs font-semibold uppercase tracking-wider text-ink-faint;
+}
+
+.table-row {
+  @apply border-b border-line/70 transition-colors last:border-0 hover:bg-elevated/50;
+}
+
+.nav-link {
+  @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-muted transition-colors duration-200 hover:bg-elevated hover:text-ink;
+}
+
+.nav-link-active {
+  @apply bg-brand/10 text-brand-light ring-1 ring-inset ring-brand/20 hover:bg-brand/15 hover:text-brand-light;
+}
+
+.page-title {
+  @apply font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl;
+}
+}
+
+/* ---------- SweetAlert2: tema Fusions3D ---------- */
+
 .swal2-popup.fusions3d-swal {
-  @apply rounded-2xl border border-slate-700 shadow-2xl;
-  background: #111a2e;
-  color: #e2e8f0;
+  @apply rounded-2xl border border-line-strong shadow-pop;
+  background: var(--color-surface);
+  color: var(--color-ink);
 }
 
 .swal2-popup.fusions3d-swal .swal2-title {
-  color: #f1f5f9;
+  color: var(--color-ink);
+  font-family: var(--font-display);
 }
 
 .swal2-popup.fusions3d-swal .swal2-html-container {
-  color: #cbd5e1;
+  color: var(--color-ink-muted);
 }
 
 .swal2-popup.fusions3d-swal .swal2-confirm {
   @apply rounded-lg px-5 py-2.5 font-semibold;
-  background: #ff6000;
+  background: var(--color-brand);
   box-shadow: none;
 }
 
 .swal2-popup.fusions3d-swal .swal2-confirm:hover {
-  background: #cc4d00;
+  background: var(--color-brand-dark);
 }
 
 .swal2-popup.fusions3d-swal .swal2-cancel {
   @apply rounded-lg px-5 py-2.5 font-semibold;
-  background: #334155;
+  background: var(--color-elevated);
   box-shadow: none;
 }
 
 .swal2-popup.fusions3d-swal .swal2-cancel:hover {
-  background: #475569;
+  background: var(--color-line-strong);
 }

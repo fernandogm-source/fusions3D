@@ -1,170 +1,123 @@
 # Fusions3D — Frontend
 
-> **← Volver al README principal:** [`README.md`](../README.md)
+Aplicación SPA de administración y catálogo de Fusions3D, desarrollada con Angular 20 y TypeScript. Consume la API REST de `fusions3d-back`.
 
-SPA desarrollada con **Angular 20** para la plataforma **Fusions3D**, tienda de objetos
-impresos en 3D. Consume la API REST del proyecto `fusions3d-back`.
+El diseño usa un tema oscuro con acento naranja, una sidebar adaptable, Tailwind CSS 4, Inter y Space Grotesk.
 
-Diseño oscuro tipo *PcComponentes* (acento naranja `#ff6000`) construido con TailwindCSS.
-
----
-
-## 📋 Requisitos
+## Requisitos e instalación
 
 - Node.js >= 20
-- La API REST `fusions3d-back` en ejecución (`http://localhost:3000`) con MongoDB.
-
-## 🚀 Instalación
+- La API y MongoDB en ejecución. Para desarrollo, la API debe estar disponible en `http://localhost:3000`.
 
 ```bash
 cd fusions3d-front
 npm install
+npm start
 ```
 
-## ▶️ Ejecución
+Abre `http://localhost:4200`.
 
-```bash
-# 1. Arranca el backend (desde la carpeta fusions3d-back)
-npm run dev          # http://localhost:3000
+## Comandos
 
-# 2. Arranca el frontend (desde fusions3d-front)
-npm start            # http://localhost:4200
+| Comando | Acción |
+|---|---|
+| `npm start` | Angular dev server |
+| `npm run build` | Build en `dist/` |
+| `npm run watch` | Build de desarrollo en modo watch |
+| `npm test -- --watch=false --browsers=ChromeHeadless` | Tests unitarios en Chrome Headless |
+
+## Configuración de API
+
+La URL base se configura en `src/environments/`:
+
+| Archivo | Uso | Valor actual |
+|---|---|---|
+| `environment.development.ts` | Desarrollo | `http://localhost:3000/api` |
+| `environment.ts` | Build de producción | `http://localhost:3000/api` (placeholder local) |
+
+**Antes de desplegar**, cambia `apiUrl` en `environment.ts` por la URL real del backend. El backend también debe permitir el origen del frontend mediante `CORS_ORIGIN`.
+
+## Organización
+
+La aplicación usa componentes standalone, rutas lazy-loaded, Reactive Forms, RxJS y Signals.
+
+```text
+src/app/
+├── core/
+│   ├── interceptors/  # Loading y errores HTTP
+│   ├── models/        # Modelos tipados por recurso
+│   ├── services/      # Servicios HTTP tipados por recurso + ApiService
+│   └── store/         # Stores Signals con caché/selección y CRUD
+├── features/
+│   ├── impresions/    # Catálogo de prints (nombre histórico de la carpeta)
+│   ├── categories/
+│   ├── materials/
+│   ├── print-variants/
+│   ├── roles/
+│   └── users/
+├── layouts/
+│   └── main-layout/   # Sidebar, topbar, outlet y loader global
+└── shared/            # Componentes, validadores y utilidades comunes
 ```
 
-Abre `http://localhost:4200` — redirige automáticamente al catálogo `/impresiones`.
+Cada feature de negocio tiene sus propias rutas, páginas y componentes específicos:
 
-### Otros comandos
-
-```bash
-npm run build        # build de producción en dist/
-npm test             # tests unitarios (Karma)
+```text
+features/<recurso>/
+├── <recurso>.routes.ts
+├── components/
+│   ├── <recurso>-form/
+│   └── <recurso>-table/
+└── pages/
+    ├── <recurso>-list/
+    ├── <recurso>-create/
+    ├── <recurso>-detail/
+    └── <recurso>-edit/
 ```
 
-## 📄 Variables de entorno
+Los modelos, servicios y stores tipados están en `core/`. Los formularios usan esos servicios para cargar referencias relacionadas (por ejemplo, materiales/prints para una variante y roles para un usuario); las operaciones CRUD pasan por el store del recurso.
 
-Configuración en `src/environments/`:
+## Rutas de la aplicación
 
-| Archivo                       | Uso         | Variables                                            |
-| ----------------------------- | ----------- | ---------------------------------------------------- |
-| `environment.development.ts`  | Desarrollo  | `apiUrl: 'http://localhost:3000/api'`, `apiTimeout: 10000` |
-| `environment.ts`              | Producción  | Mismas claves (ajustar `apiUrl` al dominio real)     |
+| Feature | Listado / papelera | Crear | Detalle | Editar |
+|---|---|---|---|---|
+| Impresiones | `/impresiones` | `/impresiones/nueva` | `/impresiones/:slug` | `/impresiones/:slug/editar` |
+| Categorías | `/admin/categories` | `/admin/categories/nueva` | `/admin/categories/:id` | `/admin/categories/:id/editar` |
+| Materiales | `/admin/materials` | `/admin/materials/nuevo` | `/admin/materials/:id` | `/admin/materials/:id/editar` |
+| Variantes | `/admin/print-variants` | `/admin/print-variants/nueva` | `/admin/print-variants/:id` | `/admin/print-variants/:id/editar` |
+| Roles | `/admin/roles` | `/admin/roles/nuevo` | `/admin/roles/:id` | `/admin/roles/:id/editar` |
+| Usuarios | `/admin/users` | `/admin/users/nuevo` | `/admin/users/:id` | `/admin/users/:id/editar` |
 
-> **CORS**: el backend debe permitir el origen `http://localhost:4200`
-> (`CORS_ORIGIN` en el `.env` del backend).
+La papelera se abre desde el listado de cada feature y no tiene una ruta independiente.
 
-## 📁 Estructura del proyecto
+Las features se cargan bajo demanda con `loadChildren`. Las vistas de papelera son accesos separados; no se añaden filtros por estado.
 
-```
-src/
-├── environments/
-│   ├── environment.ts
-│   └── environment.development.ts
-├── app/
-│   ├── core/                        # Servicios singleton, interceptors, modelos, store
-│   │   ├── interceptors/
-│   │   │   ├── error.interceptor.ts     # Errores globales → SweetAlert2
-│   │   │   └── loading.interceptor.ts   # Indicador global de carga
-│   │   ├── models/
-│   │   │   ├── api-response.model.ts    # Envolvente { success, data } / errores API
-│   │   │   └── impresion.model.ts       # Modelo Impresion + payloads
-│   │   ├── services/
-│   │   │   ├── api.service.ts           # Servicio HTTP centralizado (baseUrl, timeout, serialización)
-│   │   │   ├── impresiones.service.ts   # Endpoints del recurso /impresiones
-│   │   │   └── loading.service.ts       # Contador global de peticiones (Signals)
-│   │   └── store/
-│   │       └── impresions.store.ts      # Store global/caché con Signals
-│   ├── shared/                      # Reutilizable y agnóstico de dominio
-│   │   ├── components/
-│   │   │   ├── loader/                  # Spinner global
-│   │   │   ├── empty-state/             # Sin resultados
-│   │   │   ├── error-state/             # Error de API + reintento
-│   │   │   └── not-found/               # Página 404
-│   │   └── utils/
-│   │       ├── alert.util.ts            # SweetAlert2 con tema oscuro
-│   │       ├── custom-validators.ts     # Validadores (URL, número positivo, mensajes)
-│   │       ├── error-message.util.ts    # Traducción de errores a mensajes amigables
-│   │       ├── format.util.ts           # Formato del tiempo de impresión
-│   │       └── placeholder-image.util.ts# Imágenes placeholder SVG deterministas
-│   ├── layouts/
-│   │   └── main-layout/             # Navbar responsive + outlet + footer + loader
-│   ├── features/
-│   │   └── impresions/              # Módulo de impresiones (lazy loaded)
-│   │       ├── components/
-│   │       │   ├── impresion-card/      # Card (imagen, título, precio)
-│   │       │   ├── impresion-grid/      # Grid de cards
-│   │       │   ├── impresion-table/     # Tabla de impresiones
-│   │       │   └── impresion-form/      # Formulario reactivo reutilizable
-│   │       ├── pages/
-│   │       │   ├── impresiones-list/    # Listar
-│   │       │   ├── impresion-detail/    # Detalle (por slug)
-│   │       │   ├── impresion-create/    # Crear
-│   │       │   └── impresion-edit/      # Editar (por slug)
-│   │       └── impresions.routes.ts
-│   ├── app.config.ts                # Providers (router, HttpClient + interceptors)
-│   ├── app.routes.ts                # Rutas raíz con lazy loading
-│   ├── app.spec.ts                  # Tests unitarios
-│   └── app.ts                       # Componente raíz
-├── index.html
-├── main.ts
-└── styles.css
-```
+## API consumida
 
-## 🛣️ Rutas
+Base URL: `${environment.apiUrl}`. Recursos:
 
-| Ruta                          | Descripción                    |
-| ----------------------------- | ------------------------------ |
-| `/impresiones`                | Catálogo (listado)             |
-| `/impresiones/nueva`          | Crear impresión                |
-| `/impresiones/:slug`          | Detalle (identificador: slug)  |
-| `/impresiones/:slug/editar`   | Editar impresión               |
-| `**`                          | Página 404                     |
+| Feature | Endpoint |
+|---|---|
+| Impresiones | `/prints` |
+| Categorías | `/categories` |
+| Materiales | `/materials` |
+| Variantes | `/print-variants` |
+| Roles | `/roles` |
+| Usuarios | `/users` |
 
-Todas las rutas usan **lazy loading** (`loadComponent` / `loadChildren`) y los
-parámetros se reciben como `input()` gracias a `withComponentInputBinding()`.
+Los recursos usan la envolvente `{ success, data }`; `ApiService` desenvuelve `data` y aplica timeout. Los errores se traducen en `error-message.util.ts` y se notifican mediante el interceptor/SweetAlert2.
 
-## 🔌 API consumida
+Las respuestas de prints, categorías y variantes pueden incluir imágenes pobladas. La API no dispone todavía de endpoints de carga o edición de imágenes; los listados muestran un placeholder cuando no hay imagen.
 
-Base URL: `http://localhost:3000/api` (recurso `/impresiones`):
+## Estado y formularios
 
-| Método | Endpoint                         | Uso en la app            |
-| ------ | -------------------------------- | ------------------------ |
-| GET    | `/impresiones`                   | Listado                  |
-| GET    | `/impresiones/slug/:slug`        | Detalle / edición        |
-| POST   | `/impresiones`                   | Crear                    |
-| PATCH  | `/impresiones/:id`               | Actualizar               |
-| PATCH  | `/impresiones/:id/active`        | Activar / desactivar     |
-| PATCH  | `/impresiones/:id/soft-delete`   | Eliminar (borrado lógico)|
+- Cada store sigue el patrón de `ImpresionsStore`: lista, selección, caché, carga, error, CRUD y acciones de estado/soft-delete/restore.
+- Los formularios son componentes propios de cada feature y reciben el registro inicial en modo edición.
+- La lista y la papelera se mantienen como vistas separadas, sin filtros de estado.
+- `ApiService` centraliza las peticiones y la envoltura de respuesta; los interceptores gestionan carga y errores.
 
-Respuestas con envolvente `{ success, data }`, desenvueltas por `ApiService`.
-Errores con `{ success: false, error: { code, message, details? } }`, gestionados
-globalmente por el `errorInterceptor` (SweetAlert2) y traducidos a mensajes amigables.
+## Seguridad
 
-## 🧠 Gestión de estado — `ImpresionsStore`
+Las rutas del frontend no tienen guard de autenticación y el backend tampoco valida identidad ni permisos. **Este panel es solo para desarrollo hasta que se implemente autenticación/autorización en la API**; ocultar enlaces o añadir un guard de frontend no protegería por sí solo los endpoints.
 
-Store global con **Angular Signals** (`signal`, `computed`, `effect`) que actúa como
-**caché**:
-
-- `loadAll()` solo pide el catálogo la primera vez (evita peticiones duplicadas).
-- `loadBySlug()` consulta la caché antes de llamar a la API.
-- Las mutaciones (crear/editar/activar/eliminar) sincronizan la caché en memoria.
-- Estado expuesto: `impresions`, `loading`, `error`, `selectedImpresion`
-  (+ derivados: `total`, `activeImpresions`, `hasError`, `isEmpty`).
-
-## 🎨 Stack
-
-Angular 20 (Standalone Components) · Router · HttpClient · Signals · Reactive Forms ·
-RxJS · TailwindCSS 4 · SweetAlert2 · ngx-skeleton-loader
-
-## 📝 Notas
-
-- **Imágenes**: la API actual no persiste un campo `imagen`. El formulario admite una
-  URL de imagen opcional (validada, preparada para el futuro) y las tarjetas muestran
-  un placeholder SVG determinista generado a partir del slug cuando no hay imagen.
-- **Validaciones del formulario**: `required`, `minLength`, `maxLength`, patrón de URL,
-  precios positivos y valores numéricos, con mensajes accesibles (`role="alert"`,
-  `aria-invalid`, `aria-describedby`).
-- **Manejo de errores**: timeout (10 s), API caída, errores HTTP 4xx/5xx, errores de
-  validación del backend y respuestas inválidas; todas las operaciones usan try/catch
-  y muestran mensajes amigables.
-- **Preparada para crecer**: nuevos módulos (usuarios, reservas, pagos, reviews,
-  favoritos…) se añaden como carpetas bajo `features/` con sus propias rutas lazy.
+> [← Volver al README principal](../README.md)

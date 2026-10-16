@@ -1,12 +1,11 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, computed, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 import { ImpresionStatus } from '../../../../core/models/impresion.model';
 import { ImpresionsStore } from '../../../../core/store/impresions.store';
+import { DetailSkeleton } from '../../../../shared/components/skeleton/detail-skeleton/detail-skeleton';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { confirmAction, showSuccess } from '../../../../shared/utils/alert.util';
-import { formatTiempoImpresion } from '../../../../shared/utils/format.util';
 import { placeholderImage } from '../../../../shared/utils/placeholder-image.util';
 
 const STATUS_LABELS: Record<ImpresionStatus, string> = {
@@ -17,16 +16,16 @@ const STATUS_LABELS: Record<ImpresionStatus, string> = {
 };
 
 const STATUS_CLASSES: Record<ImpresionStatus, string> = {
-  published: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/30',
-  draft: 'bg-amber-500/15 text-amber-400 ring-amber-500/30',
-  archived: 'bg-slate-500/15 text-slate-400 ring-slate-500/30',
-  suspended: 'bg-red-500/15 text-red-400 ring-red-500/30',
+  published: 'badge-success',
+  draft: 'badge-warning',
+  archived: 'badge-muted',
+  suspended: 'badge-danger',
 };
 
 /** Página de detalle de una impresión (ruta identificada por slug). */
 @Component({
   selector: 'app-impresion-detail',
-  imports: [RouterLink, CurrencyPipe, DatePipe, NgxSkeletonLoaderModule, ErrorState],
+  imports: [RouterLink, DatePipe, DetailSkeleton, ErrorState],
   templateUrl: './impresion-detail.html',
 })
 export class ImpresionDetailPage {
@@ -40,8 +39,16 @@ export class ImpresionDetailPage {
 
   protected readonly imageUrl = computed(() => {
     const impresion = this.store.selectedImpresion();
-    return impresion ? (impresion.imagen ?? placeholderImage(impresion.slug, impresion.nombre)) : '';
+    return impresion
+      ? (impresion.images?.find((image) => image.isCover)?.imageUrl
+        ?? impresion.images?.[0]?.imageUrl
+        ?? placeholderImage(impresion.slug, impresion.name))
+      : '';
   });
+
+  protected readonly hasPhoto = computed(
+    () => (this.store.selectedImpresion()?.images?.length ?? 0) > 0,
+  );
 
   protected readonly statusLabel = computed(() => {
     const status = this.store.selectedImpresion()?.status;
@@ -63,8 +70,6 @@ export class ImpresionDetailPage {
     // Limpia la selección al salir de la página
     inject(DestroyRef).onDestroy(() => this.store.clearSelected());
   }
-
-  protected formatTiempo = formatTiempoImpresion;
 
   protected retry(): void {
     this.store.clearError();
@@ -94,7 +99,7 @@ export class ImpresionDetailPage {
 
     const confirmed = await confirmAction({
       title: '¿Eliminar impresión?',
-      text: `"${impresion.nombre}" se eliminará (borrado lógico).`,
+      text: `"${impresion.name}" se eliminará (borrado lógico).`,
       confirmText: 'Sí, eliminar',
     });
     if (!confirmed) return;

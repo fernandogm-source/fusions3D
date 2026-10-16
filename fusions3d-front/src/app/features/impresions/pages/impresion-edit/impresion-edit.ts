@@ -10,31 +10,7 @@ import { ImpresionForm } from '../../components/impresion-form/impresion-form';
 @Component({
   selector: 'app-impresion-edit',
   imports: [ImpresionForm, ErrorState],
-  template: `
-    <div class="mb-8">
-      <h1 class="text-3xl font-extrabold tracking-tight text-slate-100">
-        Editar <span class="text-[#ff6000]">impresión</span>
-      </h1>
-      <p class="mt-1 text-sm text-slate-400">Modifica los datos de la pieza y guarda los cambios.</p>
-    </div>
-
-    @if (store.hasError() && !store.selectedImpresion()) {
-      <app-error-state
-        title="No se ha podido cargar la impresión"
-        [message]="store.error() ?? 'Error desconocido'"
-        (retry)="retry()"
-      />
-    } @else {
-      <app-impresion-form
-        submitLabel="Guardar cambios"
-        [isEdit]="true"
-        [initialValue]="store.selectedImpresion()"
-        [submitting]="submitting()"
-        [cancelUrl]="store.selectedImpresion() ? '/impresiones/' + store.selectedImpresion()!.slug : '/impresiones'"
-        (formSubmit)="onSubmit($event)"
-      />
-    }
-  `,
+  templateUrl: './impresion-edit.html',
 })
 export class ImpresionEditPage {
   /** Slug recibido desde la ruta gracias a withComponentInputBinding */
@@ -66,7 +42,7 @@ export class ImpresionEditPage {
     try {
       const updated = await this.store.update(current._id, payload);
       if (updated) {
-        showSuccess(`"${updated.nombre}" se ha actualizado correctamente.`);
+        showSuccess(`"${updated.name}" se ha actualizado correctamente.`);
         // El backend regenera el slug si cambia el nombre
         void this.router.navigate(['/impresiones', updated.slug]);
       }

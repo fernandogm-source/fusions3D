@@ -1,0 +1,22 @@
+<div class="mb-8">
+  <p class="text-sm font-medium text-brand-light">Catálogo</p>
+  <h1 class="page-title mt-1">Editar impresión</h1>
+  <p class="mt-2 text-sm text-ink-muted">Modifica los datos de la pieza y guarda los cambios.</p>
+</div>
+
+@if (store.hasError() && !store.selectedImpresion()) {
+  <app-error-state
+    title="No se ha podido cargar la impresión"
+    [message]="store.error() ?? 'Error desconocido'"
+    (retry)="retry()"
+  />
+} @else {
+  <app-impresion-form
+    submitLabel="Guardar cambios"
+    [isEdit]="true"
+    [initialValue]="store.selectedImpresion()"
+    [submitting]="submitting()"
+    [cancelUrl]="store.selectedImpresion() ? '/impresiones/' + store.selectedImpresion()!.slug : '/impresiones'"
+    (formSubmit)="onSubmit($event)"
+  />
+}

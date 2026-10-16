@@ -1,13 +1,17 @@
-<div class="flex min-h-screen flex-col bg-slate-950">
-  <app-navbar />
+<div class="min-h-screen bg-base">
+  <app-sidebar [open]="sidebarOpen()" (close)="sidebarOpen.set(false)" />
 
-  <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-    <router-outlet />
-  </main>
+  <div class="flex min-h-screen flex-col lg:pl-72">
+    <app-topbar (menuToggle)="sidebarOpen.set(!sidebarOpen())" />
 
-  <footer class="border-t border-slate-800 py-6 text-center text-sm text-slate-500">
-    Fusions3D © {{ year }} — Objetos impresos en 3D
-  </footer>
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+      <router-outlet />
+    </main>
+
+    <footer class="border-t border-line/70 py-6 text-center text-xs text-ink-faint">
+      Fusions3D © {{ year }} — Objetos impresos en 3D
+    </footer>
+  </div>
 
   <app-loader />
 </div>

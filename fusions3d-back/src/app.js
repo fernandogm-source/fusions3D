@@ -6,6 +6,11 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { connectDB } = require('./config/database');
 const printRoutes = require('./routes/print.routes');
+const categoryRoutes = require('./routes/category.routes');
+const materialRoutes = require('./routes/material.routes');
+const printVariantRoutes = require('./routes/printVariant.routes');
+const roleRoutes = require('./routes/role.routes');
+const userRoutes = require('./routes/user.routes');
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
@@ -30,7 +35,12 @@ app.get('/health', (_req, res) => {
   });
 });
 
-app.use('/api/impresiones', printRoutes);
+app.use('/api/prints', printRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/materials', materialRoutes);
+app.use('/api/print-variants', printVariantRoutes);
+app.use('/api/roles', roleRoutes);
+app.use('/api/users', userRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
