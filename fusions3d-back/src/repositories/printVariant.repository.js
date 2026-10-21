@@ -9,11 +9,11 @@ const POPULATE = [
 
 class PrintVariantRepository {
   async findAll() {
-    return PrintVariant.find({ deletedAt: null }).sort({ name: 1 }).populate(POPULATE).lean();
+    return PrintVariant.find({ deletedAt: null }).sort({ sku: 1 }).populate(POPULATE).lean();
   }
 
   async findSoftDeleted() {
-    return PrintVariant.find({ deletedAt: { $ne: null } }).sort({ name: 1 }).populate(POPULATE).lean();
+    return PrintVariant.find({ deletedAt: { $ne: null } }).sort({ sku: 1 }).populate(POPULATE).lean();
   }
 
   async findById(id) {
@@ -29,7 +29,7 @@ class PrintVariantRepository {
   }
 
   async findByPrintId(printId) {
-    return PrintVariant.find({ printId, deletedAt: null }).sort({ name: 1 }).populate(POPULATE).lean();
+    return PrintVariant.find({ printId, deletedAt: null }).sort({ sku: 1 }).populate(POPULATE).lean();
   }
 
   async create(data) {
@@ -62,7 +62,7 @@ class PrintVariantRepository {
   }
 
   async findByActive(isActive) {
-    return PrintVariant.find({ isActive, deletedAt: null }).sort({ name: 1 }).populate(POPULATE).lean();
+    return PrintVariant.find({ isActive, deletedAt: null }).sort({ sku: 1 }).populate(POPULATE).lean();
   }
 
   async restoreById(id) {

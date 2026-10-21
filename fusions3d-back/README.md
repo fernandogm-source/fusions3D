@@ -60,7 +60,7 @@ La API se sirve en `http://localhost:3000`.
 npm run seed
 ```
 
-El seed inserta o actualiza datos de ejemplo para materiales, categorías, roles, impresiones, variantes, usuarios e imágenes. Cada print lleva una URL de foto pública de Pexels; las categorías usan placeholders. También elimina los placeholders de imágenes de variantes creados por versiones anteriores. Usa upserts y no vacía las colecciones, por lo que puede repetirse.
+El seed inserta o actualiza datos de ejemplo para materiales, categorías, roles, impresiones, variantes, usuarios e imágenes. Cada print lleva una URL de foto pública de Pexels; las categorías usan placeholders. Solo se generan imágenes para impresiones y categorías; las variantes no tienen imágenes. Usa upserts y no vacía las colecciones, por lo que puede repetirse.
 
 En la primera ejecución crea `admin@fusions3d.local`. La contraseña inicial por defecto es `Admin123!`; para cambiarla, define `SEED_ADMIN_PASSWORD` en `.env` antes de sembrar. Las contraseñas de los usuarios de ejemplo también son exclusivamente para desarrollo. Los hashes se guardan con bcrypt.
 
@@ -148,7 +148,7 @@ El borrado lógico aplica la misma cascada. Los dependientes conservan sus docum
 | Print | `name`, `description`, `categoryId`, `slug`, `status`, `isActive`, `deletedAt` |
 | Category | `name`, `slug`, `status`, `isActive`, `deletedAt` |
 | Material | `name`, `isActive`, `deletedAt` |
-| PrintVariant | `printId`, `sku` (generado), `name`, `materialId`, `color`, `salePrice`, `costPrice`, `printTime`, `isActive`, `deletedAt`, `createdAt`, `updatedAt` |
+| PrintVariant | `printId`, `sku` (generado), `materialId`, `color`, `salePrice`, `costPrice`, `printTime`, `isActive`, `deletedAt`, `createdAt`, `updatedAt` |
 | Role | `name`, `isActive`, `deletedAt` |
 | User | `name`, `email`, `password` (hash), `roles`, `addresses`, `phone`, `isActive`, `deletedAt` |
 
@@ -157,7 +157,7 @@ Las imágenes se asocian mediante `entityType` y `entityId`, y se devuelven pobl
 ## Notas importantes
 
 - Los slugs de impresiones y categorías se generan desde el nombre.
-- El `sku` de las variantes se genera automáticamente a partir del print, el material y el color. No se puede enviar ni modificar manualmente; al cambiar alguno de esos datos, el backend lo regenera.
+- Las variantes no tienen nombre personalizado: se identifican por su `sku` y por sus referencias de impresión/material y color. El `sku` se genera automáticamente a partir del print, el material y el color. No se puede enviar ni modificar manualmente; al cambiar alguno de esos datos, el backend lo regenera.
 - Las impresiones requieren una categoría activa; las variantes, una impresión y un material activos; y los roles asignados a usuarios también deben estar activos. Las altas, los cambios de referencia y las reactivaciones fallan con `409 DEPENDENCY_UNAVAILABLE` si falta alguna dependencia.
 - Los listados de impresiones, variantes y usuarios incluyen `dependencyIssues` cuando una referencia está ausente, eliminada o inactiva. Es un dato calculado para la respuesta, no un campo persistido en MongoDB.
 - Los `ref` de Mongoose guardan referencias `ObjectId`, pero MongoDB no impone claves foráneas. Las comprobaciones se realizan en los servicios de la API; `dependencyIssues` permite identificar relaciones inválidas ya existentes.
@@ -166,5 +166,16 @@ Las imágenes se asocian mediante `entityType` y `entityId`, y se devuelven pobl
 - **No hay autenticación ni autorización**: todas las rutas, incluidas las de usuarios y roles, están expuestas. No desplegar públicamente hasta añadir controles de acceso.
 - `POSTMAN.md` contiene ejemplos de las rutas actuales. No se distribuye una colección JSON importable de Postman.
 - El backend no tiene tests configurados.
+
+### Migración local de variantes
+
+El campo `name` se elimina de los documentos existentes de `print_variants` con una migración acotada a MongoDB local (`localhost`, base `fusions3d`). Primero ejecuta una simulación; para aplicar el `$unset` de `name`, usa `--apply`:
+
+```bash
+npm run migrate:remove-variant-name
+npm run migrate:remove-variant-name -- --apply
+```
+
+La migración no modifica otras colecciones ni elimina documentos.
 
 > [← Volver al README principal](../README.md)

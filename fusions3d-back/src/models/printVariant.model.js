@@ -16,13 +16,6 @@ const printVariantSchema = new mongoose.Schema(
       uppercase: true,
       maxlength: 50
     },
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-      minlength: 1,
-      maxlength: 150
-    },
     materialId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Material',

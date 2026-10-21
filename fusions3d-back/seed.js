@@ -65,12 +65,12 @@ const printData = [
 ];
 
 const variantData = [
-  { printSlug: "soporte-para-movil", sku: "SOPMOV-PLA-NEG", name: "Estándar - PLA Negro", materialName: "PLA", color: "Negro", salePrice: 12.5, costPrice: 4.2, printTime: 180 },
-  { printSlug: "soporte-para-movil", sku: "SOPMOV-PET-AZU", name: "Resistente - PETG Azul", materialName: "PETG", color: "Azul", salePrice: 15.9, costPrice: 5.3, printTime: 210 },
-  { printSlug: "maceta-geometrica", sku: "MACGEO-PETG-BLA", name: "Estándar - PETG Blanco", materialName: "PETG", color: "Blanco", salePrice: 18.9, costPrice: 6.75, printTime: 360 },
-  { printSlug: "organizador-de-cables", sku: "ORGCAB-PLA-GRI", name: "Estándar - PLA Gris", materialName: "PLA", color: "Gris", salePrice: 8.5, costPrice: 2.3, printTime: 120 },
-  { printSlug: "figura-decorativa", sku: "FIGDEC-RES-GRI", name: "Estándar - Resin Gris", materialName: "Resin", color: "Gris", salePrice: 24.9, costPrice: 9.8, printTime: 540 },
-  { printSlug: "caja-para-electronica", sku: "CAJELE-ABS-NEG", name: "Estándar - ABS Negro", materialName: "ABS", color: "Negro", salePrice: 16.75, costPrice: 5.6, printTime: 300 },
+  { printSlug: "soporte-para-movil", sku: "SOPMOV-PLA-NEG", materialName: "PLA", color: "Negro", salePrice: 12.5, costPrice: 4.2, printTime: 180 },
+  { printSlug: "soporte-para-movil", sku: "SOPMOV-PET-AZU", materialName: "PETG", color: "Azul", salePrice: 15.9, costPrice: 5.3, printTime: 210 },
+  { printSlug: "maceta-geometrica", sku: "MACGEO-PETG-BLA", materialName: "PETG", color: "Blanco", salePrice: 18.9, costPrice: 6.75, printTime: 360 },
+  { printSlug: "organizador-de-cables", sku: "ORGCAB-PLA-GRI", materialName: "PLA", color: "Gris", salePrice: 8.5, costPrice: 2.3, printTime: 120 },
+  { printSlug: "figura-decorativa", sku: "FIGDEC-RES-GRI", materialName: "Resin", color: "Gris", salePrice: 24.9, costPrice: 9.8, printTime: 540 },
+  { printSlug: "caja-para-electronica", sku: "CAJELE-ABS-NEG", materialName: "ABS", color: "Negro", salePrice: 16.75, costPrice: 5.6, printTime: 300 },
 ].map((variant) => ({ ...variant, isActive: true, deletedAt: null }));
 
 const userData = [
@@ -159,13 +159,11 @@ async function seed() {
     }
     console.log(`${printData.length} impresiones preparadas.`);
 
-    const variantBySku = {};
     for (const variant of variantData) {
-      const saved = await upsert(PrintVariant, { sku: variant.sku }, {
+      await upsert(PrintVariant, { sku: variant.sku }, {
         printId: printBySlug[variant.printSlug],
         materialId: materialByName[variant.materialName],
         sku: variant.sku,
-        name: variant.name,
         color: variant.color,
         salePrice: variant.salePrice,
         costPrice: variant.costPrice,
@@ -173,7 +171,6 @@ async function seed() {
         isActive: variant.isActive,
         deletedAt: variant.deletedAt,
       });
-      variantBySku[variant.sku] = saved._id;
     }
     console.log(`${variantData.length} variantes preparadas.`);
 
@@ -217,14 +214,6 @@ async function seed() {
         position: index,
       })),
     ];
-
-    for (const variant of variantData) {
-      await Image.deleteOne({
-        entityType: "PrintVariant",
-        entityId: variantBySku[variant.sku],
-        imageUrl: `https://placehold.co/800x600/ff6000/ffffff?text=${encodeURIComponent(variant.name)}`,
-      });
-    }
 
     for (const image of imageRecords) {
       const imageUrl = image.imageUrl || `https://placehold.co/800x600/ff6000/ffffff?text=${encodeURIComponent(image.label)}`;

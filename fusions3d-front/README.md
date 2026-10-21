@@ -113,7 +113,7 @@ Las impresiones y categorías pueden incluir imágenes pobladas; las variantes n
 ## Estado y formularios
 
 - Los stores usan Signals para lista, selección, caché, carga, error y operaciones CRUD. `DependencyRefreshStore` notifica cambios en categorías, impresiones, materiales y roles; los stores de impresiones, variantes y usuarios actualizan sus listados relacionados sin recargar la página.
-- Los formularios son componentes propios de cada feature y reciben el registro inicial en modo edición.
+- Los formularios son componentes propios de cada feature y reciben el registro inicial en modo edición. Las variantes no tienen nombre personalizado: se identifican por SKU y muestran impresión, material y color.
 - La lista y la papelera se mantienen como vistas separadas, sin filtros de estado.
 - `ApiService` centraliza las peticiones y la envoltura de respuesta; los interceptores gestionan carga y errores.
 - Los listados de impresiones, variantes y usuarios muestran avisos `dependencyIssues` cuando una referencia está ausente, eliminada o inactiva. La API devuelve `409 DEPENDENCY_UNAVAILABLE` si una operación requiere una dependencia que no está disponible; desde edición, la interfaz vuelve al listado y muestra el mensaje.

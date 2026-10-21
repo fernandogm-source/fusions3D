@@ -3,7 +3,6 @@ const { objectId } = require('./common.schema');
 
 const createPrintVariantSchema = z.object({
   printId: objectId('printId'),
-  name: z.string().min(1, 'El nombre es obligatorio').max(150, 'El nombre no puede superar los 150 caracteres'),
   materialId: objectId('materialId'),
   color: z.string().min(1, 'El color es obligatorio').max(100, 'El color no puede superar los 100 caracteres'),
   salePrice: z.number().min(0, 'El precio de venta no puede ser negativo'),
@@ -13,7 +12,6 @@ const createPrintVariantSchema = z.object({
 
 const updatePrintVariantSchema = z.object({
   printId: objectId('printId').optional(),
-  name: z.string().min(1).max(150).optional(),
   materialId: objectId('materialId').optional(),
   color: z.string().min(1).max(100).optional(),
   salePrice: z.number().min(0).optional(),

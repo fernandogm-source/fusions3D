@@ -12,7 +12,7 @@ Aplicación full-stack para gestionar un catálogo de piezas impresas en 3D. El 
 - Gestión de impresiones, categorías, materiales, variantes, roles y usuarios.
 - Alta y edición de los recursos; las impresiones también tienen vista de detalle.
 - Activación/desactivación y borrado lógico con restauración desde la papelera. Desactivar o borrar un padre desactiva sus dependientes.
-- Slugs para impresiones y categorías; SKU para variantes.
+- Slugs para impresiones y categorías; SKU generado como identificador de variantes (sin nombre personalizado).
 - Imágenes asociadas a impresiones y categorías se devuelven al poblar los recursos. Se conservan al desactivar o borrar lógicamente el elemento. **No existe una API para subir o administrar imágenes.**
 - Los listados de impresiones, variantes y usuarios pueden devolver `dependencyIssues` cuando una referencia no existe, está borrada o inactiva.
 

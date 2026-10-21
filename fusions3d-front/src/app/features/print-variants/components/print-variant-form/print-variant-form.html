@@ -6,7 +6,6 @@
     } @else {
       <p class="self-end text-sm text-ink-muted">El SKU se generará automáticamente.</p>
     }
-    <div class="flex flex-col gap-2"><label for="variant-name" class="label">Nombre *</label><input id="variant-name" formControlName="name" maxlength="150" placeholder="Estándar - PLA Negro" class="input" /></div>
     <div class="flex flex-col gap-2"><label for="variant-material" class="label">Material *</label><select id="variant-material" formControlName="materialId" class="input"><option value="">Selecciona un material</option>@for (material of materials(); track material._id) { <option [value]="material._id">{{ material.name }}</option> }</select></div>
     <div class="flex flex-col gap-2"><label for="variant-color" class="label">Color *</label><input id="variant-color" formControlName="color" maxlength="100" placeholder="Negro" class="input" /></div>
     <div class="flex flex-col gap-2"><label for="variant-sale" class="label">Precio de venta *</label><input id="variant-sale" type="number" min="0" step="0.01" formControlName="salePrice" class="input" /></div>

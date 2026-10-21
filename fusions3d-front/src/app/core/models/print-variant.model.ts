@@ -11,7 +11,6 @@ export interface PrintVariant {
   _id: string;
   printId: string | VariantReference;
   sku: string;
-  name: string;
   materialId: string | VariantReference;
   color: string;
   salePrice: number;
@@ -26,7 +25,6 @@ export interface PrintVariant {
 
 export interface PrintVariantPayload {
   printId: string;
-  name: string;
   materialId: string;
   color: string;
   salePrice: number;

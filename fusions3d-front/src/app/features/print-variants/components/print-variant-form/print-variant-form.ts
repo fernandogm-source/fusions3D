@@ -23,7 +23,7 @@ export class PrintVariantForm {
   protected readonly materials = signal<Material[]>([]);
   protected readonly form = this.fb.group({
     printId: ['', Validators.required],
-    name: ['', [Validators.required, Validators.maxLength(150)]], materialId: ['', Validators.required],
+    materialId: ['', Validators.required],
     color: ['', [Validators.required, Validators.maxLength(100)]], salePrice: [0, [Validators.required, Validators.min(0)]],
     costPrice: [0, [Validators.required, Validators.min(0)]], printTime: [0, [Validators.required, Validators.min(0)]],
   });
@@ -35,7 +35,7 @@ export class PrintVariantForm {
     effect(() => {
       const value = this.initialValue();
       if (value) this.form.patchValue({
-        printId: this.referenceId(value.printId), name: value.name,
+        printId: this.referenceId(value.printId),
         materialId: this.referenceId(value.materialId), color: value.color,
         salePrice: value.salePrice, costPrice: value.costPrice, printTime: value.printTime,
       });
@@ -46,6 +46,6 @@ export class PrintVariantForm {
   protected submit(): void {
     if (this.form.invalid || this.submitting()) { this.form.markAllAsTouched(); return; }
     const value = this.form.getRawValue();
-    this.formSubmit.emit({ ...value, name: value.name.trim(), color: value.color.trim() });
+    this.formSubmit.emit({ ...value, color: value.color.trim() });
   }
 }

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
-    "seed": "node seed.js"
+    "seed": "node seed.js",
+    "migrate:remove-variant-name": "node scripts/remove-print-variant-name.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -85,7 +85,6 @@ Content-Type: application/json
 ```json
 {
   "printId": "<PRINT_ID>",
-  "name": "Estándar - PLA Negro",
   "materialId": "<MATERIAL_ID>",
   "color": "Negro",
   "salePrice": 12.5,
@@ -94,7 +93,7 @@ Content-Type: application/json
 }
 ```
 
-El `sku` se genera automáticamente a partir del print, el material y el color. No debe enviarse en la creación ni en la actualización; si cambia alguno de esos datos, el backend lo vuelve a generar.
+Las variantes no tienen nombre personalizado: se muestran mediante SKU, impresión, material y color. El `sku` se genera automáticamente a partir del print, el material y el color. No debe enviarse en la creación ni en la actualización; si cambia alguno de esos datos, el backend lo vuelve a generar.
 
 ## Consultar recursos
 
