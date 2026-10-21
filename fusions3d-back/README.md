@@ -25,8 +25,8 @@ src/
 ├── repositories/ # Consultas Mongoose
 ├── routes/       # Rutas Express por recurso
 ├── schemas/      # Esquemas Zod por recurso
-├── services/     # Reglas de negocio
-├── utils/        # AppError y generación de slugs
+├── services/     # Reglas de negocio y cascadas de dependencias
+├── utils/        # Errores, slugs, SKU y avisos de dependencias
 └── app.js
 ```
 
@@ -60,7 +60,7 @@ La API se sirve en `http://localhost:3000`.
 npm run seed
 ```
 
-El seed inserta o actualiza datos de ejemplo para materiales, categorías, roles, impresiones, variantes, usuarios e imágenes. Cada print lleva una URL de foto pública de Pexels; categorías y variantes usan placeholders. Usa upserts y **no vacía ni borra las colecciones**, por lo que puede repetirse.
+El seed inserta o actualiza datos de ejemplo para materiales, categorías, roles, impresiones, variantes, usuarios e imágenes. Cada print lleva una URL de foto pública de Pexels; las categorías usan placeholders. También elimina los placeholders de imágenes de variantes creados por versiones anteriores. Usa upserts y no vacía las colecciones, por lo que puede repetirse.
 
 En la primera ejecución crea `admin@fusions3d.local`. La contraseña inicial por defecto es `Admin123!`; para cambiarla, define `SEED_ADMIN_PASSWORD` en `.env` antes de sembrar. Las contraseñas de los usuarios de ejemplo también son exclusivamente para desarrollo. Los hashes se guardan con bcrypt.
 
@@ -86,6 +86,22 @@ Error:
 
 Los errores de validación incluyen `error.details`. En desarrollo, el middleware añade el stack trace.
 
+Las operaciones que requieren una referencia disponible pueden responder `409 DEPENDENCY_UNAVAILABLE` si el documento relacionado no existe o está inactivo/eliminado. Los listados de impresiones, variantes y usuarios incluyen `dependencyIssues` por registro cuando detectan referencias inválidas.
+
+Ejemplo del campo calculado en una impresión:
+
+```json
+{
+  "dependencyIssues": [
+    {
+      "field": "categoryId",
+      "message": "La categoría asignada está desactivada",
+      "referenceId": "<CATEGORY_ID>"
+    }
+  ]
+}
+```
+
 ## Endpoints
 
 Base URL: `http://localhost:3000`. Todos los recursos de negocio usan el prefijo `/api`.
@@ -106,7 +122,14 @@ Base URL: `http://localhost:3000`. Todos los recursos de negocio usan el prefijo
 | PATCH | `/api/{resource}/:id/soft-delete` | Borrado lógico |
 | PATCH | `/api/{resource}/:id/restore` | Restaurar |
 
-`{resource}` puede ser `prints`, `categories`, `materials`, `print-variants`, `roles` o `users`. El endpoint `/:id/active` funciona como toggle y no requiere un body para las rutas actuales.
+`{resource}` puede ser `prints`, `categories`, `materials`, `print-variants`, `roles` o `users`. El endpoint `/:id/active` alterna el estado y no requiere body. Al desactivar un padre, sus dependientes también quedan inactivos:
+
+- Categoría → impresiones → variantes.
+- Impresión → variantes.
+- Material → variantes.
+- Rol → usuarios asignados.
+
+El borrado lógico aplica la misma cascada. Los dependientes conservan sus documentos y referencias; no se eliminan ni se marcan como borrados. Reactivar o restaurar al padre no reactiva automáticamente a los hijos. Las imágenes de impresiones y categorías se conservan y siguen poblándose, incluso si el padre está inactivo o en la papelera.
 
 ### Rutas adicionales
 
@@ -125,15 +148,19 @@ Base URL: `http://localhost:3000`. Todos los recursos de negocio usan el prefijo
 | Print | `name`, `description`, `categoryId`, `slug`, `status`, `isActive`, `deletedAt` |
 | Category | `name`, `slug`, `status`, `isActive`, `deletedAt` |
 | Material | `name`, `isActive`, `deletedAt` |
-| PrintVariant | `printId`, `sku`, `name`, `materialId`, `color`, `salePrice`, `costPrice`, `printTime`, `isActive`, `deletedAt` |
+| PrintVariant | `printId`, `sku` (generado), `name`, `materialId`, `color`, `salePrice`, `costPrice`, `printTime`, `isActive`, `deletedAt`, `createdAt`, `updatedAt` |
 | Role | `name`, `isActive`, `deletedAt` |
 | User | `name`, `email`, `password` (hash), `roles`, `addresses`, `phone`, `isActive`, `deletedAt` |
 
-Las imágenes se asocian mediante `entityType` y `entityId`, y se devuelven pobladas en impresiones, categorías y variantes. No hay rutas para modificarlas todavía.
+Las imágenes se asocian mediante `entityType` y `entityId`, y se devuelven pobladas en impresiones y categorías. Las variantes no tienen imágenes. No hay rutas para modificarlas todavía.
 
 ## Notas importantes
 
 - Los slugs de impresiones y categorías se generan desde el nombre.
+- El `sku` de las variantes se genera automáticamente a partir del print, el material y el color. No se puede enviar ni modificar manualmente; al cambiar alguno de esos datos, el backend lo regenera.
+- Las impresiones requieren una categoría activa; las variantes, una impresión y un material activos; y los roles asignados a usuarios también deben estar activos. Las altas, los cambios de referencia y las reactivaciones fallan con `409 DEPENDENCY_UNAVAILABLE` si falta alguna dependencia.
+- Los listados de impresiones, variantes y usuarios incluyen `dependencyIssues` cuando una referencia está ausente, eliminada o inactiva. Es un dato calculado para la respuesta, no un campo persistido en MongoDB.
+- Los `ref` de Mongoose guardan referencias `ObjectId`, pero MongoDB no impone claves foráneas. Las comprobaciones se realizan en los servicios de la API; `dependencyIssues` permite identificar relaciones inválidas ya existentes.
 - El borrado es lógico (`deletedAt`) y no elimina documentos físicamente.
 - Las contraseñas de usuario se hashean con bcrypt y no se incluyen en las consultas de lectura.
 - **No hay autenticación ni autorización**: todas las rutas, incluidas las de usuarios y roles, están expuestas. No desplegar públicamente hasta añadir controles de acceso.

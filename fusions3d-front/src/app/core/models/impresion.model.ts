@@ -1,5 +1,6 @@
 import { PrintCategory } from './category.model';
 import { PrintImage } from './image.model';
+import { DependencyIssue } from './dependency-issue.model';
 
 export type ImpresionStatus = 'published' | 'draft' | 'archived' | 'suspended';
 
@@ -19,6 +20,7 @@ export interface Impresion {
   createdAt: string;
   updatedAt: string | null;
   deletedAt: string | null;
+  dependencyIssues?: DependencyIssue[];
 }
 
 /**

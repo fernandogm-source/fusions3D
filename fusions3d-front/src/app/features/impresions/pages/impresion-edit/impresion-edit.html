@@ -16,7 +16,6 @@
     [isEdit]="true"
     [initialValue]="store.selectedImpresion()"
     [submitting]="submitting()"
-    [cancelUrl]="store.selectedImpresion() ? '/impresiones/' + store.selectedImpresion()!.slug : '/impresiones'"
     (formSubmit)="onSubmit($event)"
   />
 }

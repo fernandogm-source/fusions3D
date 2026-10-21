@@ -12,5 +12,5 @@ export class RoleEditPage {
   protected readonly role = this.store.selected; protected readonly saving = signal(false);
   constructor() { effect(() => { const id = this.id(); untracked(() => void this.store.loadById(id)); }); }
   protected retry(): void { void this.store.loadById(this.id()); }
-  protected async submit(payload: RolePayload): Promise<void> { this.saving.set(true); try { const role = await this.store.update(this.id(), payload); if (role) { showSuccess('Rol actualizado.'); void this.router.navigate(['/admin/roles', role._id]); } } finally { this.saving.set(false); } }
+  protected async submit(payload: RolePayload): Promise<void> { this.saving.set(true); try { const role = await this.store.update(this.id(), payload); if (role) { showSuccess('Rol actualizado.'); void this.router.navigate(['/admin/roles']); } } finally { this.saving.set(false); } }
 }

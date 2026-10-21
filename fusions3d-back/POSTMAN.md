@@ -85,7 +85,6 @@ Content-Type: application/json
 ```json
 {
   "printId": "<PRINT_ID>",
-  "sku": "SOPMOV-PLA-NEG",
   "name": "Estándar - PLA Negro",
   "materialId": "<MATERIAL_ID>",
   "color": "Negro",
@@ -94,6 +93,8 @@ Content-Type: application/json
   "printTime": 180
 }
 ```
+
+El `sku` se genera automáticamente a partir del print, el material y el color. No debe enviarse en la creación ni en la actualización; si cambia alguno de esos datos, el backend lo vuelve a generar.
 
 ## Consultar recursos
 
@@ -160,6 +161,20 @@ GET   {{baseUrl}}/api/prints/soft-deleted
 
 Los mismos sufijos (`/soft-delete`, `/restore`, `/soft-deleted`) están disponibles en los demás recursos.
 
+Desactivar un recurso padre también desactiva sus dependientes: categoría → impresiones y variantes; impresión o material → variantes; rol → usuarios asignados. El borrado lógico aplica la misma cascada. Los hijos no se borran y no se reactivan automáticamente cuando se restaura o activa el padre. Las imágenes asociadas a impresiones y categorías se conservan.
+
+Los listados de impresiones, variantes y usuarios pueden incluir `dependencyIssues` en cada registro para señalar una referencia ausente, eliminada o inactiva.
+
+Ejemplo de referencia inactiva en la respuesta de un listado:
+
+```json
+{
+  "field": "categoryId",
+  "message": "La categoría asignada está desactivada",
+  "referenceId": "<CATEGORY_ID>"
+}
+```
+
 ## Usuarios
 
 Crear usuario requiere nombre, email y contraseña de al menos ocho caracteres:
@@ -213,7 +228,7 @@ Error:
 
 - `400`: datos inválidos o estado no permitido.
 - `404`: recurso o ruta no encontrada.
-- `409`: conflicto con un valor único ya existente.
+- `409`: conflicto con un valor único ya existente o `DEPENDENCY_UNAVAILABLE` cuando una operación requiere una referencia borrada/inactiva.
 - `500`: error interno.
 
 ## Seguridad

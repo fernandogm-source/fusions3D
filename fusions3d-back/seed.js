@@ -216,13 +216,15 @@ async function seed() {
         imageUrl: print.imageUrl,
         position: index,
       })),
-      ...variantData.map((variant, index) => ({
+    ];
+
+    for (const variant of variantData) {
+      await Image.deleteOne({
         entityType: "PrintVariant",
         entityId: variantBySku[variant.sku],
-        label: variant.name,
-        position: index,
-      })),
-    ];
+        imageUrl: `https://placehold.co/800x600/ff6000/ffffff?text=${encodeURIComponent(variant.name)}`,
+      });
+    }
 
     for (const image of imageRecords) {
       const imageUrl = image.imageUrl || `https://placehold.co/800x600/ff6000/ffffff?text=${encodeURIComponent(image.label)}`;

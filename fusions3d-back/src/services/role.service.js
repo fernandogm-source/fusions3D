@@ -1,5 +1,6 @@
 const repository = require('../repositories/role.repository');
 const { AppError } = require('../utils/app.error');
+const dependencyCascade = require('./dependency-cascade.service');
 
 class RoleService {
   async getAll() {
@@ -49,7 +50,12 @@ class RoleService {
       throw new AppError('No se puede activar un rol eliminado', 400, 'ROLE_DELETED');
     }
 
-    return repository.setActiveById(id, !role.isActive);
+    const newActive = !role.isActive;
+    if (!newActive) {
+      await dependencyCascade.deactivateRoleDependents(id);
+    }
+
+    return repository.setActiveById(id, newActive);
   }
 
   async softDelete(id) {
@@ -63,6 +69,7 @@ class RoleService {
       throw new AppError('El rol ya está eliminado', 409, 'ALREADY_DELETED');
     }
 
+    await dependencyCascade.deactivateRoleDependents(id);
     const role = await repository.softDelete(id);
 
     return { message: 'Rol eliminado correctamente', data: role };

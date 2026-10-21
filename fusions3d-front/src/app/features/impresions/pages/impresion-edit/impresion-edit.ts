@@ -3,18 +3,18 @@ import { Router } from '@angular/router';
 import { ImpresionCreatePayload } from '../../../../core/models/impresion.model';
 import { ImpresionsStore } from '../../../../core/store/impresions.store';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
-import { showSuccess } from '../../../../shared/utils/alert.util';
+import { showError, showSuccess } from '../../../../shared/utils/alert.util';
 import { ImpresionForm } from '../../components/impresion-form/impresion-form';
 
-/** Página de edición de una impresión existente (identificada por slug). */
+/** Página de edición de una impresión existente (identificada por ID). */
 @Component({
   selector: 'app-impresion-edit',
   imports: [ImpresionForm, ErrorState],
   templateUrl: './impresion-edit.html',
 })
 export class ImpresionEditPage {
-  /** Slug recibido desde la ruta gracias a withComponentInputBinding */
-  readonly slug = input.required<string>();
+  /** ID recibido desde la ruta gracias a withComponentInputBinding */
+  readonly id = input.required<string>();
 
   protected readonly store = inject(ImpresionsStore);
   private readonly router = inject(Router);
@@ -23,14 +23,14 @@ export class ImpresionEditPage {
 
   constructor() {
     effect(() => {
-      const slug = this.slug();
-      untracked(() => void this.store.loadBySlug(slug));
+      const id = this.id();
+      untracked(() => void this.store.loadById(id));
     });
   }
 
   protected retry(): void {
     this.store.clearError();
-    void this.store.loadBySlug(this.slug());
+    void this.store.loadById(this.id());
   }
 
   protected async onSubmit(payload: ImpresionCreatePayload): Promise<void> {
@@ -44,7 +44,13 @@ export class ImpresionEditPage {
       if (updated) {
         showSuccess(`"${updated.name}" se ha actualizado correctamente.`);
         // El backend regenera el slug si cambia el nombre
-        void this.router.navigate(['/impresiones', updated.slug]);
+        void this.router.navigate(['/impresiones']);
+      } else if (this.store.dependencyUnavailable()) {
+        const message = this.store.error() ?? 'La categoría asignada ya no está disponible.';
+        this.store.clearError();
+        await this.store.loadAll(true);
+        await this.router.navigate(['/impresiones']);
+        showError(message, 'Dependencia no disponible');
       }
     } finally {
       this.submitting.set(false);

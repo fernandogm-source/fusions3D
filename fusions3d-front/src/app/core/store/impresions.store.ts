@@ -1,4 +1,4 @@
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { getErrorMessage } from '../../shared/utils/error-message.util';
 import {
@@ -7,6 +7,8 @@ import {
   ImpresionUpdatePayload,
 } from '../models/impresion.model';
 import { ImpresionesService } from '../services/impresiones.service';
+import { DependencyRefreshStore } from './dependency-refresh.store';
+import { isDependencyUnavailable } from '../../shared/utils/error-message.util';
 
 /**
  * Store global de impresiones basado en Angular Signals.
@@ -21,6 +23,7 @@ import { ImpresionesService } from '../services/impresiones.service';
 @Injectable({ providedIn: 'root' })
 export class ImpresionsStore {
   private readonly impresionesService = inject(ImpresionesService);
+  private readonly dependencyRefresh = inject(DependencyRefreshStore);
 
   // ---------- Estado interno (writable signals) ----------
   private readonly _impresions = signal<Impresion[]>([]);
@@ -30,6 +33,9 @@ export class ImpresionsStore {
   /** Indica si el catálogo ya se ha cargado al menos una vez (caché) */
   private readonly _loaded = signal<boolean>(false);
   private readonly _trashView = signal(false);
+  private _refreshPending = false;
+  private _pendingTrashView: boolean | null = null;
+  private readonly _dependencyUnavailable = signal(false);
 
   // ---------- Estado público (readonly signals) ----------
   readonly impresions = this._impresions.asReadonly();
@@ -38,6 +44,7 @@ export class ImpresionsStore {
   readonly selectedImpresion = this._selectedImpresion.asReadonly();
   readonly loaded = this._loaded.asReadonly();
   readonly trashView = this._trashView.asReadonly();
+  readonly dependencyUnavailable = this._dependencyUnavailable.asReadonly();
 
   // ---------- Estado derivado (computed) ----------
   readonly total = computed(() => this._impresions().length);
@@ -60,6 +67,15 @@ export class ImpresionsStore {
         this._selectedImpresion.set(null);
       }
     });
+
+    effect(() => {
+      const revision = this.dependencyRefresh.categoryRevision();
+      if (revision > 0) {
+        untracked(() => {
+          if (this._loaded()) void this.loadView(this._trashView(), true);
+        });
+      }
+    });
   }
 
   /**
@@ -75,7 +91,14 @@ export class ImpresionsStore {
   }
 
   private async loadView(trashView: boolean, force: boolean): Promise<void> {
-    if (this._loading() || (this._loaded() && this._trashView() === trashView && !force)) return;
+    if (this._loading()) {
+      if (force) {
+        this._refreshPending = true;
+        this._pendingTrashView = trashView;
+      }
+      return;
+    }
+    if (this._loaded() && this._trashView() === trashView && !force) return;
 
     this._trashView.set(trashView);
     this._loading.set(true);
@@ -90,7 +113,7 @@ export class ImpresionsStore {
     } catch (error) {
       this._error.set(getErrorMessage(error));
     } finally {
-      this._loading.set(false);
+      this.finishLoad();
     }
   }
 
@@ -117,7 +140,34 @@ export class ImpresionsStore {
     } catch (error) {
       this._error.set(getErrorMessage(error));
     } finally {
-      this._loading.set(false);
+      this.finishLoad();
+    }
+  }
+
+  /**
+   * Carga una impresión por su ID. Consulta primero la caché global
+   * para evitar peticiones duplicadas.
+   */
+  async loadById(id: string): Promise<void> {
+    const cached = this._impresions().find((i) => i._id === id);
+    if (cached) {
+      this._selectedImpresion.set(cached);
+      this._error.set(null);
+      return;
+    }
+
+    this._loading.set(true);
+    this._error.set(null);
+    this._selectedImpresion.set(null);
+
+    try {
+      const data = await firstValueFrom(this.impresionesService.getById(id));
+      this._selectedImpresion.set(data);
+      this.upsertCache(data);
+    } catch (error) {
+      this._error.set(getErrorMessage(error));
+    } finally {
+      this.finishLoad();
     }
   }
 
@@ -127,6 +177,7 @@ export class ImpresionsStore {
 
   clearError(): void {
     this._error.set(null);
+    this._dependencyUnavailable.set(false);
   }
 
   /** Crea una impresión y la añade a la caché. Devuelve null si falla. */
@@ -136,9 +187,11 @@ export class ImpresionsStore {
     try {
       const created = await firstValueFrom(this.impresionesService.create(payload));
       this._impresions.update((list) => [...list, created]);
+      this.dependencyRefresh.notify('print');
       return created;
     } catch (error) {
       this._error.set(getErrorMessage(error));
+      this._dependencyUnavailable.set(isDependencyUnavailable(error));
       return null;
     }
   }
@@ -146,14 +199,17 @@ export class ImpresionsStore {
   /** Actualiza una impresión y sincroniza la caché. Devuelve null si falla. */
   async update(id: string, payload: ImpresionUpdatePayload): Promise<Impresion | null> {
     this._error.set(null);
+    this._dependencyUnavailable.set(false);
 
     try {
       const updated = await firstValueFrom(this.impresionesService.update(id, payload));
       this._impresions.update((list) => list.map((i) => (i._id === id ? updated : i)));
       this._selectedImpresion.update((sel) => (sel?._id === id ? updated : sel));
+      this.dependencyRefresh.notify('print');
       return updated;
     } catch (error) {
       this._error.set(getErrorMessage(error));
+      this._dependencyUnavailable.set(isDependencyUnavailable(error));
       return null;
     }
   }
@@ -168,6 +224,7 @@ export class ImpresionsStore {
       const updated = await firstValueFrom(this.impresionesService.toggleActive(id, !current.isActive));
       this._impresions.update((list) => list.map((i) => (i._id === id ? updated : i)));
       this._selectedImpresion.update((sel) => (sel?._id === id ? updated : sel));
+      this.dependencyRefresh.notify('print');
       return true;
     } catch (error) {
       this._error.set(getErrorMessage(error));
@@ -182,6 +239,7 @@ export class ImpresionsStore {
     try {
       await firstValueFrom(this.impresionesService.softDelete(id));
       this._impresions.update((list) => list.filter((i) => i._id !== id));
+      this.dependencyRefresh.notify('print');
       return true;
     } catch (error) {
       this._error.set(getErrorMessage(error));
@@ -194,6 +252,7 @@ export class ImpresionsStore {
     try {
       await firstValueFrom(this.impresionesService.restore(id));
       await (this._trashView() ? this.loadSoftDeleted(true) : this.loadAll(true));
+      this.dependencyRefresh.notify('print');
       return true;
     } catch (error) {
       this._error.set(getErrorMessage(error));
@@ -208,5 +267,15 @@ export class ImpresionsStore {
         ? list.map((i) => (i._id === impresion._id ? impresion : i))
         : [...list, impresion],
     );
+  }
+
+  private finishLoad(): void {
+    this._loading.set(false);
+    if (!this._refreshPending) return;
+
+    const trashView = this._pendingTrashView ?? this._trashView();
+    this._refreshPending = false;
+    this._pendingTrashView = null;
+    void this.loadView(trashView, true);
   }
 }

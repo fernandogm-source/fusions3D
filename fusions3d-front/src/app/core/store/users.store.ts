@@ -1,24 +1,30 @@
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { getErrorMessage } from '../../shared/utils/error-message.util';
+import { getErrorMessage, isDependencyUnavailable } from '../../shared/utils/error-message.util';
 import { User, UserPayload, UserUpdatePayload } from '../models/user.model';
 import { UsersService } from '../services/users.service';
+import { DependencyRefreshStore } from './dependency-refresh.store';
 
 @Injectable({ providedIn: 'root' })
 export class UsersStore {
   private readonly service = inject(UsersService);
+  private readonly dependencyRefresh = inject(DependencyRefreshStore);
   private readonly _items = signal<User[]>([]);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
   private readonly _trashView = signal(false);
   private readonly _selected = signal<User | null>(null);
   private readonly _loaded = signal(false);
+  private _refreshPending = false;
+  private _pendingTrashView: boolean | null = null;
+  private readonly _dependencyUnavailable = signal(false);
   readonly items = this._items.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
   readonly trashView = this._trashView.asReadonly();
   readonly selected = this._selected.asReadonly();
   readonly loaded = this._loaded.asReadonly();
+  readonly dependencyUnavailable = this._dependencyUnavailable.asReadonly();
   readonly total = computed(() => this._items().length);
   readonly activeItems = computed(() => this._items().filter((item) => item.isActive));
   readonly hasError = computed(() => this._error() !== null);
@@ -29,17 +35,33 @@ export class UsersStore {
       const selected = this._selected();
       if (selected && this._loaded() && !this._items().some((item) => item._id === selected._id)) this._selected.set(null);
     });
+
+    effect(() => {
+      const revision = this.dependencyRefresh.roleRevision();
+      if (revision > 0) {
+        untracked(() => {
+          if (this._loaded()) void this.loadView(this._trashView(), true);
+        });
+      }
+    });
   }
 
   loadAll(force = false): Promise<void> { return this.loadView(false, force); }
   loadSoftDeleted(force = false): Promise<void> { return this.loadView(true, force); }
 
   private async loadView(trashView: boolean, force: boolean): Promise<void> {
-    if (this._loading() || (this._loaded() && this._trashView() === trashView && !force)) return;
+    if (this._loading()) {
+      if (force) {
+        this._refreshPending = true;
+        this._pendingTrashView = trashView;
+      }
+      return;
+    }
+    if (this._loaded() && this._trashView() === trashView && !force) return;
     this._trashView.set(trashView); this._loading.set(true); this._error.set(null);
     try { this._items.set(await firstValueFrom(trashView ? this.service.getSoftDeleted() : this.service.getAll())); this._loaded.set(true); }
     catch (error) { this._error.set(getErrorMessage(error)); this._items.set([]); }
-    finally { this._loading.set(false); }
+    finally { this.finishLoad(); }
   }
 
   async loadById(id: string, force = false): Promise<void> {
@@ -48,10 +70,10 @@ export class UsersStore {
     this._loading.set(true); this._error.set(null); this._selected.set(null);
     try { const user = await firstValueFrom(this.service.getById(id)); this._selected.set(user); this.upsert(user); }
     catch (error) { this._error.set(getErrorMessage(error)); }
-    finally { this._loading.set(false); }
+    finally { this.finishLoad(); }
   }
   clearSelected(): void { this._selected.set(null); }
-  clearError(): void { this._error.set(null); }
+  clearError(): void { this._error.set(null); this._dependencyUnavailable.set(false); }
   async create(payload: UserPayload): Promise<User | null> {
     this._error.set(null);
     try { const created = await firstValueFrom(this.service.create(payload)); this._items.update((items) => [...items, created]); this._selected.set(created); return created; }
@@ -59,8 +81,9 @@ export class UsersStore {
   }
   async update(id: string, payload: UserUpdatePayload): Promise<User | null> {
     this._error.set(null);
+    this._dependencyUnavailable.set(false);
     try { const updated = await firstValueFrom(this.service.update(id, payload)); this.upsert(updated); return updated; }
-    catch (error) { this._error.set(getErrorMessage(error)); return null; }
+    catch (error) { this._error.set(getErrorMessage(error)); this._dependencyUnavailable.set(isDependencyUnavailable(error)); return null; }
   }
   async toggleActive(item: User): Promise<boolean> {
     try { this.upsert(await firstValueFrom(this.service.toggleActive(item._id))); return true; }
@@ -77,5 +100,15 @@ export class UsersStore {
   private upsert(user: User): void {
     this._items.update((items) => items.some((item) => item._id === user._id) ? items.map((item) => item._id === user._id ? user : item) : [...items, user]);
     this._selected.update((item) => item?._id === user._id ? user : item);
+  }
+
+  private finishLoad(): void {
+    this._loading.set(false);
+    if (!this._refreshPending) return;
+
+    const trashView = this._pendingTrashView ?? this._trashView();
+    this._refreshPending = false;
+    this._pendingTrashView = null;
+    void this.loadView(trashView, true);
   }
 }

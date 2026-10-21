@@ -1,4 +1,5 @@
 import { Role } from './role.model';
+import { DependencyIssue } from './dependency-issue.model';
 
 export interface UserAddress {
   _id?: string;
@@ -21,6 +22,7 @@ export interface User {
   createdAt: string;
   updatedAt: string | null;
   deletedAt: string | null;
+  dependencyIssues?: DependencyIssue[];
 }
 
 export interface UserPayload {

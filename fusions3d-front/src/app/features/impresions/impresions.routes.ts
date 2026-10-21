@@ -24,7 +24,7 @@ export const IMPRESIONS_ROUTES: Routes = [
     title: 'Detalle | Fusions3D',
   },
   {
-    path: ':slug/editar',
+    path: ':id/editar',
     loadComponent: () =>
       import('./pages/impresion-edit/impresion-edit').then((m) => m.ImpresionEditPage),
     title: 'Editar impresión | Fusions3D',

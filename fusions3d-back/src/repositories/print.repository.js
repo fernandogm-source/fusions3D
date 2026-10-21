@@ -3,7 +3,7 @@ require('../models/category.model');
 require('../models/image.model');
 
 const POPULATE = [
-  { path: 'categoryId', select: 'name slug' },
+  { path: 'categoryId', select: 'name slug deletedAt isActive' },
   { path: 'images', select: 'imageUrl altText position isCover status' }
 ];
 

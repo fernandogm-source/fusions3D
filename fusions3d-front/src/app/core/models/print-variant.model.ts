@@ -1,7 +1,10 @@
+import { DependencyIssue } from './dependency-issue.model';
+
 export interface VariantReference {
   _id: string;
   name: string;
   slug?: string;
+  deletedAt?: string | null;
 }
 
 export interface PrintVariant {
@@ -16,11 +19,13 @@ export interface PrintVariant {
   printTime: number;
   isActive: boolean;
   deletedAt: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  dependencyIssues?: DependencyIssue[];
 }
 
 export interface PrintVariantPayload {
   printId: string;
-  sku: string;
   name: string;
   materialId: string;
   color: string;

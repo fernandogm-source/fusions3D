@@ -16,7 +16,7 @@ export class CategoryCreatePage {
       const category = await this.store.create(payload);
       if (!category) return;
       showSuccess('Categoría creada correctamente.');
-      void this.router.navigate(['/admin/categories', category._id]);
+      void this.router.navigate(['/admin/categories']);
     } finally { this.saving.set(false); }
   }
 }

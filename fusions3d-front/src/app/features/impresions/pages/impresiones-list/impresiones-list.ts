@@ -5,7 +5,7 @@ import { ImpresionsStore } from '../../../../core/store/impresions.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { TableSkeleton } from '../../../../shared/components/skeleton/table-skeleton/table-skeleton';
-import { confirmAction, showSuccess } from '../../../../shared/utils/alert.util';
+import { confirmAction, showError, showSuccess } from '../../../../shared/utils/alert.util';
 import { ImpresionTable } from '../../components/impresion-table/impresion-table';
 
 /** Página de listado: catálogo de impresiones 3D (vista de administración). */
@@ -55,6 +55,10 @@ export class ImpresionesListPage {
           ? 'La impresión se ha desactivado.'
           : 'La impresión se ha activado.',
       );
+    } else {
+      const message = this.store.error() ?? 'No se pudo cambiar el estado de la impresión.';
+      this.store.clearError();
+      showError(message);
     }
   }
 

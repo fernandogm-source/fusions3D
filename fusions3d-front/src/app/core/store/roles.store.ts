@@ -3,10 +3,12 @@ import { firstValueFrom } from 'rxjs';
 import { getErrorMessage } from '../../shared/utils/error-message.util';
 import { Role, RolePayload, RoleUpdatePayload } from '../models/role.model';
 import { RolesService } from '../services/roles.service';
+import { DependencyRefreshStore } from './dependency-refresh.store';
 
 @Injectable({ providedIn: 'root' })
 export class RolesStore {
   private readonly service = inject(RolesService);
+  private readonly dependencyRefresh = inject(DependencyRefreshStore);
   private readonly _items = signal<Role[]>([]);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
@@ -54,24 +56,24 @@ export class RolesStore {
   clearError(): void { this._error.set(null); }
   async create(payload: RolePayload): Promise<Role | null> {
     this._error.set(null);
-    try { const created = await firstValueFrom(this.service.create(payload)); this._items.update((items) => [...items, created]); this._selected.set(created); return created; }
+    try { const created = await firstValueFrom(this.service.create(payload)); this._items.update((items) => [...items, created]); this._selected.set(created); this.dependencyRefresh.notify('role'); return created; }
     catch (error) { this._error.set(getErrorMessage(error)); return null; }
   }
   async update(id: string, payload: RoleUpdatePayload): Promise<Role | null> {
     this._error.set(null);
-    try { const updated = await firstValueFrom(this.service.update(id, payload)); this.upsert(updated); return updated; }
+    try { const updated = await firstValueFrom(this.service.update(id, payload)); this.upsert(updated); this.dependencyRefresh.notify('role'); return updated; }
     catch (error) { this._error.set(getErrorMessage(error)); return null; }
   }
   async toggleActive(item: Role): Promise<boolean> {
-    try { this.upsert(await firstValueFrom(this.service.toggleActive(item._id))); return true; }
+    try { this.upsert(await firstValueFrom(this.service.toggleActive(item._id))); this.dependencyRefresh.notify('role'); return true; }
     catch (error) { this._error.set(getErrorMessage(error)); return false; }
   }
   async softDelete(item: Role): Promise<boolean> {
-    try { await firstValueFrom(this.service.softDelete(item._id)); this._items.update((items) => items.filter((entry) => entry._id !== item._id)); this._selected.update((selected) => selected?._id === item._id ? null : selected); return true; }
+    try { await firstValueFrom(this.service.softDelete(item._id)); this._items.update((items) => items.filter((entry) => entry._id !== item._id)); this._selected.update((selected) => selected?._id === item._id ? null : selected); this.dependencyRefresh.notify('role'); return true; }
     catch (error) { this._error.set(getErrorMessage(error)); return false; }
   }
   async restore(item: Role): Promise<boolean> {
-    try { const restored = await firstValueFrom(this.service.restore(item._id)); if (this._trashView()) this._items.update((items) => items.filter((entry) => entry._id !== item._id)); else this.upsert(restored); return true; }
+    try { const restored = await firstValueFrom(this.service.restore(item._id)); if (this._trashView()) this._items.update((items) => items.filter((entry) => entry._id !== item._id)); else this.upsert(restored); this.dependencyRefresh.notify('role'); return true; }
     catch (error) { this._error.set(getErrorMessage(error)); return false; }
   }
   private upsert(role: Role): void {

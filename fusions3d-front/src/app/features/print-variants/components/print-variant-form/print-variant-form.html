@@ -1,7 +1,11 @@
 <form [formGroup]="form" (ngSubmit)="submit()" class="card mx-auto flex max-w-4xl flex-col gap-6 p-6 sm:p-8">
   <div class="grid gap-5 sm:grid-cols-2">
     <div class="flex flex-col gap-2"><label for="variant-print" class="label">Impresión *</label><select id="variant-print" formControlName="printId" class="input"><option value="">Selecciona una impresión</option>@for (print of prints(); track print._id) { <option [value]="print._id">{{ print.name }}</option> }</select></div>
-    <div class="flex flex-col gap-2"><label for="variant-sku" class="label">SKU *</label><input id="variant-sku" formControlName="sku" maxlength="50" placeholder="SOPMOV-PLA-NEG" class="input" /></div>
+    @if (initialValue(); as variant) {
+      <div class="flex flex-col gap-2"><label for="variant-sku" class="label">SKU (generado automáticamente)</label><input id="variant-sku" [value]="variant.sku" readonly class="input" /></div>
+    } @else {
+      <p class="self-end text-sm text-ink-muted">El SKU se generará automáticamente.</p>
+    }
     <div class="flex flex-col gap-2"><label for="variant-name" class="label">Nombre *</label><input id="variant-name" formControlName="name" maxlength="150" placeholder="Estándar - PLA Negro" class="input" /></div>
     <div class="flex flex-col gap-2"><label for="variant-material" class="label">Material *</label><select id="variant-material" formControlName="materialId" class="input"><option value="">Selecciona un material</option>@for (material of materials(); track material._id) { <option [value]="material._id">{{ material.name }}</option> }</select></div>
     <div class="flex flex-col gap-2"><label for="variant-color" class="label">Color *</label><input id="variant-color" formControlName="color" maxlength="100" placeholder="Negro" class="input" /></div>

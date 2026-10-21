@@ -1,1 +1,49 @@
-<div class="card overflow-x-auto p-0"><table class="w-full min-w-[850px] border-collapse text-left text-sm"><thead><tr class="table-head"><th class="px-5 py-3.5">SKU</th><th class="px-5 py-3.5">Variante</th><th class="px-5 py-3.5">Impresión</th><th class="px-5 py-3.5">Material / color</th><th class="px-5 py-3.5">Precio</th>@if (!trashView()) { <th class="px-5 py-3.5">Estado</th> }<th class="px-5 py-3.5 text-right">Acciones</th></tr></thead><tbody>@for (variant of variants(); track variant._id) { <tr class="table-row"><td class="px-5 py-4 font-mono text-xs text-brand-light">{{ variant.sku }}</td><td class="px-5 py-4"><a [routerLink]="['/admin/print-variants', variant._id]" class="font-semibold text-ink hover:text-brand-light">{{ variant.name }}</a></td><td class="px-5 py-4 text-ink-muted">{{ label(variant.printId) }}</td><td class="px-5 py-4 text-ink-muted">{{ label(variant.materialId) }} · {{ variant.color }}</td><td class="px-5 py-4 font-semibold text-ink">{{ variant.salePrice | currency:'EUR':'symbol':'1.2-2':'es' }}</td>@if (!trashView()) { <td class="px-5 py-4"><span class="badge" [class]="variant.isActive ? 'badge-success' : 'badge-muted'">{{ variant.isActive ? 'Activa' : 'Inactiva' }}</span></td> }<td class="px-5 py-4"><div class="flex justify-end gap-1">@if (trashView()) { <button (click)="restore.emit(variant)" class="btn btn-ghost !px-3 !py-1.5 text-xs text-success">Restaurar</button> } @else { <a [routerLink]="['/admin/print-variants', variant._id, 'editar']" class="btn btn-ghost !px-3 !py-1.5 text-xs">Editar</a><button (click)="toggleActive.emit(variant)" class="btn btn-ghost !px-3 !py-1.5 text-xs text-warning">{{ variant.isActive ? 'Desactivar' : 'Activar' }}</button><button (click)="remove.emit(variant)" class="btn btn-ghost !px-3 !py-1.5 text-xs hover:!text-danger">Eliminar</button> }</div></td></tr> }</tbody></table></div>
+<div class="card overflow-x-auto p-0">
+  <table class="w-full min-w-[850px] border-collapse text-left text-sm">
+    <thead>
+      <tr class="table-head">
+        <th class="px-5 py-3.5">SKU</th>
+        <th class="px-5 py-3.5">Variante</th>
+        <th class="px-5 py-3.5">Impresión</th>
+        <th class="px-5 py-3.5">Material / color</th>
+        <th class="px-5 py-3.5">Precio</th>
+        @if (!trashView()) { <th class="px-5 py-3.5">Estado</th> }
+        <th class="px-5 py-3.5 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (variant of variants(); track variant._id) {
+        <tr class="table-row" [class.table-row-inactive]="!trashView() && !variant.isActive">
+          <td class="px-5 py-4 font-mono text-xs text-brand-light">{{ variant.sku }}</td>
+          <td class="px-5 py-4">
+            <span class="font-semibold text-ink">{{ variant.name }}</span>
+            @if (variant.dependencyIssues?.length) {
+              <ul class="mt-2 space-y-1 text-xs text-danger" aria-label="Problemas de referencias">
+                @for (issue of variant.dependencyIssues; track $index) {
+                  <li role="alert"><span aria-hidden="true">⚠ </span>{{ issue.message }}</li>
+                }
+              </ul>
+            }
+          </td>
+          <td class="px-5 py-4 text-ink-muted">{{ label(variant.printId) }}</td>
+          <td class="px-5 py-4 text-ink-muted">{{ label(variant.materialId) }} · {{ variant.color }}</td>
+          <td class="px-5 py-4 font-semibold text-ink">{{ variant.salePrice | currency:'EUR':'symbol':'1.2-2':'es' }}</td>
+          @if (!trashView()) {
+            <td class="px-5 py-4"><span class="badge" [class]="variant.isActive ? 'badge-success' : 'badge-muted'">{{ variant.isActive ? 'Activa' : 'Inactiva' }}</span></td>
+          }
+          <td class="px-5 py-4">
+            <div class="flex justify-end gap-2">
+              @if (trashView()) {
+                <button (click)="restore.emit(variant)" class="btn btn-ghost !px-3 !py-1.5 text-xs text-success">Restaurar</button>
+              } @else {
+                <a [routerLink]="['/admin/print-variants', variant._id, 'editar']" class="btn btn-action btn-action-edit">Editar</a>
+                <button (click)="toggleActive.emit(variant)" class="btn btn-action" [class.btn-action-deactivate]="variant.isActive" [class.btn-action-activate]="!variant.isActive">{{ variant.isActive ? 'Desactivar' : 'Activar' }}</button>
+                <button (click)="remove.emit(variant)" class="btn btn-action btn-action-delete">Eliminar</button>
+              }
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

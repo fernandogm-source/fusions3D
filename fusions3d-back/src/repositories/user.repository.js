@@ -1,7 +1,7 @@
 const User = require('../models/user.model');
 require('../models/role.model');
 
-const POPULATE_ROLES = { path: 'roles', select: 'name' };
+const POPULATE_ROLES = { path: 'roles', select: 'name deletedAt isActive' };
 
 class UserRepository {
   async findAll() {

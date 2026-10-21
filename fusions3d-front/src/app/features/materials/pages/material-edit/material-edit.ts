@@ -12,5 +12,5 @@ export class MaterialEditPage {
   protected readonly material = this.store.selected; protected readonly saving = signal(false);
   constructor() { effect(() => { const id = this.id(); untracked(() => void this.store.loadById(id)); }); }
   protected retry(): void { void this.store.loadById(this.id()); }
-  protected async submit(payload: MaterialPayload): Promise<void> { this.saving.set(true); try { const item = await this.store.update(this.id(), payload); if (item) { showSuccess('Material actualizado.'); void this.router.navigate(['/admin/materials', item._id]); } } finally { this.saving.set(false); } }
+  protected async submit(payload: MaterialPayload): Promise<void> { this.saving.set(true); try { const item = await this.store.update(this.id(), payload); if (item) { showSuccess('Material actualizado.'); void this.router.navigate(['/admin/materials']); } } finally { this.saving.set(false); } }
 }

@@ -61,13 +61,13 @@
 
       <!-- Acciones -->
       <div class="flex flex-col gap-3 sm:flex-row">
-        <a [routerLink]="['/impresiones', impresion.slug, 'editar']" class="btn btn-primary flex-1">
+        <a [routerLink]="['/impresiones', impresion._id, 'editar']" class="btn btn-action btn-action-edit flex-1">
           Editar
         </a>
-        <button type="button" (click)="toggleActive()" [disabled]="processing()" class="btn btn-secondary flex-1">
+        <button type="button" (click)="toggleActive()" [disabled]="processing()" class="btn btn-action flex-1" [class.btn-action-deactivate]="impresion.isActive" [class.btn-action-activate]="!impresion.isActive">
           {{ impresion.isActive ? 'Desactivar' : 'Activar' }}
         </button>
-        <button type="button" (click)="delete()" [disabled]="processing()" class="btn btn-danger flex-1">
+        <button type="button" (click)="delete()" [disabled]="processing()" class="btn btn-action btn-action-delete flex-1">
           Eliminar
         </button>
       </div>

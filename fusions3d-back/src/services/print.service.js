@@ -1,14 +1,24 @@
 const repository = require('../repositories/print.repository');
+const Category = require('../models/category.model');
 const { AppError } = require('../utils/app.error');
 const { generateSlug } = require('../utils/slug.util');
+const { attachDependencyIssues } = require('../utils/dependency-issues.util');
+const dependencyCascade = require('./dependency-cascade.service');
+
+const DEPENDENCIES = [{
+  field: 'categoryId',
+  missingMessage: 'No tiene una categoría válida asignada',
+  deletedMessage: 'La categoría asignada está eliminada',
+  inactiveMessage: 'La categoría asignada está desactivada'
+}];
 
 class PrintService {
   async getAll() {
-    return repository.findAll();
+    return attachDependencyIssues(await repository.findAll(), DEPENDENCIES);
   }
 
   async getSoftDeleted() {
-    return repository.findSoftDeleted();
+    return attachDependencyIssues(await repository.findSoftDeleted(), DEPENDENCIES);
   }
 
   async getById(id) {
@@ -32,6 +42,7 @@ class PrintService {
   }
 
   async create(data) {
+    await this.ensureCategoryExists(data.categoryId);
     const slug = await generateSlug(data.name);
     return repository.create({ ...data, slug });
   }
@@ -41,6 +52,10 @@ class PrintService {
     delete cleanData._id;
     delete cleanData.createdAt;
     delete cleanData.deletedAt;
+
+    if (cleanData.categoryId !== undefined) {
+      await this.ensureCategoryExists(cleanData.categoryId);
+    }
 
     if (cleanData.name) {
       cleanData.slug = await generateSlug(cleanData.name);
@@ -69,6 +84,11 @@ class PrintService {
     }
 
     const newActive = !print.isActive;
+    if (newActive) {
+      await this.ensureCategoryExists(print.categoryId);
+    } else {
+      await dependencyCascade.deactivatePrintDependents(id);
+    }
     const updated = await repository.setActiveById(id, newActive);
 
     return updated;
@@ -85,17 +105,18 @@ class PrintService {
       throw new AppError('La impresión ya está eliminada', 409, 'ALREADY_DELETED');
     }
 
+    await dependencyCascade.deactivatePrintDependents(id);
     const print = await repository.softDelete(id);
 
     return { message: 'Impresión eliminada correctamente', data: print };
   }
 
   async getActive() {
-    return repository.findByActive(true);
+    return attachDependencyIssues(await repository.findByActive(true), DEPENDENCIES);
   }
 
   async getInactive() {
-    return repository.findByActive(false);
+    return attachDependencyIssues(await repository.findByActive(false), DEPENDENCIES);
   }
 
   async restore(id) {
@@ -112,6 +133,22 @@ class PrintService {
     const restored = await repository.restoreById(id);
 
     return { message: 'Impresión restaurada correctamente', data: restored };
+  }
+
+  async ensureCategoryExists(categoryId) {
+    const category = await Category.findOne({
+      _id: categoryId,
+      deletedAt: null,
+      isActive: true
+    }).select('_id').lean();
+
+    if (!category) {
+      throw new AppError(
+        'La categoría asignada no existe, está eliminada o desactivada',
+        409,
+        'DEPENDENCY_UNAVAILABLE'
+      );
+    }
   }
 }
 

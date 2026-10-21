@@ -71,9 +71,10 @@ features/<recurso>/
 └── pages/
     ├── <recurso>-list/
     ├── <recurso>-create/
-    ├── <recurso>-detail/
     └── <recurso>-edit/
 ```
+
+La feature de impresiones también incluye una página de detalle (`/impresiones/:slug`); las demás features no tienen ruta de detalle en la interfaz actual.
 
 Los modelos, servicios y stores tipados están en `core/`. Los formularios usan esos servicios para cargar referencias relacionadas (por ejemplo, materiales/prints para una variante y roles para un usuario); las operaciones CRUD pasan por el store del recurso.
 
@@ -81,12 +82,12 @@ Los modelos, servicios y stores tipados están en `core/`. Los formularios usan 
 
 | Feature | Listado / papelera | Crear | Detalle | Editar |
 |---|---|---|---|---|
-| Impresiones | `/impresiones` | `/impresiones/nueva` | `/impresiones/:slug` | `/impresiones/:slug/editar` |
-| Categorías | `/admin/categories` | `/admin/categories/nueva` | `/admin/categories/:id` | `/admin/categories/:id/editar` |
-| Materiales | `/admin/materials` | `/admin/materials/nuevo` | `/admin/materials/:id` | `/admin/materials/:id/editar` |
-| Variantes | `/admin/print-variants` | `/admin/print-variants/nueva` | `/admin/print-variants/:id` | `/admin/print-variants/:id/editar` |
-| Roles | `/admin/roles` | `/admin/roles/nuevo` | `/admin/roles/:id` | `/admin/roles/:id/editar` |
-| Usuarios | `/admin/users` | `/admin/users/nuevo` | `/admin/users/:id` | `/admin/users/:id/editar` |
+| Impresiones | `/impresiones` | `/impresiones/nueva` | `/impresiones/:slug` | `/impresiones/:id/editar` |
+| Categorías | `/admin/categories` | `/admin/categories/nueva` | — | `/admin/categories/:id/editar` |
+| Materiales | `/admin/materials` | `/admin/materials/nuevo` | — | `/admin/materials/:id/editar` |
+| Variantes | `/admin/print-variants` | `/admin/print-variants/nueva` | — | `/admin/print-variants/:id/editar` |
+| Roles | `/admin/roles` | `/admin/roles/nuevo` | — | `/admin/roles/:id/editar` |
+| Usuarios | `/admin/users` | `/admin/users/nuevo` | — | `/admin/users/:id/editar` |
 
 La papelera se abre desde el listado de cada feature y no tiene una ruta independiente.
 
@@ -107,14 +108,15 @@ Base URL: `${environment.apiUrl}`. Recursos:
 
 Los recursos usan la envolvente `{ success, data }`; `ApiService` desenvuelve `data` y aplica timeout. Los errores se traducen en `error-message.util.ts` y se notifican mediante el interceptor/SweetAlert2.
 
-Las respuestas de prints, categorías y variantes pueden incluir imágenes pobladas. La API no dispone todavía de endpoints de carga o edición de imágenes; los listados muestran un placeholder cuando no hay imagen.
+Las impresiones y categorías pueden incluir imágenes pobladas; las variantes no tienen imágenes. La API no dispone todavía de endpoints de carga o edición de imágenes. Las imágenes se conservan y se muestran aunque la impresión o categoría esté inactiva o en la papelera; se usa un placeholder cuando no hay ninguna imagen asociada.
 
 ## Estado y formularios
 
-- Cada store sigue el patrón de `ImpresionsStore`: lista, selección, caché, carga, error, CRUD y acciones de estado/soft-delete/restore.
+- Los stores usan Signals para lista, selección, caché, carga, error y operaciones CRUD. `DependencyRefreshStore` notifica cambios en categorías, impresiones, materiales y roles; los stores de impresiones, variantes y usuarios actualizan sus listados relacionados sin recargar la página.
 - Los formularios son componentes propios de cada feature y reciben el registro inicial en modo edición.
 - La lista y la papelera se mantienen como vistas separadas, sin filtros de estado.
 - `ApiService` centraliza las peticiones y la envoltura de respuesta; los interceptores gestionan carga y errores.
+- Los listados de impresiones, variantes y usuarios muestran avisos `dependencyIssues` cuando una referencia está ausente, eliminada o inactiva. La API devuelve `409 DEPENDENCY_UNAVAILABLE` si una operación requiere una dependencia que no está disponible; desde edición, la interfaz vuelve al listado y muestra el mensaje.
 
 ## Seguridad
 

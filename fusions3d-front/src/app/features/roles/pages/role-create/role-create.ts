@@ -8,5 +8,5 @@ import { showSuccess } from '../../../../shared/utils/alert.util';
 @Component({ selector: 'app-role-create', imports: [RoleForm], templateUrl: './role-create.html' })
 export class RoleCreatePage {
   private readonly store = inject(RolesStore); private readonly router = inject(Router); protected readonly saving = signal(false);
-  protected async submit(payload: RolePayload): Promise<void> { this.saving.set(true); try { const role = await this.store.create(payload); if (role) { showSuccess('Rol creado.'); void this.router.navigate(['/admin/roles', role._id]); } } finally { this.saving.set(false); } }
+  protected async submit(payload: RolePayload): Promise<void> { this.saving.set(true); try { const role = await this.store.create(payload); if (role) { showSuccess('Rol creado.'); void this.router.navigate(['/admin/roles']); } } finally { this.saving.set(false); } }
 }

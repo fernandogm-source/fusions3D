@@ -61,15 +61,9 @@ const printVariantSchema = new mongoose.Schema(
   },
   {
     collection: 'print_variants',
-    versionKey: false
+    versionKey: false,
+    timestamps: true
   }
 );
-
-printVariantSchema.virtual('images', {
-  ref: 'Image',
-  localField: '_id',
-  foreignField: 'entityId',
-  match: { entityType: 'PrintVariant' }
-});
 
 module.exports = mongoose.model('PrintVariant', printVariantSchema);

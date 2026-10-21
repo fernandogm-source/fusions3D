@@ -24,7 +24,7 @@ export class ImpresionCreatePage {
       const created = await this.store.create(payload);
       if (created) {
         showSuccess(`"${created.name}" se ha creado correctamente.`);
-        void this.router.navigate(['/impresiones', created.slug]);
+        void this.router.navigate(['/impresiones']);
       }
     } finally {
       this.submitting.set(false);

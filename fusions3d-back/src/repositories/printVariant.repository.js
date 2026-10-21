@@ -1,12 +1,10 @@
 const PrintVariant = require('../models/printVariant.model');
 require('../models/print.model');
 require('../models/material.model');
-require('../models/image.model');
 
 const POPULATE = [
-  { path: 'printId', select: 'name slug' },
-  { path: 'materialId', select: 'name' },
-  { path: 'images', select: 'imageUrl altText position isCover status' }
+  { path: 'printId', select: 'name slug deletedAt isActive' },
+  { path: 'materialId', select: 'name deletedAt isActive' }
 ];
 
 class PrintVariantRepository {
@@ -35,7 +33,8 @@ class PrintVariantRepository {
   }
 
   async create(data) {
-    return PrintVariant.create(data);
+    const variant = await PrintVariant.create(data);
+    return PrintVariant.findById(variant._id).populate(POPULATE).lean();
   }
 
   async updateById(id, data) {
@@ -56,10 +55,10 @@ class PrintVariantRepository {
 
   async setActiveById(id, isActive) {
     return PrintVariant.findOneAndUpdate(
-      { _id: id },
+      { _id: id, deletedAt: null },
       { isActive },
       { new: true, runValidators: true }
-    ).lean();
+    ).populate(POPULATE).lean();
   }
 
   async findByActive(isActive) {
@@ -71,7 +70,7 @@ class PrintVariantRepository {
       { _id: id, deletedAt: { $ne: null } },
       { deletedAt: null },
       { new: true, runValidators: true }
-    ).lean();
+    ).populate(POPULATE).lean();
   }
 }
 

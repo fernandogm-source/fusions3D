@@ -6,5 +6,9 @@ import { User } from '../../../../core/models/user.model';
 export class UserTable {
   readonly users = input.required<User[]>(); readonly trashView = input(false);
   readonly toggleActive = output<User>(); readonly remove = output<User>(); readonly restore = output<User>();
-  protected roleNames(user: User): string { return user.roles.map((role) => typeof role === 'string' ? role : role.name).join(', ') || 'Sin roles'; }
+  protected roleNames(user: User): string {
+    return user.roles
+      .map((role) => !role ? 'Rol no disponible' : typeof role === 'string' ? role : role.name)
+      .join(', ') || 'Sin roles';
+  }
 }

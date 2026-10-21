@@ -3,16 +3,16 @@
     <thead><tr class="table-head"><th class="px-5 py-3.5">Categoría</th><th class="px-5 py-3.5">Estado editorial</th>@if (!trashView()) { <th class="px-5 py-3.5">Activa</th> }<th class="px-5 py-3.5 text-right">Acciones</th></tr></thead>
     <tbody>
       @for (category of categories(); track category._id) {
-        <tr class="table-row">
-          <td class="px-5 py-4"><a [routerLink]="['/admin/categories', category._id]" class="font-semibold text-ink hover:text-brand-light">{{ category.name }}</a><p class="mt-1 font-mono text-xs text-ink-faint">{{ category.slug }}</p></td>
+        <tr class="table-row" [class.table-row-inactive]="!trashView() && !category.isActive">
+          <td class="px-5 py-4"><span class="font-semibold text-ink">{{ category.name }}</span><p class="mt-1 font-mono text-xs text-ink-faint">{{ category.slug }}</p></td>
           <td class="px-5 py-4"><span class="badge" [class]="category.status === 'published' ? 'badge-success' : category.status === 'draft' ? 'badge-warning' : 'badge-muted'">{{ category.status }}</span></td>
           @if (!trashView()) { <td class="px-5 py-4"><span class="badge" [class]="category.isActive ? 'badge-success' : 'badge-muted'">{{ category.isActive ? 'Sí' : 'No' }}</span></td> }
-          <td class="px-5 py-4"><div class="flex justify-end gap-1">
+          <td class="px-5 py-4"><div class="flex justify-end gap-2">
             @if (trashView()) { <button (click)="restore.emit(category)" class="btn btn-ghost !px-3 !py-1.5 text-xs text-success">Restaurar</button> }
             @else {
-              <a [routerLink]="['/admin/categories', category._id, 'editar']" class="btn btn-ghost !px-3 !py-1.5 text-xs">Editar</a>
-              <button (click)="toggleActive.emit(category)" class="btn btn-ghost !px-3 !py-1.5 text-xs text-warning">{{ category.isActive ? 'Desactivar' : 'Activar' }}</button>
-              <button (click)="remove.emit(category)" class="btn btn-ghost !px-3 !py-1.5 text-xs hover:!text-danger">Eliminar</button>
+               <a [routerLink]="['/admin/categories', category._id, 'editar']" class="btn btn-action btn-action-edit">Editar</a>
+               <button (click)="toggleActive.emit(category)" class="btn btn-action" [class.btn-action-deactivate]="category.isActive" [class.btn-action-activate]="!category.isActive">{{ category.isActive ? 'Desactivar' : 'Activar' }}</button>
+               <button (click)="remove.emit(category)" class="btn btn-action btn-action-delete">Eliminar</button>
             }
           </div></td>
         </tr>

@@ -21,4 +21,5 @@ export interface PrintCategory {
   _id: string;
   name: string;
   slug: string;
+  deletedAt?: string | null;
 }

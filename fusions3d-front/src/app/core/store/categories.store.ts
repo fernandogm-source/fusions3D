@@ -3,10 +3,12 @@ import { firstValueFrom } from 'rxjs';
 import { getErrorMessage } from '../../shared/utils/error-message.util';
 import { Category, CategoryPayload, CategoryUpdatePayload } from '../models/category.model';
 import { CategoriesService } from '../services/categories.service';
+import { DependencyRefreshStore } from './dependency-refresh.store';
 
 @Injectable({ providedIn: 'root' })
 export class CategoriesStore {
   private readonly service = inject(CategoriesService);
+  private readonly dependencyRefresh = inject(DependencyRefreshStore);
   private readonly _items = signal<Category[]>([]);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
@@ -31,6 +33,7 @@ export class CategoriesStore {
         this._selected.set(null);
       }
     });
+
   }
 
   loadAll(force = false): Promise<void> { return this.loadView(false, force); }
@@ -75,19 +78,28 @@ export class CategoriesStore {
     try {
       const updated = await firstValueFrom(this.service.update(id, payload));
       this._items.update((items) => items.map((item) => item._id === id ? updated : item));
-      this._selected.update((item) => item?._id === id ? updated : item); return updated;
+      this._selected.update((item) => item?._id === id ? updated : item);
+      this.dependencyRefresh.notify('category');
+      return updated;
     } catch (error) { this._error.set(getErrorMessage(error)); return null; }
   }
 
   async toggleActive(item: Category): Promise<boolean> {
-    try { const updated = await firstValueFrom(this.service.toggleActive(item._id)); this.upsert(updated); return true; }
+    try {
+      const updated = await firstValueFrom(this.service.toggleActive(item._id));
+      this.upsert(updated);
+      this.dependencyRefresh.notify('category');
+      return true;
+    }
     catch (error) { this._error.set(getErrorMessage(error)); return false; }
   }
   async softDelete(item: Category): Promise<boolean> {
     try {
       await firstValueFrom(this.service.softDelete(item._id));
       this._items.update((items) => items.filter((entry) => entry._id !== item._id));
-      this._selected.update((selected) => selected?._id === item._id ? null : selected); return true;
+      this._selected.update((selected) => selected?._id === item._id ? null : selected);
+      this.dependencyRefresh.notify('category');
+      return true;
     } catch (error) { this._error.set(getErrorMessage(error)); return false; }
   }
   async restore(item: Category): Promise<boolean> {
@@ -95,6 +107,7 @@ export class CategoriesStore {
       const restored = await firstValueFrom(this.service.restore(item._id));
       if (this._trashView()) this._items.update((items) => items.filter((entry) => entry._id !== item._id));
       else this.upsert(restored);
+      this.dependencyRefresh.notify('category');
       return true;
     } catch (error) { this._error.set(getErrorMessage(error)); return false; }
   }

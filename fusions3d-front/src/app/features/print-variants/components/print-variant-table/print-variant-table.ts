@@ -7,5 +7,8 @@ import { PrintVariant, VariantReference } from '../../../../core/models/print-va
 export class PrintVariantTable {
   readonly variants = input.required<PrintVariant[]>(); readonly trashView = input(false);
   readonly toggleActive = output<PrintVariant>(); readonly remove = output<PrintVariant>(); readonly restore = output<PrintVariant>();
-  protected label(value: string | VariantReference): string { return typeof value === 'string' ? value : value.name; }
+  protected label(value: string | VariantReference | null): string {
+    if (!value) return 'Referencia no disponible';
+    return typeof value === 'string' ? value : value.name;
+  }
 }

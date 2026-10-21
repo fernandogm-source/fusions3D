@@ -5,7 +5,7 @@ const imageSchema = new mongoose.Schema(
     entityType: {
       type: String,
       required: true,
-      enum: ['Print', 'PrintVariant', 'Category']
+      enum: ['Print', 'Category']
     },
     entityId: {
       type: mongoose.Schema.Types.ObjectId,

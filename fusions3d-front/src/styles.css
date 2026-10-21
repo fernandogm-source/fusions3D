@@ -83,6 +83,26 @@ body {
   @apply border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20;
 }
 
+.btn-action {
+  @apply min-h-9 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition-all duration-200;
+}
+
+.btn-action-edit {
+  @apply border-brand/25 bg-brand/5 text-brand-light hover:border-brand/45 hover:bg-brand/10;
+}
+
+.btn-action-deactivate {
+  @apply border-warning/25 bg-warning/5 text-warning hover:border-warning/45 hover:bg-warning/10;
+}
+
+.btn-action-activate {
+  @apply border-success/25 bg-success/5 text-success hover:border-success/45 hover:bg-success/10;
+}
+
+.btn-action-delete {
+  @apply border-danger/25 bg-danger/5 text-danger hover:border-danger/45 hover:bg-danger/10;
+}
+
 .input {
   @apply w-full rounded-lg border border-line bg-base px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint outline-none transition-colors duration-200 focus:border-brand/60 focus:ring-4 focus:ring-brand/15;
 }
@@ -129,6 +149,14 @@ body {
 
 .table-row {
   @apply border-b border-line/70 transition-colors last:border-0 hover:bg-elevated/50;
+}
+
+.table-row-inactive {
+  @apply bg-danger/10;
+}
+
+.table-row-inactive:hover {
+  @apply bg-danger/15;
 }
 
 .nav-link {

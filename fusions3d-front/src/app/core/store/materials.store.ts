@@ -3,10 +3,12 @@ import { firstValueFrom } from 'rxjs';
 import { getErrorMessage } from '../../shared/utils/error-message.util';
 import { Material, MaterialPayload, MaterialUpdatePayload } from '../models/material.model';
 import { MaterialsService } from '../services/materials.service';
+import { DependencyRefreshStore } from './dependency-refresh.store';
 
 @Injectable({ providedIn: 'root' })
 export class MaterialsStore {
   private readonly service = inject(MaterialsService);
+  private readonly dependencyRefresh = inject(DependencyRefreshStore);
   private readonly _items = signal<Material[]>([]);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
@@ -56,24 +58,24 @@ export class MaterialsStore {
 
   async create(payload: MaterialPayload): Promise<Material | null> {
     this._error.set(null);
-    try { const created = await firstValueFrom(this.service.create(payload)); this._items.update((items) => [...items, created]); this._selected.set(created); return created; }
+    try { const created = await firstValueFrom(this.service.create(payload)); this._items.update((items) => [...items, created]); this._selected.set(created); this.dependencyRefresh.notify('material'); return created; }
     catch (error) { this._error.set(getErrorMessage(error)); return null; }
   }
   async update(id: string, payload: MaterialUpdatePayload): Promise<Material | null> {
     this._error.set(null);
-    try { const updated = await firstValueFrom(this.service.update(id, payload)); this.upsert(updated); return updated; }
+    try { const updated = await firstValueFrom(this.service.update(id, payload)); this.upsert(updated); this.dependencyRefresh.notify('material'); return updated; }
     catch (error) { this._error.set(getErrorMessage(error)); return null; }
   }
   async toggleActive(item: Material): Promise<boolean> {
-    try { this.upsert(await firstValueFrom(this.service.toggleActive(item._id))); return true; }
+    try { this.upsert(await firstValueFrom(this.service.toggleActive(item._id))); this.dependencyRefresh.notify('material'); return true; }
     catch (error) { this._error.set(getErrorMessage(error)); return false; }
   }
   async softDelete(item: Material): Promise<boolean> {
-    try { await firstValueFrom(this.service.softDelete(item._id)); this._items.update((items) => items.filter((entry) => entry._id !== item._id)); this._selected.update((selected) => selected?._id === item._id ? null : selected); return true; }
+    try { await firstValueFrom(this.service.softDelete(item._id)); this._items.update((items) => items.filter((entry) => entry._id !== item._id)); this._selected.update((selected) => selected?._id === item._id ? null : selected); this.dependencyRefresh.notify('material'); return true; }
     catch (error) { this._error.set(getErrorMessage(error)); return false; }
   }
   async restore(item: Material): Promise<boolean> {
-    try { const restored = await firstValueFrom(this.service.restore(item._id)); if (this._trashView()) this._items.update((items) => items.filter((entry) => entry._id !== item._id)); else this.upsert(restored); return true; }
+    try { const restored = await firstValueFrom(this.service.restore(item._id)); if (this._trashView()) this._items.update((items) => items.filter((entry) => entry._id !== item._id)); else this.upsert(restored); this.dependencyRefresh.notify('material'); return true; }
     catch (error) { this._error.set(getErrorMessage(error)); return false; }
   }
   private upsert(material: Material): void {

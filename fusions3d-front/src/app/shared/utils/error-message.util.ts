@@ -55,3 +55,9 @@ export function getErrorMessage(error: unknown): string {
 
   return 'Ha ocurrido un error inesperado.';
 }
+
+export function isDependencyUnavailable(error: unknown): boolean {
+  if (!(error instanceof HttpErrorResponse)) return false;
+  const body = error.error as Partial<ApiErrorBody> | undefined;
+  return body?.error?.code === 'DEPENDENCY_UNAVAILABLE';
+}
