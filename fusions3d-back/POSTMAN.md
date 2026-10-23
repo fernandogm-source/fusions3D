@@ -69,11 +69,15 @@ Content-Type: application/json
   "name": "Soporte para móvil",
   "description": "Soporte de escritorio para teléfono móvil.",
   "categoryId": "<CATEGORY_ID>",
-  "status": "published"
+  "status": "published",
+  "images": [
+    "https://example.com/soporte-frontal.jpg",
+    "https://example.com/soporte-lateral.jpg"
+  ]
 }
 ```
 
-El backend genera el `slug`. Guarda el `_id` devuelto para crear una variante.
+El backend genera el `slug`. Las URLs deben usar HTTP o HTTPS; la primera imagen queda como portada. Guarda el `_id` devuelto para crear una variante.
 
 ### Crear variante
 
@@ -131,6 +135,17 @@ Content-Type: application/json
 { "name": "Soporte premium para móvil" }
 ```
 
+Para gestionar las imágenes, envía la lista final que quieres conservar (incluidas las URLs nuevas). Las imágenes omitidas se eliminan de esa impresión; `"images": []` las elimina todas. La respuesta devuelve la impresión con sus imágenes actualizadas.
+
+```json
+{
+  "images": [
+    "https://example.com/soporte-frontal.jpg",
+    "https://example.com/nueva-vista.jpg"
+  ]
+}
+```
+
 El endpoint `PATCH /api/{resource}/<ID>/active` alterna el estado activo/inactivo y no requiere body:
 
 ```http
@@ -160,7 +175,7 @@ GET   {{baseUrl}}/api/prints/soft-deleted
 
 Los mismos sufijos (`/soft-delete`, `/restore`, `/soft-deleted`) están disponibles en los demás recursos.
 
-Desactivar un recurso padre también desactiva sus dependientes: categoría → impresiones y variantes; impresión o material → variantes; rol → usuarios asignados. El borrado lógico aplica la misma cascada. Los hijos no se borran y no se reactivan automáticamente cuando se restaura o activa el padre. Las imágenes asociadas a impresiones y categorías se conservan.
+Desactivar o borrar lógicamente una categoría, impresión, material o rol se rechaza con `409 DEPENDENTS_EXIST` si todavía tiene dependientes asociados: categoría → impresiones, impresión o material → variantes, rol → usuarios asignados. Se cuentan también los dependientes inactivos y eliminados lógicamente; hay que reasignar o quitar esas referencias antes de continuar. Si un dependiente está en la papelera, restáuralo para cambiar la referencia. No se modifican los dependientes. Las imágenes asociadas a impresiones y categorías se conservan.
 
 Los listados de impresiones, variantes y usuarios pueden incluir `dependencyIssues` en cada registro para señalar una referencia ausente, eliminada o inactiva.
 
@@ -227,7 +242,7 @@ Error:
 
 - `400`: datos inválidos o estado no permitido.
 - `404`: recurso o ruta no encontrada.
-- `409`: conflicto con un valor único ya existente o `DEPENDENCY_UNAVAILABLE` cuando una operación requiere una referencia borrada/inactiva.
+- `409`: conflicto con un valor único ya existente, `DEPENDENCY_UNAVAILABLE` cuando una operación requiere una referencia borrada/inactiva o `DEPENDENTS_EXIST` cuando se intenta desactivar/eliminar lógicamente un recurso que aún tiene dependientes.
 - `500`: error interno.
 
 ## Seguridad

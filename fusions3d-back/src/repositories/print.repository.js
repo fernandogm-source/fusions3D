@@ -1,10 +1,15 @@
 const Print = require('../models/print.model');
+const Image = require('../models/image.model');
 require('../models/category.model');
-require('../models/image.model');
 
 const POPULATE = [
   { path: 'categoryId', select: 'name slug deletedAt isActive' },
-  { path: 'images', select: 'imageUrl altText position isCover status' }
+  {
+    path: 'images',
+    select: 'imageUrl altText position isCover status',
+    match: { entityType: 'Print', status: 'published', isActive: true },
+    options: { sort: { position: 1 } }
+  }
 ];
 
 class PrintRepository {
@@ -30,6 +35,24 @@ class PrintRepository {
 
   async create(data) {
     return Print.create(data);
+  }
+
+  async replaceImages(id, imageUrls, altText) {
+    await Image.deleteMany({ entityType: 'Print', entityId: id });
+
+    const uniqueImageUrls = [...new Set(imageUrls)];
+    if (uniqueImageUrls.length === 0) return;
+
+    await Image.insertMany(uniqueImageUrls.map((imageUrl, position) => ({
+      entityType: 'Print',
+      entityId: id,
+      imageUrl,
+      altText,
+      position,
+      isCover: position === 0,
+      status: 'published',
+      isActive: true
+    })));
   }
 
   async updateById(id, data) {

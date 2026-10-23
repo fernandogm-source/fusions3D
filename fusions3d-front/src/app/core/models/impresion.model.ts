@@ -31,6 +31,7 @@ export interface ImpresionCreatePayload {
   description: string;
   categoryId: string;
   status?: ImpresionStatus;
+  images?: string[];
 }
 
 /**

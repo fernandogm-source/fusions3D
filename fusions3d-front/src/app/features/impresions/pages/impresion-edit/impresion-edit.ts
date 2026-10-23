@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { ImpresionCreatePayload } from '../../../../core/models/impresion.model';
 import { ImpresionsStore } from '../../../../core/store/impresions.store';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
-import { showError, showSuccess } from '../../../../shared/utils/alert.util';
+import { showSuccess } from '../../../../shared/utils/alert.util';
 import { ImpresionForm } from '../../components/impresion-form/impresion-form';
 
 /** Página de edición de una impresión existente (identificada por ID). */
@@ -46,12 +46,10 @@ export class ImpresionEditPage {
         // El backend regenera el slug si cambia el nombre
         void this.router.navigate(['/impresiones']);
       } else if (this.store.dependencyUnavailable()) {
-        const message = this.store.error() ?? 'La categoría asignada ya no está disponible.';
         this.store.clearError();
         await this.store.loadAll(true);
         await this.router.navigate(['/impresiones']);
-        showError(message, 'Dependencia no disponible');
-      }
+      } else this.store.clearError();
     } finally {
       this.submitting.set(false);
     }

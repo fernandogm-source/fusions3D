@@ -17,8 +17,15 @@ export class MaterialsListPage {
   protected async remove(material: Material): Promise<void> {
     if (!(await confirmAction({ title: '¿Eliminar material?', text: `"${material.name}" se moverá a la papelera.`, confirmText: 'Sí, eliminar' }))) return;
     if (await this.store.softDelete(material)) showSuccess('Material eliminado.');
+    else this.store.clearError();
   }
-  protected async toggle(material: Material): Promise<void> { if (await this.store.toggleActive(material)) showSuccess('Estado del material actualizado.'); }
-  protected async restore(material: Material): Promise<void> { if (await this.store.restore(material)) showSuccess('Material restaurado.'); }
+  protected async toggle(material: Material): Promise<void> {
+    if (await this.store.toggleActive(material)) showSuccess('Estado del material actualizado.');
+    else this.store.clearError();
+  }
+  protected async restore(material: Material): Promise<void> {
+    if (await this.store.restore(material)) showSuccess('Material restaurado.');
+    else this.store.clearError();
+  }
   protected create(): void { void this.router.navigate(['/admin/materials/nuevo']); }
 }

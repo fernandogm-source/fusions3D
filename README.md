@@ -11,9 +11,9 @@ Aplicación full-stack para gestionar un catálogo de piezas impresas en 3D. El 
 
 - Gestión de impresiones, categorías, materiales, variantes, roles y usuarios.
 - Alta y edición de los recursos; las impresiones también tienen vista de detalle.
-- Activación/desactivación y borrado lógico con restauración desde la papelera. Desactivar o borrar un padre desactiva sus dependientes.
+- Activación/desactivación y borrado lógico con restauración desde la papelera. Desactivar o borrar lógicamente una categoría, impresión, material o rol se bloquea si conserva dependientes (`409 DEPENDENTS_EXIST`); no se aplica una cascada.
 - Slugs para impresiones y categorías; SKU generado como identificador de variantes (sin nombre personalizado).
-- Imágenes asociadas a impresiones y categorías se devuelven al poblar los recursos. Se conservan al desactivar o borrar lógicamente el elemento. **No existe una API para subir o administrar imágenes.**
+- Imágenes asociadas a impresiones y categorías se devuelven al poblar los recursos y se conservan al desactivar o borrar lógicamente el elemento. En impresiones se pueden enviar listas de URLs al crear o actualizar; no hay subida de archivos ni rutas independientes para imágenes.
 - Los listados de impresiones, variantes y usuarios pueden devolver `dependencyIssues` cuando una referencia no existe, está borrada o inactiva.
 
 ## Tecnologías
@@ -60,7 +60,7 @@ Desde `fusions3d-back`:
 npm run seed
 ```
 
-El seed es idempotente: inserta o actualiza los registros de ejemplo sin vaciar las colecciones existentes. Crea materiales, categorías, roles, impresiones, variantes y usuarios. Cada impresión tiene una foto pública de Pexels y las categorías usan imágenes placeholder; los demás recursos no tienen imágenes asociadas. En la primera ejecución, el usuario de desarrollo es `admin@fusions3d.local` con contraseña `Admin123!`; define `SEED_ADMIN_PASSWORD` antes de ejecutarlo para usar otra. Las credenciales de ejemplo no son para producción.
+Este comando inserta o actualiza datos de ejemplo sin vaciar las colecciones. Para borrar y recrear los datos de las colecciones de Fusions3D, ejecuta `npm run seed:reset` desde `fusions3d-back`; no se permite con `NODE_ENV=production`. En la primera ejecución, el usuario de desarrollo es `admin@fusions3d.local` con contraseña `Admin123!`; define `SEED_ADMIN_PASSWORD` antes de ejecutarlo para usar otra. Las credenciales de ejemplo no son para producción.
 
 ### 3. Frontend
 
@@ -89,6 +89,7 @@ Abre `http://localhost:4200`. En desarrollo, el frontend usa `http://localhost:3
 | `npm run dev` | API con Nodemon |
 | `npm start` | API en modo normal |
 | `npm run seed` | Insertar/actualizar datos de ejemplo |
+| `npm run seed:reset` | Vaciar las colecciones de Fusions3D y recrear datos de prueba |
 
 ## Rutas principales de la API
 
@@ -106,7 +107,7 @@ Todos los recursos están bajo `/api`; la tabla completa está en el [README del
 
 Los recursos CRUD incluyen listados, consulta individual, creación, actualización, activación, borrado lógico y restauración. Impresiones/categorías tienen consulta por slug; las variantes, por SKU y por impresión; los usuarios incluyen actualización de roles.
 
-Al desactivar o borrar lógicamente una categoría se desactivan sus impresiones y variantes; al hacerlo con una impresión o material, se desactivan sus variantes; al hacerlo con un rol, se desactivan los usuarios que lo tienen asignado. Restaurar o reactivar el padre **no reactiva automáticamente** a sus dependientes. Las altas, cambios de referencia y reactivaciones requieren dependencias disponibles; si no lo están, la API responde con `409 DEPENDENCY_UNAVAILABLE`.
+Las altas, los cambios de referencia y las reactivaciones requieren dependencias disponibles; si no lo están, la API responde con `409 DEPENDENCY_UNAVAILABLE`. Para evitar referencias colgantes, desactivar o borrar lógicamente categorías, impresiones, materiales y roles responde con `409 DEPENDENTS_EXIST` mientras tengan dependientes asociados, incluso si estos están inactivos o en la papelera. Hay que quitar o reasignar esas referencias antes de continuar.
 
 ## Organización
 
@@ -121,6 +122,6 @@ El archivo `fusions3d-front/src/environments/environment.ts` todavía apunta a `
 
 ## Limitaciones conocidas
 
-- No hay endpoints para cargar, editar o eliminar imágenes.
+- No hay subida de archivos ni endpoints independientes para imágenes; las URLs de imágenes de impresiones se gestionan al crear o actualizar la impresión.
 - El backend no tiene una suite de tests configurada.
 - `fusions3d-back/POSTMAN.md` documenta las peticiones actuales para probar la API. No hay una colección JSON de Postman importable en el repositorio.

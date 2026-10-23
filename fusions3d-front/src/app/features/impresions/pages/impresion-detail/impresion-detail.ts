@@ -37,12 +37,21 @@ export class ImpresionDetailPage {
 
   protected readonly processing = signal(false);
 
+  protected readonly images = computed(() => {
+    const impresion = this.store.selectedImpresion();
+    return [...(impresion?.images ?? [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+  });
+  protected readonly activeImageIndex = signal(0);
   protected readonly imageUrl = computed(() => {
     const impresion = this.store.selectedImpresion();
+    const images = this.images();
+    const coverIndex = images.findIndex((image) => image.isCover);
+    const selectedIndex = images.length > 0
+      ? (this.activeImageIndex() < images.length ? this.activeImageIndex() : 0)
+      : -1;
+    const image = images[selectedIndex >= 0 ? selectedIndex : coverIndex];
     return impresion
-      ? (impresion.images?.find((image) => image.isCover)?.imageUrl
-        ?? impresion.images?.[0]?.imageUrl
-        ?? placeholderImage(impresion.slug, impresion.name))
+      ? (image?.imageUrl ?? placeholderImage(impresion.slug, impresion.name))
       : '';
   });
 
@@ -67,6 +76,12 @@ export class ImpresionDetailPage {
       untracked(() => void this.store.loadBySlug(slug));
     });
 
+    effect(() => {
+      const images = this.store.selectedImpresion()?.images ?? [];
+      const coverIndex = images.findIndex((image) => image.isCover);
+      this.activeImageIndex.set(coverIndex >= 0 ? coverIndex : 0);
+    });
+
     // Limpia la selección al salir de la página
     inject(DestroyRef).onDestroy(() => this.store.clearSelected());
   }
@@ -74,6 +89,20 @@ export class ImpresionDetailPage {
   protected retry(): void {
     this.store.clearError();
     void this.store.loadBySlug(this.slug());
+  }
+
+  protected previousImage(): void {
+    const count = this.images().length;
+    if (count > 1) this.activeImageIndex.update((index) => (index - 1 + count) % count);
+  }
+
+  protected nextImage(): void {
+    const count = this.images().length;
+    if (count > 1) this.activeImageIndex.update((index) => (index + 1) % count);
+  }
+
+  protected selectImage(index: number): void {
+    this.activeImageIndex.set(index);
   }
 
   protected async toggleActive(): Promise<void> {
@@ -87,7 +116,7 @@ export class ImpresionDetailPage {
         showSuccess(
           impresion.isActive ? 'La impresión se ha desactivado.' : 'La impresión se ha activado.',
         );
-      }
+      } else this.store.clearError();
     } finally {
       this.processing.set(false);
     }
@@ -110,7 +139,7 @@ export class ImpresionDetailPage {
       if (ok) {
         showSuccess('La impresión se ha eliminado correctamente.');
         void this.router.navigate(['/impresiones']);
-      }
+      } else this.store.clearError();
     } finally {
       this.processing.set(false);
     }

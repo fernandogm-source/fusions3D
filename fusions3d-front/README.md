@@ -108,7 +108,7 @@ Base URL: `${environment.apiUrl}`. Recursos:
 
 Los recursos usan la envolvente `{ success, data }`; `ApiService` desenvuelve `data` y aplica timeout. Los errores se traducen en `error-message.util.ts` y se notifican mediante el interceptor/SweetAlert2.
 
-Las impresiones y categorías pueden incluir imágenes pobladas; las variantes no tienen imágenes. La API no dispone todavía de endpoints de carga o edición de imágenes. Las imágenes se conservan y se muestran aunque la impresión o categoría esté inactiva o en la papelera; se usa un placeholder cuando no hay ninguna imagen asociada.
+Las impresiones y categorías pueden incluir imágenes pobladas; las variantes no tienen imágenes. Las impresiones aceptan una lista de URLs HTTP/HTTPS al crearse o actualizarse; al actualizar, la lista reemplaza las imágenes asociadas (una lista vacía las elimina). No hay subida de archivos ni endpoints independientes para imágenes. Las imágenes se conservan y se muestran aunque la impresión o categoría esté inactiva o en la papelera; se usa un placeholder cuando no hay ninguna imagen asociada.
 
 ## Estado y formularios
 
@@ -116,7 +116,7 @@ Las impresiones y categorías pueden incluir imágenes pobladas; las variantes n
 - Los formularios son componentes propios de cada feature y reciben el registro inicial en modo edición. Las variantes no tienen nombre personalizado: se identifican por SKU y muestran impresión, material y color.
 - La lista y la papelera se mantienen como vistas separadas, sin filtros de estado.
 - `ApiService` centraliza las peticiones y la envoltura de respuesta; los interceptores gestionan carga y errores.
-- Los listados de impresiones, variantes y usuarios muestran avisos `dependencyIssues` cuando una referencia está ausente, eliminada o inactiva. La API devuelve `409 DEPENDENCY_UNAVAILABLE` si una operación requiere una dependencia que no está disponible; desde edición, la interfaz vuelve al listado y muestra el mensaje.
+- Los listados de impresiones, variantes y usuarios muestran avisos `dependencyIssues` cuando una referencia está ausente, eliminada o inactiva. La API devuelve `409 DEPENDENCY_UNAVAILABLE` si una operación requiere una dependencia que no está disponible y `409 DEPENDENTS_EXIST` si se intenta desactivar o borrar lógicamente un recurso con dependientes. Los errores de acciones se notifican mediante el interceptor sin sustituir la vista ya cargada; los fallos al cargar muestran el estado de error. En ciertos conflictos de dependencias durante la edición, la interfaz vuelve al listado.
 
 ## Seguridad
 

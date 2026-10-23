@@ -116,14 +116,28 @@ async function upsert(Model, filter, values) {
   );
 }
 
-async function seed() {
+async function seed({ reset = false } = {}) {
   try {
+    if (reset && process.env.NODE_ENV?.toLowerCase() === "production") {
+      throw new Error("El seed destructivo no se puede ejecutar con NODE_ENV=production");
+    }
+
     if (!process.env.MONGODB_URI) {
       throw new Error("MONGODB_URI no está definida en el archivo .env");
     }
 
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log("Conectado a MongoDB. Insertando/actualizando datos de ejemplo…");
+    console.log(`Conectado a MongoDB (${mongoose.connection.name}).`);
+
+    if (reset) {
+      console.warn("Modo destructivo: vaciando las colecciones de Fusions3D antes de sembrar…");
+      const collections = [Category, Material, Print, PrintVariant, Role, User, Image];
+      const deleteResults = await Promise.all(collections.map((Model) => Model.deleteMany({})));
+      const deletedCount = deleteResults.reduce((total, result) => total + result.deletedCount, 0);
+      console.log(`${deletedCount} documentos eliminados de ${collections.length} colecciones.`);
+    } else {
+      console.log("Insertando/actualizando datos de ejemplo sin borrar datos existentes…");
+    }
 
     const materialByName = {};
     for (const material of materials) {
@@ -246,7 +260,9 @@ async function seed() {
       );
     }
     console.log(`${imageRecords.length} imágenes de ejemplo preparadas.`);
-    console.log("Seed completado. No se han eliminado datos existentes.");
+    console.log(reset
+      ? "Seed completado. Se recrearon los datos de prueba en las colecciones de Fusions3D."
+      : "Seed completado. No se han eliminado datos existentes.");
     console.log("Usuario admin de desarrollo: admin@fusions3d.local");
     if (!process.env.SEED_ADMIN_PASSWORD) {
       console.warn("Contraseña inicial del admin: Admin123! (cámbiala y define SEED_ADMIN_PASSWORD).");
@@ -262,4 +278,4 @@ async function seed() {
   }
 }
 
-seed();
+seed({ reset: process.argv.includes("--reset") });

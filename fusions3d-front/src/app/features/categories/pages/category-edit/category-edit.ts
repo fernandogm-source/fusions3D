@@ -19,7 +19,10 @@ export class CategoryEditPage {
     this.saving.set(true);
     try {
       const updated = await this.store.update(this.id(), payload);
-      if (!updated) return;
+      if (!updated) {
+        this.store.clearError();
+        return;
+      }
       showSuccess('Categoría actualizada.');
       void this.router.navigate(['/admin/categories']);
     }

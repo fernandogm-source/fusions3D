@@ -7,6 +7,7 @@
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
     "seed": "node seed.js",
+    "seed:reset": "node seed.js --reset",
     "migrate:remove-variant-name": "node scripts/remove-print-variant-name.js"
   },
   "dependencies": {

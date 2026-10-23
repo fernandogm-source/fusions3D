@@ -37,6 +37,7 @@ export class ImpresionForm {
 
   readonly formSubmit = output<ImpresionCreatePayload>();
   protected readonly categories = signal<PrintCategory[]>([]);
+  protected readonly imageUrls = signal<string[]>([]);
 
   protected readonly statusOptions = computed<{ value: ImpresionStatus; label: string }[]>(() => {
     const base = [
@@ -70,6 +71,11 @@ export class ImpresionForm {
           categoryId: typeof value.categoryId === 'string' ? value.categoryId : value.categoryId?._id ?? '',
           status: value.status,
         });
+        this.imageUrls.set(
+          [...(value.images ?? [])]
+            .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+            .map((image) => image.imageUrl),
+        );
       }
     });
   }
@@ -83,6 +89,23 @@ export class ImpresionForm {
     return getControlErrorMessage(this.form.get(controlName), label);
   }
 
+  protected addImageUrl(): void {
+    this.imageUrls.update((urls) => [...urls, '']);
+  }
+
+  protected updateImageUrl(index: number, event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.imageUrls.update((urls) => urls.map((url, currentIndex) => currentIndex === index ? value : url));
+  }
+
+  protected removeImageUrl(index: number): void {
+    this.imageUrls.update((urls) => urls.filter((_, currentIndex) => currentIndex !== index));
+  }
+
+  protected isPreviewableUrl(value: string): boolean {
+    return this.isHttpUrl(value.trim());
+  }
+
   protected onSubmit(): void {
     if (this.form.invalid || this.submitting()) {
       this.form.markAllAsTouched();
@@ -90,14 +113,29 @@ export class ImpresionForm {
     }
 
     const raw = this.form.getRawValue();
+    const images = this.imageUrls().map((url) => url.trim()).filter(Boolean);
+    if (images.some((url) => !this.isHttpUrl(url))) {
+      showError('Introduce URLs de imagen válidas que empiecen por http:// o https://.');
+      return;
+    }
 
     const payload: ImpresionCreatePayload = {
       name: raw.name.trim(),
       description: raw.description.trim(),
       categoryId: raw.categoryId,
       status: raw.status,
+      images,
     };
 
     this.formSubmit.emit(payload);
+  }
+
+  private isHttpUrl(value: string): boolean {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
   }
 }

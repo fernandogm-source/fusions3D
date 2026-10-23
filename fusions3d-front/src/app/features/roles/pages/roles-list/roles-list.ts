@@ -14,7 +14,17 @@ export class RolesListPage {
   protected showTrash(value: boolean): void { void (value ? this.store.loadSoftDeleted(true) : this.store.loadAll(true)); }
   protected retry(): void { void (this.store.trashView() ? this.store.loadSoftDeleted(true) : this.store.loadAll(true)); }
   protected create(): void { void this.router.navigate(['/admin/roles/nuevo']); }
-  protected async remove(role: Role): Promise<void> { if (!(await confirmAction({ title: '¿Eliminar rol?', text: `"${role.name}" se moverá a la papelera.`, confirmText: 'Sí, eliminar' }))) return; if (await this.store.softDelete(role)) showSuccess('Rol eliminado.'); }
-  protected async toggle(role: Role): Promise<void> { if (await this.store.toggleActive(role)) showSuccess('Estado del rol actualizado.'); }
-  protected async restore(role: Role): Promise<void> { if (await this.store.restore(role)) showSuccess('Rol restaurado.'); }
+  protected async remove(role: Role): Promise<void> {
+    if (!(await confirmAction({ title: '¿Eliminar rol?', text: `"${role.name}" se moverá a la papelera.`, confirmText: 'Sí, eliminar' }))) return;
+    if (await this.store.softDelete(role)) showSuccess('Rol eliminado.');
+    else this.store.clearError();
+  }
+  protected async toggle(role: Role): Promise<void> {
+    if (await this.store.toggleActive(role)) showSuccess('Estado del rol actualizado.');
+    else this.store.clearError();
+  }
+  protected async restore(role: Role): Promise<void> {
+    if (await this.store.restore(role)) showSuccess('Rol restaurado.');
+    else this.store.clearError();
+  }
 }

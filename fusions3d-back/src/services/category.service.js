@@ -2,7 +2,7 @@ const repository = require('../repositories/category.repository');
 const Category = require('../models/category.model');
 const { AppError } = require('../utils/app.error');
 const { generateSlug } = require('../utils/slug.util');
-const dependencyCascade = require('./dependency-cascade.service');
+const dependencyRestriction = require('./dependency-restriction.service');
 
 class CategoryService {
   async getAll() {
@@ -69,7 +69,7 @@ class CategoryService {
 
     const newActive = !category.isActive;
     if (!newActive) {
-      await dependencyCascade.deactivateCategoryDependents(id);
+      await dependencyRestriction.assertCategoryHasNoPrints(id);
     }
 
     return repository.setActiveById(id, newActive);
@@ -86,7 +86,7 @@ class CategoryService {
       throw new AppError('La categoría ya está eliminada', 409, 'ALREADY_DELETED');
     }
 
-    await dependencyCascade.deactivateCategoryDependents(id);
+    await dependencyRestriction.assertCategoryHasNoPrints(id);
     const category = await repository.softDelete(id);
 
     return { message: 'Categoría eliminada correctamente', data: category };

@@ -3,7 +3,7 @@ const Category = require('../models/category.model');
 const { AppError } = require('../utils/app.error');
 const { generateSlug } = require('../utils/slug.util');
 const { attachDependencyIssues } = require('../utils/dependency-issues.util');
-const dependencyCascade = require('./dependency-cascade.service');
+const dependencyRestriction = require('./dependency-restriction.service');
 
 const DEPENDENCIES = [{
   field: 'categoryId',
@@ -43,12 +43,21 @@ class PrintService {
 
   async create(data) {
     await this.ensureCategoryExists(data.categoryId);
-    const slug = await generateSlug(data.name);
-    return repository.create({ ...data, slug });
+    const { images = [], ...printData } = data;
+    const slug = await generateSlug(printData.name);
+    const print = await repository.create({ ...printData, slug });
+
+    if (images.length > 0) {
+      await repository.replaceImages(print._id, images, print.name);
+    }
+
+    return repository.findById(print._id);
   }
 
   async update(id, body) {
     const cleanData = { ...body };
+    const images = cleanData.images;
+    delete cleanData.images;
     delete cleanData._id;
     delete cleanData.createdAt;
     delete cleanData.deletedAt;
@@ -69,6 +78,11 @@ class PrintService {
       throw new AppError('Impresión no encontrada', 404, 'PRINT_NOT_FOUND');
     }
 
+    if (images !== undefined) {
+      await repository.replaceImages(id, images, print.name);
+      return repository.findById(id);
+    }
+
     return print;
   }
 
@@ -87,7 +101,7 @@ class PrintService {
     if (newActive) {
       await this.ensureCategoryExists(print.categoryId);
     } else {
-      await dependencyCascade.deactivatePrintDependents(id);
+      await dependencyRestriction.assertPrintHasNoVariants(id);
     }
     const updated = await repository.setActiveById(id, newActive);
 
@@ -105,7 +119,7 @@ class PrintService {
       throw new AppError('La impresión ya está eliminada', 409, 'ALREADY_DELETED');
     }
 
-    await dependencyCascade.deactivatePrintDependents(id);
+    await dependencyRestriction.assertPrintHasNoVariants(id);
     const print = await repository.softDelete(id);
 
     return { message: 'Impresión eliminada correctamente', data: print };

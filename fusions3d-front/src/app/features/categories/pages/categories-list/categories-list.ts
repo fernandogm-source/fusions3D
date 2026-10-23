@@ -17,12 +17,15 @@ export class CategoriesListPage {
   protected async remove(category: Category): Promise<void> {
     if (!(await confirmAction({ title: '¿Eliminar categoría?', text: `"${category.name}" se moverá a la papelera.`, confirmText: 'Sí, eliminar' }))) return;
     if (await this.store.softDelete(category)) showSuccess('Categoría eliminada.');
+    else this.store.clearError();
   }
   protected async toggle(category: Category): Promise<void> {
     if (await this.store.toggleActive(category)) showSuccess(category.isActive ? 'Categoría desactivada.' : 'Categoría activada.');
+    else this.store.clearError();
   }
   protected async restore(category: Category): Promise<void> {
     if (await this.store.restore(category)) showSuccess('Categoría restaurada.');
+    else this.store.clearError();
   }
   protected openCreate(): void { void this.router.navigate(['/admin/categories/nueva']); }
 }

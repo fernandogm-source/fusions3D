@@ -1,6 +1,6 @@
 const repository = require('../repositories/material.repository');
 const { AppError } = require('../utils/app.error');
-const dependencyCascade = require('./dependency-cascade.service');
+const dependencyRestriction = require('./dependency-restriction.service');
 
 class MaterialService {
   async getAll() {
@@ -52,7 +52,7 @@ class MaterialService {
 
     const newActive = !material.isActive;
     if (!newActive) {
-      await dependencyCascade.deactivateMaterialDependents(id);
+      await dependencyRestriction.assertMaterialHasNoVariants(id);
     }
 
     return repository.setActiveById(id, newActive);
@@ -69,7 +69,7 @@ class MaterialService {
       throw new AppError('El material ya está eliminado', 409, 'ALREADY_DELETED');
     }
 
-    await dependencyCascade.deactivateMaterialDependents(id);
+    await dependencyRestriction.assertMaterialHasNoVariants(id);
     const material = await repository.softDelete(id);
 
     return { message: 'Material eliminado correctamente', data: material };

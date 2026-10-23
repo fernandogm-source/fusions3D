@@ -24,13 +24,44 @@
 @if (store.selectedImpresion(); as impresion) {
   <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
     <!-- Imagen -->
-    <div class="card overflow-hidden p-0">
+    <div class="card relative overflow-hidden p-0">
       <img
         [src]="imageUrl()"
-        [alt]="'Imagen de ' + impresion.name"
+        [alt]="images()[activeImageIndex()]?.altText || ('Imagen ' + (activeImageIndex() + 1) + ' de ' + impresion.name)"
         class="aspect-[4/3] h-full w-full object-cover"
         [class.grayscale]="!impresion.isActive && hasPhoto()"
       />
+      @if (images().length > 1) {
+        <button
+          type="button"
+          class="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 px-3 py-2 text-xl text-white transition hover:bg-black/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          aria-label="Imagen anterior"
+          (click)="previousImage()"
+        >
+          ‹
+        </button>
+        <button
+          type="button"
+          class="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 px-3 py-2 text-xl text-white transition hover:bg-black/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          aria-label="Imagen siguiente"
+          (click)="nextImage()"
+        >
+          ›
+        </button>
+        <div class="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2" aria-label="Seleccionar imagen">
+          @for (image of images(); track image._id; let index = $index) {
+            <button
+              type="button"
+              class="h-2.5 w-2.5 rounded-full border border-white transition"
+              [class.bg-white]="index === activeImageIndex()"
+              [class.bg-black/40]="index !== activeImageIndex()"
+              [attr.aria-label]="'Mostrar imagen ' + (index + 1)"
+              [attr.aria-current]="index === activeImageIndex() ? 'true' : null"
+              (click)="selectImage(index)"
+            ></button>
+          }
+        </div>
+      }
     </div>
 
     <!-- Información -->
