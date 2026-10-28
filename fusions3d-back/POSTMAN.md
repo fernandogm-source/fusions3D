@@ -8,9 +8,86 @@ Define esta variable en Postman:
 
 ```text
 baseUrl = http://localhost:3000
+adminEmail = admin@fusions3d.local
+adminPassword = Admin-Fusions3D-2026!
 ```
 
-Las rutas de negocio llevan el prefijo `/api`. Los ejemplos asumen que la API está iniciada y MongoDB conectado.
+Las rutas de negocio llevan el prefijo `/api`. Las rutas del panel requieren un token ADMIN; las de Auth y Profile aplican sus propios requisitos de autenticación. Los ejemplos asumen que la API está iniciada y MongoDB conectado.
+
+## Iniciar sesión
+
+Provisiona primero los datos de prueba con `npm run seed`. El administrador de desarrollo es `admin@fusions3d.local` con contraseña `Admin-Fusions3D-2026!`, definida en `seed.js`.
+
+```http
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+```
+
+Guarda `data.accessToken` de la respuesta como variable `accessToken` y añade este header a las peticiones del panel:
+
+```http
+Authorization: Bearer {{accessToken}}
+```
+
+`GET {{baseUrl}}/api/auth/me` devuelve la identidad del token actual.
+
+## Cerrar sesión
+
+El endpoint revoca el token presentado; después de responder, ese token ya no puede volver a utilizarse.
+
+```http
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{accessToken}}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "message": "Sesión cerrada correctamente"
+}
+```
+
+## Consultar y actualizar Profile
+
+El usuario autenticado consulta y modifica su propio perfil. ADMIN puede indicar el usuario objetivo mediante `userId` en la query.
+
+```http
+GET {{baseUrl}}/api/profiles/getprofile
+Authorization: Bearer {{accessToken}}
+```
+
+```http
+PATCH {{baseUrl}}/api/profiles/updateprofile
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Nombre de usuario",
+  "phone": "+34 600 000 000",
+  "addresses": [
+    {
+      "street": "Calle Mayor 1",
+      "city": "Madrid",
+      "postalCode": "28001",
+      "country": "España",
+      "isDefault": true
+    }
+  ]
+}
+```
+
+Para que un ADMIN opere sobre otro perfil, añade `?userId=<USER_ID>` a cualquiera de las dos rutas. Los usuarios normales no pueden seleccionar otro `userId`.
 
 ## Health check
 
@@ -106,8 +183,6 @@ GET {{baseUrl}}/api/prints
 GET {{baseUrl}}/api/categories
 GET {{baseUrl}}/api/materials
 GET {{baseUrl}}/api/print-variants
-GET {{baseUrl}}/api/roles
-GET {{baseUrl}}/api/users
 ```
 
 Consultas específicas:
@@ -152,17 +227,6 @@ El endpoint `PATCH /api/{resource}/<ID>/active` alterna el estado activo/inactiv
 PATCH {{baseUrl}}/api/prints/<PRINT_ID>/active
 ```
 
-También existe un endpoint específico para reemplazar roles de usuario:
-
-```http
-PATCH {{baseUrl}}/api/users/<USER_ID>/roles
-Content-Type: application/json
-```
-
-```json
-{ "roles": ["<ROLE_ID>"] }
-```
-
 ## Borrado lógico y restauración
 
 Los recursos no se borran físicamente mediante la API:
@@ -175,9 +239,9 @@ GET   {{baseUrl}}/api/prints/soft-deleted
 
 Los mismos sufijos (`/soft-delete`, `/restore`, `/soft-deleted`) están disponibles en los demás recursos.
 
-Desactivar o borrar lógicamente una categoría, impresión, material o rol se rechaza con `409 DEPENDENTS_EXIST` si todavía tiene dependientes asociados: categoría → impresiones, impresión o material → variantes, rol → usuarios asignados. Se cuentan también los dependientes inactivos y eliminados lógicamente; hay que reasignar o quitar esas referencias antes de continuar. Si un dependiente está en la papelera, restáuralo para cambiar la referencia. No se modifican los dependientes. Las imágenes asociadas a impresiones y categorías se conservan.
+Desactivar o borrar lógicamente una categoría, impresión o material se rechaza con `409 DEPENDENTS_EXIST` si todavía tiene dependientes asociados: categoría → impresiones, impresión o material → variantes. Se cuentan también los dependientes inactivos y eliminados lógicamente; hay que reasignar o quitar esas referencias antes de continuar. Si un dependiente está en la papelera, restáuralo para cambiar la referencia. No se modifican los dependientes. Las imágenes asociadas a impresiones y categorías se conservan.
 
-Los listados de impresiones, variantes y usuarios pueden incluir `dependencyIssues` en cada registro para señalar una referencia ausente, eliminada o inactiva.
+Los listados de impresiones y variantes pueden incluir `dependencyIssues` en cada registro para señalar una referencia ausente, eliminada o inactiva.
 
 Ejemplo de referencia inactiva en la respuesta de un listado:
 
@@ -188,36 +252,6 @@ Ejemplo de referencia inactiva en la respuesta de un listado:
   "referenceId": "<CATEGORY_ID>"
 }
 ```
-
-## Usuarios
-
-Crear usuario requiere nombre, email y contraseña de al menos ocho caracteres:
-
-```http
-POST {{baseUrl}}/api/users
-Content-Type: application/json
-```
-
-```json
-{
-  "name": "María García",
-  "email": "maria@example.com",
-  "password": "Cambiar123!",
-  "roles": ["<ROLE_ID>"],
-  "phone": "+34 600 000 000",
-  "addresses": [
-    {
-      "street": "Calle Mayor 1",
-      "city": "Madrid",
-      "postalCode": "28001",
-      "country": "España",
-      "isDefault": true
-    }
-  ]
-}
-```
-
-Las contraseñas se guardan con bcrypt y no se devuelven en las respuestas.
 
 ## Respuestas y errores
 
@@ -247,4 +281,4 @@ Error:
 
 ## Seguridad
 
-La API actual no tiene autenticación ni autorización. No la expongas públicamente ni uses estos ejemplos con datos sensibles hasta proteger las rutas.
+Las rutas del panel de negocio, incluidas las lecturas, requieren rol `ADMIN`. Profile requiere autenticación y aplica propietario o ADMIN; este último puede seleccionar cualquier usuario con `?userId=<USER_ID>`. Sin token la API responde `401`; un usuario que intente acceder al perfil de otro recibe `403`. `/api/roles` está activa para ADMIN; `/api/users` sigue desactivada mientras el frontend adopta los nuevos contratos.

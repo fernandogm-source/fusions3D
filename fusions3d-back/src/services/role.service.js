@@ -1,6 +1,13 @@
 const repository = require('../repositories/role.repository');
 const { AppError } = require('../utils/app.error');
+const { ADMIN_ROLE_NAME } = require('../utils/role.util');
 const dependencyRestriction = require('./dependency-restriction.service');
+
+function assertNotAdminRole(role, action) {
+  if (role.name === ADMIN_ROLE_NAME) {
+    throw new AppError(`No se puede ${action} el rol ${ADMIN_ROLE_NAME}`, 409, 'ADMIN_ROLE_PROTECTED');
+  }
+}
 
 class RoleService {
   async getAll() {
@@ -30,11 +37,17 @@ class RoleService {
     delete cleanData._id;
     delete cleanData.deletedAt;
 
-    const role = await repository.updateById(id, cleanData);
+    const existing = await repository.findById(id);
 
-    if (!role) {
+    if (!existing) {
       throw new AppError('Rol no encontrado', 404, 'ROLE_NOT_FOUND');
     }
+
+    if (cleanData.name !== undefined && cleanData.name !== existing.name) {
+      assertNotAdminRole(existing, 'renombrar');
+    }
+
+    const role = await repository.updateById(id, cleanData);
 
     return role;
   }
@@ -52,6 +65,7 @@ class RoleService {
 
     const newActive = !role.isActive;
     if (!newActive) {
+      assertNotAdminRole(role, 'desactivar');
       await dependencyRestriction.assertRoleHasNoUsers(id);
     }
 
@@ -69,6 +83,7 @@ class RoleService {
       throw new AppError('El rol ya está eliminado', 409, 'ALREADY_DELETED');
     }
 
+    assertNotAdminRole(existing, 'eliminar');
     await dependencyRestriction.assertRoleHasNoUsers(id);
     const role = await repository.softDelete(id);
 

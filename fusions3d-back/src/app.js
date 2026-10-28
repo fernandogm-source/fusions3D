@@ -9,12 +9,21 @@ const printRoutes = require('./routes/print.routes');
 const categoryRoutes = require('./routes/category.routes');
 const materialRoutes = require('./routes/material.routes');
 const printVariantRoutes = require('./routes/printVariant.routes');
+const authRoutes = require('./routes/auth.routes');
+const profileRoutes = require('./routes/profile.routes');
 const roleRoutes = require('./routes/role.routes');
-const userRoutes = require('./routes/user.routes');
+const { _auth } = require('./middlewares/auth.middleware');
+const { _admin } = require('./middlewares/admin.middleware');
+const { validateJwtConfig } = require('./utils/jwt.util');
 const { notFoundHandler, errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+if (process.env.TRUST_PROXY) {
+  const trustProxy = process.env.TRUST_PROXY;
+  app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy);
+}
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -35,18 +44,25 @@ app.get('/health', (_req, res) => {
   });
 });
 
+// Login is public; the current API is an admin panel, so every other /api route is ADMIN-only.
+app.use('/api/auth', authRoutes);
+app.use('/api/profiles', profileRoutes);
+app.use('/api', _auth, _admin);
+
 app.use('/api/prints', printRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/materials', materialRoutes);
 app.use('/api/print-variants', printVariantRoutes);
 app.use('/api/roles', roleRoutes);
-app.use('/api/users', userRoutes);
+
+// User administration routes are not mounted until the admin UI uses the new User/Profile contracts.
 
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 async function start() {
   try {
+    validateJwtConfig();
     await connectDB();
     app.listen(PORT, () => {
       console.log(`Fusions3D API escuchando en http://localhost:${PORT}`);

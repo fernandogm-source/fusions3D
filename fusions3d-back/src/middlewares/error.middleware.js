@@ -6,8 +6,6 @@ function notFoundHandler(req, _res, next) {
 }
 
 function errorHandler(error, _req, res, _next) {
-  console.error(error);
-
   let statusCode = error.statusCode || 500;
   let code = error.code || 'INTERNAL_ERROR';
   let message = error.message || 'Error interno del servidor';
@@ -17,7 +15,7 @@ function errorHandler(error, _req, res, _next) {
     statusCode = 400;
     code = 'VALIDATION_ERROR';
     message = 'Error de validación en los datos enviados';
-    details = error.errors.map((err) => ({
+    details = (error.issues || error.errors || []).map((err) => ({
       field: err.path.join('.'),
       message: err.message
     }));
@@ -41,13 +39,17 @@ function errorHandler(error, _req, res, _next) {
     message = 'Ya existe un registro con el mismo identificador único';
   }
 
+  if (statusCode >= 500) {
+    console.error(error);
+  }
+
   res.status(statusCode).json({
     success: false,
     error: {
       code,
       message,
       ...(details && { details }),
-      ...(process.env.NODE_ENV === 'development' ? { stack: error.stack } : {})
+      ...(process.env.NODE_ENV === 'development' && statusCode >= 500 ? { stack: error.stack } : {})
     }
   });
 }

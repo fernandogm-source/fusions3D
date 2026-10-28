@@ -17,6 +17,14 @@ class RoleRepository {
     return Role.findOne({ _id: id }).lean();
   }
 
+  async findAssignableById(id) {
+    return Role.findOne({ _id: id, isActive: true, deletedAt: null }).lean();
+  }
+
+  async findByName(name) {
+    return Role.findOne({ name, deletedAt: null }).lean();
+  }
+
   async create(data) {
     return Role.create(data);
   }

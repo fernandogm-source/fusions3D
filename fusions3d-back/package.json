@@ -7,15 +7,18 @@
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
     "seed": "node seed.js",
-    "seed:reset": "node seed.js --reset",
-    "migrate:remove-variant-name": "node scripts/remove-print-variant-name.js"
+    "seed:reset": "node seed.js --reset --confirm-reset",
+    "migrate:remove-variant-name": "node scripts/remove-print-variant-name.js",
+    "migrate:user-roles": "node scripts/migrate-user-roles.js"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3",
+    "argon2": "^0.45.1",
     "cors": "^2.8.6",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.7.1",
     "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.9.5",
     "morgan": "^1.12.1",
     "slugify": "^1.6.9",
@@ -26,5 +29,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "allowScripts": {
+    "argon2@0.45.1": true
   }
 }

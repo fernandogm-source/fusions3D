@@ -1,26 +1,19 @@
-const bcrypt = require('bcryptjs');
+const { hashPassword } = require('../utils/password.util');
 const repository = require('../repositories/user.repository');
-const Role = require('../models/role.model');
+const profileRepository = require('../repositories/profile.repository');
+const roleRepository = require('../repositories/role.repository');
 const { AppError } = require('../utils/app.error');
-const { attachDependencyIssues } = require('../utils/dependency-issues.util');
+const { ADMIN_ROLE_NAME } = require('../utils/role.util');
 
-const DEPENDENCIES = [{
-  field: 'roles',
-  array: true,
-  missingMessage: 'El usuario no tiene un rol válido asignado',
-  deletedMessage: 'El rol asignado está eliminado',
-  inactiveMessage: 'El rol asignado está desactivado'
-}];
-
-const SALT_ROUNDS = 10;
+const DEFAULT_ROLE_NAME = 'USER';
 
 class UserService {
   async getAll() {
-    return attachDependencyIssues(await repository.findAll(), DEPENDENCIES);
+    return repository.findAll();
   }
 
   async getSoftDeleted() {
-    return attachDependencyIssues(await repository.findSoftDeleted(), DEPENDENCIES);
+    return repository.findSoftDeleted();
   }
 
   async getById(id) {
@@ -34,26 +27,34 @@ class UserService {
   }
 
   async create(data) {
-    await this.ensureRolesExist(data.roles);
+    const { password, role, ...userData } = data;
+    const assignedRole = await this.resolveAssignableRole(role);
+    const passwordHash = await hashPassword(password);
+    const user = await repository.create({ ...userData, role: assignedRole._id, passwordHash });
 
-    const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
-    const user = await repository.create({ ...data, password: hashedPassword });
+    try {
+      await profileRepository.ensureForUser(user._id, user.email.split('@')[0]);
+    } catch (error) {
+      await repository.deleteById(user._id);
+      throw error;
+    }
 
     return this.withoutPassword(user);
   }
 
-  async update(id, body) {
+  async update(id, body, requesterId) {
     const cleanData = { ...body };
     delete cleanData._id;
     delete cleanData.createdAt;
     delete cleanData.deletedAt;
 
-    if (cleanData.roles) {
-      await this.ensureRolesExist(cleanData.roles);
+    if (cleanData.role !== undefined) {
+      await this.ensureRoleChangeAllowed(id, cleanData.role, requesterId);
     }
 
     if (cleanData.password) {
-      cleanData.password = await bcrypt.hash(cleanData.password, SALT_ROUNDS);
+      cleanData.passwordHash = await hashPassword(cleanData.password);
+      delete cleanData.password;
     }
 
     cleanData.updatedAt = new Date();
@@ -67,19 +68,17 @@ class UserService {
     return user;
   }
 
-  async updateRoles(id, roles) {
-    const user = await repository.findById(id);
+  async updateRole(id, role, requesterId) {
+    await this.ensureRoleChangeAllowed(id, role, requesterId);
 
+    const user = await repository.updateById(id, { role, updatedAt: new Date() });
     if (!user) {
       throw new AppError('Usuario no encontrado', 404, 'USER_NOT_FOUND');
     }
-
-    await this.ensureRolesExist(roles);
-
-    return repository.updateById(id, { roles, updatedAt: new Date() });
+    return user;
   }
 
-  async setActive(id) {
+  async setActive(id, requesterId) {
     const user = await repository.findByIdWithDeleted(id);
 
     if (!user) {
@@ -90,14 +89,15 @@ class UserService {
       throw new AppError('No se puede activar un usuario eliminado', 400, 'USER_DELETED');
     }
 
-    if (!user.isActive) {
-      await this.ensureRolesExist(user.roles);
+    if (user.isActive) {
+      this.assertNotSelf(id, requesterId);
+      await this.ensureAnotherActiveAdmin(user);
     }
 
     return repository.setActiveById(id, !user.isActive);
   }
 
-  async softDelete(id) {
+  async softDelete(id, requesterId) {
     const existing = await repository.findById(id);
 
     if (!existing) {
@@ -108,17 +108,20 @@ class UserService {
       throw new AppError('El usuario ya está eliminado', 409, 'ALREADY_DELETED');
     }
 
+    this.assertNotSelf(id, requesterId);
+    await this.ensureAnotherActiveAdmin(existing);
+
     const user = await repository.softDelete(id);
 
     return { message: 'Usuario eliminado correctamente', data: user };
   }
 
   async getActive() {
-    return attachDependencyIssues(await repository.findByActive(true), DEPENDENCIES);
+    return repository.findByActive(true);
   }
 
   async getInactive() {
-    return attachDependencyIssues(await repository.findByActive(false), DEPENDENCIES);
+    return repository.findByActive(false);
   }
 
   async restore(id) {
@@ -137,35 +140,72 @@ class UserService {
     return { message: 'Usuario restaurado correctamente', data: restored };
   }
 
+  assertNotSelf(targetId, requesterId) {
+    if (String(targetId) === String(requesterId)) {
+      throw new AppError(
+        'No puedes realizar esta operación sobre tu propia cuenta',
+        403,
+        'SELF_MODIFICATION_FORBIDDEN'
+      );
+    }
+  }
+
+  async ensureAnotherActiveAdmin(user) {
+    if (!user.isActive || user.deletedAt || !(await this.isAdminRole(user.role))) {
+      return;
+    }
+
+    const activeAdmins = await repository.countActiveAdmins();
+    if (activeAdmins <= 1) {
+      throw new AppError('Debe existir al menos un administrador activo', 409, 'LAST_ADMIN');
+    }
+  }
+
+  async ensureRoleChangeAllowed(id, roleId, requesterId) {
+    const user = await repository.findById(id);
+
+    if (!user) {
+      throw new AppError('Usuario no encontrado', 404, 'USER_NOT_FOUND');
+    }
+
+    const role = await this.resolveAssignableRole(roleId);
+
+    if (role.name === ADMIN_ROLE_NAME) {
+      return;
+    }
+
+    this.assertNotSelf(id, requesterId);
+    await this.ensureAnotherActiveAdmin(user);
+  }
+
+  async resolveAssignableRole(roleId) {
+    const id = roleId ?? (await roleRepository.findByName(DEFAULT_ROLE_NAME))?._id;
+    const role = id ? await roleRepository.findAssignableById(id) : null;
+
+    if (!role) {
+      throw new AppError(
+        'El rol asignado no existe o está desactivado',
+        409,
+        'DEPENDENCY_UNAVAILABLE'
+      );
+    }
+
+    return role;
+  }
+
+  async isAdminRole(roleId) {
+    const role = await roleRepository.findAssignableById(roleId);
+    return role?.name === ADMIN_ROLE_NAME;
+  }
+
   withoutPassword(user) {
     if (!user) {
       return user;
     }
 
     const obj = typeof user.toObject === 'function' ? user.toObject() : user;
-    const { password, ...rest } = obj;
+    const { password, passwordHash, ...rest } = obj;
     return rest;
-  }
-
-  async ensureRolesExist(roles) {
-    if (!roles || roles.length === 0) {
-      return;
-    }
-
-    const uniqueRoles = [...new Set(roles)];
-    const count = await Role.countDocuments({
-      _id: { $in: uniqueRoles },
-      deletedAt: null,
-      isActive: true
-    });
-
-    if (count !== uniqueRoles.length) {
-      throw new AppError(
-        'Uno o más roles no existen, están eliminados o desactivados',
-        409,
-        'DEPENDENCY_UNAVAILABLE'
-      );
-    }
   }
 }
 

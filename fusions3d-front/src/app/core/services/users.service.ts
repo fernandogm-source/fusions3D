@@ -17,6 +17,7 @@ export class UsersService {
   update(id: string, payload: UserUpdatePayload): Observable<User> {
     return this.api.patch<User>(`${this.resource}/${id}`, payload);
   }
+  // Pendiente: la API expone PATCH /users/:id/role con un único rol y /users aún no está montada.
   updateRoles(id: string, roles: string[]): Observable<User> {
     return this.api.patch<User>(`${this.resource}/${id}/roles`, { roles });
   }

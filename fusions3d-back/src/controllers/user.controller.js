@@ -39,16 +39,16 @@ class UserController {
 
   async update(req, res, next) {
     try {
-      const data = await service.update(req.params.id, req.body);
+      const data = await service.update(req.params.id, req.body, req.user.id);
       res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
     }
   }
 
-  async updateRoles(req, res, next) {
+  async updateRole(req, res, next) {
     try {
-      const data = await service.updateRoles(req.params.id, req.body.roles);
+      const data = await service.updateRole(req.params.id, req.body.role, req.user.id);
       res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
@@ -57,7 +57,7 @@ class UserController {
 
   async setActive(req, res, next) {
     try {
-      const data = await service.setActive(req.params.id);
+      const data = await service.setActive(req.params.id, req.user.id);
       res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
@@ -66,7 +66,7 @@ class UserController {
 
   async softDelete(req, res, next) {
     try {
-      const result = await service.softDelete(req.params.id);
+      const result = await service.softDelete(req.params.id, req.user.id);
       res.status(200).json({ success: true, message: result.message, data: result.data });
     } catch (error) {
       next(error);

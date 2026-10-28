@@ -1,31 +1,34 @@
 const User = require('../models/user.model');
-require('../models/role.model');
-
-const POPULATE_ROLES = { path: 'roles', select: 'name deletedAt isActive' };
+const Role = require('../models/role.model');
+const { ADMIN_ROLE_NAME } = require('../utils/role.util');
 
 class UserRepository {
   async findAll() {
-    return User.find({ deletedAt: null }).select('-password').sort({ name: 1 }).populate(POPULATE_ROLES).lean();
+    return User.find({ deletedAt: null }).select('-password -passwordHash').sort({ email: 1 }).lean();
   }
 
   async findSoftDeleted() {
-    return User.find({ deletedAt: { $ne: null } }).select('-password').sort({ name: 1 }).populate(POPULATE_ROLES).lean();
+    return User.find({ deletedAt: { $ne: null } }).select('-password -passwordHash').sort({ email: 1 }).lean();
   }
 
   async findById(id) {
-    return User.findOne({ _id: id, deletedAt: null }).select('-password').populate(POPULATE_ROLES).lean();
+    return User.findOne({ _id: id, deletedAt: null }).select('-password -passwordHash').lean();
   }
 
   async findByIdWithDeleted(id) {
-    return User.findOne({ _id: id }).select('-password').lean();
+    return User.findOne({ _id: id }).select('-password -passwordHash').lean();
   }
 
   async findByEmail(email) {
-    return User.findOne({ email: email.toLowerCase(), deletedAt: null }).select('-password').populate(POPULATE_ROLES).lean();
+    return User.findOne({ email: email.toLowerCase(), deletedAt: null }).select('-password -passwordHash').lean();
   }
 
   async create(data) {
     return User.create(data);
+  }
+
+  async deleteById(id) {
+    return User.deleteOne({ _id: id });
   }
 
   async updateById(id, data) {
@@ -33,7 +36,7 @@ class UserRepository {
       { _id: id, deletedAt: null },
       data,
       { new: true, runValidators: true }
-    ).select('-password').populate(POPULATE_ROLES).lean();
+    ).select('-password -passwordHash').lean();
   }
 
   async softDelete(id) {
@@ -41,7 +44,7 @@ class UserRepository {
       { _id: id, deletedAt: null },
       { deletedAt: new Date(), updatedAt: new Date(), isActive: false },
       { new: true, runValidators: true }
-    ).select('-password').lean();
+    ).select('-password -passwordHash').lean();
   }
 
   async setActiveById(id, isActive) {
@@ -49,11 +52,16 @@ class UserRepository {
       { _id: id },
       { isActive, updatedAt: new Date() },
       { new: true, runValidators: true }
-    ).select('-password').lean();
+    ).select('-password -passwordHash').lean();
   }
 
   async findByActive(isActive) {
-    return User.find({ isActive, deletedAt: null }).select('-password').sort({ name: 1 }).populate(POPULATE_ROLES).lean();
+    return User.find({ isActive, deletedAt: null }).select('-password -passwordHash').sort({ email: 1 }).lean();
+  }
+
+  async countActiveAdmins() {
+    const adminRoleIds = await Role.find({ name: ADMIN_ROLE_NAME, isActive: true, deletedAt: null }).distinct('_id');
+    return User.countDocuments({ role: { $in: adminRoleIds }, isActive: true, deletedAt: null });
   }
 
   async restoreById(id) {
@@ -61,7 +69,7 @@ class UserRepository {
       { _id: id, deletedAt: { $ne: null } },
       { deletedAt: null, updatedAt: new Date() },
       { new: true, runValidators: true }
-    ).select('-password').lean();
+    ).select('-password -passwordHash').lean();
   }
 }
 

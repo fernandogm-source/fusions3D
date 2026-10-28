@@ -20,7 +20,7 @@ class DependencyRestrictionService {
   }
 
   async assertRoleHasNoUsers(roleId) {
-    const count = await User.countDocuments({ roles: roleId });
+    const count = await User.countDocuments({ role: roleId });
     this.assertNoDependents('el rol', 'usuario asignado', 'usuarios asignados', count);
   }
 

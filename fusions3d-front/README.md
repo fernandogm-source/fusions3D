@@ -87,7 +87,7 @@ Los modelos, servicios y stores tipados están en `core/`. Los formularios usan 
 | Materiales | `/admin/materials` | `/admin/materials/nuevo` | — | `/admin/materials/:id/editar` |
 | Variantes | `/admin/print-variants` | `/admin/print-variants/nueva` | — | `/admin/print-variants/:id/editar` |
 | Roles | `/admin/roles` | `/admin/roles/nuevo` | — | `/admin/roles/:id/editar` |
-| Usuarios | `/admin/users` | `/admin/users/nuevo` | — | `/admin/users/:id/editar` |
+| Usuarios (pendiente) | `/admin/users` | `/admin/users/nuevo` | — | `/admin/users/:id/editar` |
 
 La papelera se abre desde el listado de cada feature y no tiene una ruta independiente.
 
@@ -104,7 +104,7 @@ Base URL: `${environment.apiUrl}`. Recursos:
 | Materiales | `/materials` |
 | Variantes | `/print-variants` |
 | Roles | `/roles` |
-| Usuarios | `/users` |
+| Usuarios (pendiente: la API no monta `/users`) | `/users` |
 
 Los recursos usan la envolvente `{ success, data }`; `ApiService` desenvuelve `data` y aplica timeout. Los errores se traducen en `error-message.util.ts` y se notifican mediante el interceptor/SweetAlert2.
 
@@ -112,14 +112,16 @@ Las impresiones y categorías pueden incluir imágenes pobladas; las variantes n
 
 ## Estado y formularios
 
-- Los stores usan Signals para lista, selección, caché, carga, error y operaciones CRUD. `DependencyRefreshStore` notifica cambios en categorías, impresiones, materiales y roles; los stores de impresiones, variantes y usuarios actualizan sus listados relacionados sin recargar la página.
+- Los stores usan Signals para lista, selección, caché, carga, error y operaciones CRUD. `DependencyRefreshStore` notifica cambios en categorías, impresiones, materiales y roles; el store de variantes actualiza sus listados relacionados sin recargar la página.
 - Los formularios son componentes propios de cada feature y reciben el registro inicial en modo edición. Las variantes no tienen nombre personalizado: se identifican por SKU y muestran impresión, material y color.
 - La lista y la papelera se mantienen como vistas separadas, sin filtros de estado.
 - `ApiService` centraliza las peticiones y la envoltura de respuesta; los interceptores gestionan carga y errores.
-- Los listados de impresiones, variantes y usuarios muestran avisos `dependencyIssues` cuando una referencia está ausente, eliminada o inactiva. La API devuelve `409 DEPENDENCY_UNAVAILABLE` si una operación requiere una dependencia que no está disponible y `409 DEPENDENTS_EXIST` si se intenta desactivar o borrar lógicamente un recurso con dependientes. Los errores de acciones se notifican mediante el interceptor sin sustituir la vista ya cargada; los fallos al cargar muestran el estado de error. En ciertos conflictos de dependencias durante la edición, la interfaz vuelve al listado.
+- Los listados de impresiones y variantes muestran avisos `dependencyIssues` cuando una referencia está ausente, eliminada o inactiva. La API devuelve `409 DEPENDENCY_UNAVAILABLE` si una operación requiere una dependencia que no está disponible y `409 DEPENDENTS_EXIST` si se intenta desactivar o borrar lógicamente un recurso con dependientes. Los errores de acciones se notifican mediante el interceptor sin sustituir la vista ya cargada; los fallos al cargar muestran el estado de error. En ciertos conflictos de dependencias durante la edición, la interfaz vuelve al listado.
 
 ## Seguridad
 
-Las rutas del frontend no tienen guard de autenticación y el backend tampoco valida identidad ni permisos. **Este panel es solo para desarrollo hasta que se implemente autenticación/autorización en la API**; ocultar enlaces o añadir un guard de frontend no protegería por sí solo los endpoints.
+La API exige un token JWT de un usuario con rol `ADMIN`, pero el frontend todavía no tiene pantalla de login, guard de rutas ni envía el token en `ApiService`. Por tanto, las peticiones a la API protegida recibirán `401` hasta que se implemente. Ocultar enlaces o añadir un guard de frontend no protegería por sí solo los endpoints: la protección real está en la API.
+
+La feature de usuarios está pendiente: su ruta de API no está montada y el servicio aún no está adaptado a su contrato.
 
 > [← Volver al README principal](../README.md)
