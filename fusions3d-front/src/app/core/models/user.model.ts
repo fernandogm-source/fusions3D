@@ -1,37 +1,24 @@
-import { Role } from './role.model';
-import { DependencyIssue } from './dependency-issue.model';
-
-export interface UserAddress {
-  _id?: string;
-  street: string;
-  city: string;
-  state?: string;
-  postalCode: string;
-  country: string;
-  isDefault?: boolean;
-}
-
+/**
+ * Cuenta de usuario tal y como la devuelve `/api/users`.
+ * El nombre, teléfono y direcciones pertenecen al perfil y no se incluyen aquí.
+ */
 export interface User {
   _id: string;
-  name: string;
   email: string;
-  roles: (string | Pick<Role, '_id' | 'name'>)[];
-  addresses: UserAddress[];
-  phone: string | null;
+  username: string;
+  /** Id del rol asignado. */
+  role: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string | null;
   deletedAt: string | null;
-  dependencyIssues?: DependencyIssue[];
 }
 
 export interface UserPayload {
-  name: string;
   email: string;
+  username: string;
   password?: string;
-  roles?: string[];
-  addresses?: UserAddress[];
-  phone?: string | null;
+  role?: string;
 }
 
 export type UserUpdatePayload = Partial<UserPayload>;

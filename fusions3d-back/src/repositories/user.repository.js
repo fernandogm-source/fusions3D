@@ -23,6 +23,22 @@ class UserRepository {
     return User.findOne({ email: email.toLowerCase(), deletedAt: null }).select('-password -passwordHash').lean();
   }
 
+  async existsByEmail(email, excludeId) {
+    const filter = { email: email.toLowerCase() };
+    if (excludeId) {
+      filter._id = { $ne: excludeId };
+    }
+    return User.exists(filter);
+  }
+
+  async existsByUsername(username, excludeId) {
+    const filter = { username: username.toLowerCase() };
+    if (excludeId) {
+      filter._id = { $ne: excludeId };
+    }
+    return User.exists(filter);
+  }
+
   async create(data) {
     return User.create(data);
   }

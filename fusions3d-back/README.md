@@ -31,7 +31,7 @@ src/
 └── app.js
 ```
 
-La API actual sirve al panel de administración. Las rutas del panel pasan por los middlewares `_auth` y `_admin`, en ese orden. El login es público; `/api/auth/me`, logout y Profile requieren `_auth`. Profile es un dominio separado de Auth y permite al propietario gestionar sus propios datos; ADMIN puede seleccionar cualquier perfil mediante `?userId=<id>`, incluso si la cuenta está inactiva o eliminada lógicamente. Las rutas `/api/roles` están activas para ADMIN. La ruta `/api/users` sigue desactivada hasta que el panel adopte sus nuevos contratos; cuando se monte, el router exige `_auth` y `_admin` por sí mismo. Un ADMIN no puede cambiar su propio rol ni desactivarse o eliminarse (`SELF_MODIFICATION_FORBIDDEN`), y ninguna operación puede dejar el sistema sin ningún administrador activo (`LAST_ADMIN`). `Image` es un modelo asociado que se popula en impresiones y categorías.
+La API actual sirve al panel de administración. Las rutas del panel pasan por los middlewares `_auth` y `_admin`, en ese orden. El login es público; `/api/auth/me`, logout y Profile requieren `_auth`. Profile es un dominio separado de Auth y permite al propietario gestionar sus propios datos; ADMIN puede seleccionar cualquier perfil mediante `?userId=<id>`, incluso si la cuenta está inactiva o eliminada lógicamente. Las rutas `/api/roles` están activas para ADMIN. La ruta `/api/users` está activa para ADMIN y el router exige `_auth` y `_admin` por sí mismo. El email y el nombre de usuario (`username`) deben ser únicos, incluso frente a usuarios eliminados lógicamente (`EMAIL_ALREADY_EXISTS` y `USERNAME_ALREADY_EXISTS`, 409). El `username` tiene entre 3 y 30 caracteres (`a-z`, `0-9`, `.`, `_` y `-`), se guarda en minúsculas y lo puede cambiar un ADMIN desde `/api/users` o el propio usuario desde `/api/profiles/updateprofile`. El login sigue usando solo el email. Un ADMIN no puede cambiar su propio rol ni desactivarse o eliminarse (`SELF_MODIFICATION_FORBIDDEN`), y ninguna operación puede dejar el sistema sin ningún administrador activo (`LAST_ADMIN`). `Image` es un modelo asociado que se popula en impresiones y categorías.
 
 ## Instalación y ejecución
 
@@ -139,7 +139,7 @@ Base URL: `http://localhost:3000`. Todos los recursos de negocio usan el prefijo
 | GET | `/api/auth/me` | Usuario autenticado actual |
 | POST | `/api/auth/logout` | Revocar el token actual |
 | GET | `/api/profiles/getprofile` | Consultar el propio perfil |
-| PATCH | `/api/profiles/updateprofile` | Actualizar el propio perfil |
+| PATCH | `/api/profiles/updateprofile` | Actualizar el propio perfil (incluye `username`) |
 | GET | `/api/{resource}` | Listar registros no eliminados |
 | GET | `/api/{resource}/active` | Listar activos |
 | GET | `/api/{resource}/inactive` | Listar inactivos |
@@ -151,7 +151,7 @@ Base URL: `http://localhost:3000`. Todos los recursos de negocio usan el prefijo
 | PATCH | `/api/{resource}/:id/soft-delete` | Borrado lógico |
 | PATCH | `/api/{resource}/:id/restore` | Restaurar |
 
-`{resource}` puede ser `prints`, `categories`, `materials`, `print-variants` o `roles`. Todas estas rutas, incluidas las lecturas, requieren `Authorization: Bearer <token>` de un ADMIN. La ruta `/api/users` no está montada todavía (pendiente).
+`{resource}` puede ser `prints`, `categories`, `materials`, `print-variants` o `roles`. Todas estas rutas, incluidas las lecturas, requieren una sesión de ADMIN: la cookie `fusions3d_session` que emite el login, o `Authorization: Bearer <token>` para clientes sin cookies. La ruta `/api/users` también está montada y requiere ADMIN.
 
 Las rutas de Profile requieren un token válido y comprueban propiedad. ADMIN puede especificar `?userId=<id>` para consultar o actualizar el perfil de otro usuario, incluso si su cuenta está inactiva o eliminada lógicamente. El `userId` no se acepta en el cuerpo de actualización. `avatarUrl` acepta una URL HTTP/HTTPS o `null` para quitar el avatar; la imagen se aloja fuera de la API.
 
@@ -173,7 +173,7 @@ Las rutas de Profile requieren un token válido y comprueban propiedad. ADMIN pu
 | Material | `name`, `isActive`, `deletedAt` |
 | PrintVariant | `printId`, `sku` (generado), `materialId`, `color`, `salePrice`, `costPrice`, `printTime`, `isActive`, `deletedAt`, `createdAt`, `updatedAt` |
 | Role | `name` (único), `isActive`, `deletedAt` |
-| User | `email`, `passwordHash` (Argon2id), `role` (ObjectId de `Role`), `isActive`, `deletedAt` |
+| User | `email`, `username` (único), `passwordHash` (Argon2id), `role` (ObjectId de `Role`), `isActive`, `deletedAt` |
 | Profile | `userId` (único), `name`, `phone`, `addresses`, `avatarUrl` |
 
 Las imágenes se asocian mediante `entityType` y `entityId`, y se devuelven pobladas en impresiones y categorías. Al crear o actualizar una impresión se puede enviar `images` como una lista de URLs HTTP/HTTPS. En un `PATCH`, la lista reemplaza las imágenes actuales: una lista vacía las elimina todas de esa impresión. Los archivos siguen alojados externamente. Las variantes no tienen imágenes.
@@ -187,11 +187,13 @@ Las imágenes se asocian mediante `entityType` y `entityId`, y se devuelven pobl
 - Los `ref` de Mongoose guardan referencias `ObjectId`, pero MongoDB no impone claves foráneas. Las comprobaciones se realizan en los servicios de la API; `dependencyIssues` permite identificar relaciones inválidas ya existentes.
 - El borrado es lógico (`deletedAt`) y no elimina documentos físicamente.
 - Las contraseñas se hashean con Argon2id mediante `src/utils/password.util.js`; la lógica JWT está centralizada en `src/utils/jwt.util.js`.
+- El login emite el JWT en la cookie `HttpOnly` `fusions3d_session` (`SameSite=Lax`, `Secure` en producción, ruta `/api`); el token no aparece en el cuerpo de la respuesta. Cualquier usuario con cuenta y rol activos puede iniciar sesión; las rutas de administración siguen reservadas a `ADMIN`, y el resto de usuarios solo accede a su Profile. El logout borra la cookie y revoca el token.
 - El JWT contiene el identificador del usuario y el id de su rol (`roleId`). Cada petición comprueba que la cuenta siga activa y que el rol del token coincida con el rol actual del usuario en MongoDB. Si cambia el rol del usuario, el token anterior deja de ser válido.
 - Los roles son documentos de la colección `roles`. Solo el rol con nombre `ADMIN` da acceso al panel de administración; cualquier otro rol (como `USER` o uno creado desde `/api/roles`) no tiene acceso. El rol `ADMIN` no se puede renombrar, desactivar ni eliminar. Solo se pueden asignar roles activos, y no se puede desactivar o borrar un rol que tenga usuarios asignados. Las credenciales de prueba del seed están en `seed.js` y solo deben usarse en desarrollo.
 - El logout revoca el `jti` del token en MongoDB; desde ese momento, las siguientes peticiones con ese token reciben `401`. El índice TTL se crea al iniciar la conexión y elimina automáticamente los registros revocados al expirar el JWT.
 - Los datos personales, direcciones y avatar pertenecen a `Profile`, relacionado 1:1 con `User` mediante un `userId` único. `_auth` autentica; el servicio de Profile aplica propietario o ADMIN.
 - Al crear un usuario se crea también su Profile, con el nombre derivado de la parte local del email.
+- Migración de usernames para bases existentes: `node scripts/migrate-usernames.js` solo muestra el plan (solo funciona contra `localhost` y la base `fusions3d`). Con `--apply` asigna a cada usuario sin `username` uno derivado de la parte local del email (con sufijo numérico si hay colisión) y crea el índice único. Ejecútala antes de arrancar la nueva versión de la API.
 - El login tiene dos límites: 10 intentos por IP y 5 por email cada 15 minutos. Ambos responden `429 LOGIN_RATE_LIMITED`.
 - No hay registro público. La creación de cuentas del panel se incorporará como operación administrativa en un paso posterior.
 - `POSTMAN.md` contiene ejemplos de las rutas actuales. No se distribuye una colección JSON importable de Postman.

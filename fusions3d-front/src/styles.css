@@ -39,6 +39,27 @@ html {
 body {
   @apply bg-base text-ink antialiased;
   font-feature-settings: "cv02", "cv03", "cv11";
+  background-image:
+    radial-gradient(1000px 520px at 100% -8%, rgb(255 96 0 / 0.08), transparent 60%),
+    radial-gradient(800px 480px at -8% 0%, rgb(255 143 82 / 0.05), transparent 55%);
+  background-attachment: fixed;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none;
+  }
 }
 
 ::selection {
@@ -60,7 +81,11 @@ body {
 /* ---------- Componentes reutilizables ---------- */
 
 .card {
-  @apply rounded-2xl border border-line bg-surface shadow-card;
+  @apply rounded-2xl border border-line bg-gradient-to-b from-surface to-base/60 shadow-card;
+}
+
+.card-interactive {
+  @apply transition-all duration-300 hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-[0_24px_48px_-26px_rgb(255_96_0/0.35)];
 }
 
 .btn {
@@ -68,11 +93,11 @@ body {
 }
 
 .btn-primary {
-  @apply bg-brand text-white shadow-[0_10px_24px_-12px_rgb(255_96_0/0.9)] hover:bg-brand-dark hover:shadow-[0_14px_28px_-12px_rgb(255_96_0/0.95)] active:translate-y-px;
+  @apply bg-gradient-to-br from-brand to-brand-dark text-white shadow-[0_10px_24px_-12px_rgb(255_96_0/0.9)] hover:from-brand-light hover:to-brand hover:shadow-[0_14px_28px_-12px_rgb(255_96_0/0.95)] active:translate-y-px;
 }
 
 .btn-secondary {
-  @apply border border-line bg-elevated text-ink hover:border-line-strong hover:bg-surface;
+  @apply border border-line bg-elevated text-ink hover:border-line-strong hover:bg-surface hover:text-white;
 }
 
 .btn-ghost {
@@ -104,7 +129,7 @@ body {
 }
 
 .input {
-  @apply w-full rounded-lg border border-line bg-base px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint outline-none transition-colors duration-200 focus:border-brand/60 focus:ring-4 focus:ring-brand/15;
+  @apply w-full rounded-lg border border-line bg-base px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint outline-none transition-all duration-200 hover:border-line-strong focus:border-brand/60 focus:ring-4 focus:ring-brand/15;
 }
 
 .input-error {
@@ -169,6 +194,10 @@ body {
 
 .page-title {
   @apply font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl;
+}
+
+.page-enter {
+  animation: page-enter 0.4s ease-out both;
 }
 }
 

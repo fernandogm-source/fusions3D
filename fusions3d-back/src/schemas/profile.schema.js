@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const { objectId } = require('./common.schema');
+const { objectId, usernameSchema } = require('./common.schema');
 
 const addressSchema = z.object({
   street: z.string().trim().min(1, 'La calle es obligatoria'),
@@ -11,6 +11,7 @@ const addressSchema = z.object({
 }).strict();
 
 const updateProfileSchema = z.object({
+  username: usernameSchema.optional(),
   name: z.string().trim().min(1).max(100).optional(),
   phone: z.string().trim().max(30).nullable().optional(),
   avatarUrl: z.url({ protocol: /^https?$/ }).max(2048).nullable().optional(),

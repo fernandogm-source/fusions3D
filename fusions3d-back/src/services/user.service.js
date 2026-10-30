@@ -28,6 +28,8 @@ class UserService {
 
   async create(data) {
     const { password, role, ...userData } = data;
+    await this.assertEmailAvailable(userData.email);
+    await this.assertUsernameAvailable(userData.username);
     const assignedRole = await this.resolveAssignableRole(role);
     const passwordHash = await hashPassword(password);
     const user = await repository.create({ ...userData, role: assignedRole._id, passwordHash });
@@ -50,6 +52,14 @@ class UserService {
 
     if (cleanData.role !== undefined) {
       await this.ensureRoleChangeAllowed(id, cleanData.role, requesterId);
+    }
+
+    if (cleanData.email !== undefined) {
+      await this.assertEmailAvailable(cleanData.email, id);
+    }
+
+    if (cleanData.username !== undefined) {
+      await this.assertUsernameAvailable(cleanData.username, id);
     }
 
     if (cleanData.password) {
@@ -138,6 +148,18 @@ class UserService {
     const restored = await repository.restoreById(id);
 
     return { message: 'Usuario restaurado correctamente', data: restored };
+  }
+
+  async assertEmailAvailable(email, excludeId) {
+    if (await repository.existsByEmail(email, excludeId)) {
+      throw new AppError('Ya existe un usuario con ese email', 409, 'EMAIL_ALREADY_EXISTS');
+    }
+  }
+
+  async assertUsernameAvailable(username, excludeId) {
+    if (await repository.existsByUsername(username, excludeId)) {
+      throw new AppError('Ya existe un usuario con ese nombre de usuario', 409, 'USERNAME_ALREADY_EXISTS');
+    }
   }
 
   assertNotSelf(targetId, requesterId) {

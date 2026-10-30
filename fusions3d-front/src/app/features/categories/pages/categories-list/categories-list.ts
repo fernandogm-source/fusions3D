@@ -5,9 +5,10 @@ import { Category } from '../../../../core/models/category.model';
 import { CategoryTable } from '../../components/category-table/category-table';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
+import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { confirmAction, showSuccess } from '../../../../shared/utils/alert.util';
 
-@Component({ selector: 'app-categories-list', imports: [CategoryTable, EmptyState, ErrorState], templateUrl: './categories-list.html' })
+@Component({ selector: 'app-categories-list', imports: [CategoryTable, EmptyState, ErrorState, PageHeader], templateUrl: './categories-list.html' })
 export class CategoriesListPage {
   protected readonly store = inject(CategoriesStore);
   private readonly router = inject(Router);

@@ -1,7 +1,8 @@
 <div
-  class="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-line-strong bg-surface/60 px-6 py-16 text-center"
+  class="page-enter flex flex-col items-center justify-center gap-5 rounded-2xl border border-dashed border-line-strong bg-gradient-to-b from-surface to-base/60 px-6 py-16 text-center"
 >
-  <span class="grid h-16 w-16 place-items-center rounded-2xl bg-elevated text-ink-faint ring-1 ring-line">
+  <span class="relative grid h-16 w-16 place-items-center rounded-2xl bg-elevated text-brand-light ring-1 ring-line">
+    <span class="absolute inset-0 -z-10 rounded-2xl bg-brand/25 blur-xl" aria-hidden="true"></span>
     <svg
       xmlns="http://www.w3.org/2000/svg"
       class="h-8 w-8"
@@ -18,7 +19,9 @@
       />
     </svg>
   </span>
-  <h2 class="font-display text-xl font-semibold text-ink">{{ title() }}</h2>
-  <p class="max-w-md text-sm text-ink-muted">{{ message() }}</p>
+  <div class="flex flex-col gap-2">
+    <h2 class="font-display text-xl font-semibold text-ink">{{ title() }}</h2>
+    <p class="mx-auto max-w-md text-sm text-ink-muted">{{ message() }}</p>
+  </div>
   <ng-content />
 </div>

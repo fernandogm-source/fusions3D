@@ -78,6 +78,7 @@ const variantData = [
 
 const adminAccount = {
   email: "admin@fusions3d.local",
+  username: "admin",
   password: "Admin-Fusions3D-2026!",
   name: "Administrador Fusions3D",
 };
@@ -85,6 +86,7 @@ const adminAccount = {
 const sampleUsers = [
   {
     email: "usuario1@fusions3d.local",
+    username: "usuario1",
     password: "Usuario1-Fusions3D-2026!",
     name: "Usuario Uno",
     phone: "+34 600 000 001",
@@ -94,6 +96,7 @@ const sampleUsers = [
   },
   {
     email: "usuario2@fusions3d.local",
+    username: "usuario2",
     password: "Usuario2-Fusions3D-2026!",
     name: "Usuario Dos",
     phone: "+34 600 000 002",
@@ -129,7 +132,7 @@ async function seedRoles() {
   return roleIdByName;
 }
 
-async function ensureUser({ email, password, roleId, profile }) {
+async function ensureUser({ email, username, password, roleId, profile }) {
   const existing = await User.findOne({ email }).select("+passwordHash").lean();
 
   if (existing) {
@@ -137,11 +140,14 @@ async function ensureUser({ email, password, roleId, profile }) {
       throw new Error(`La cuenta ${email} ya existe con otro rol; limpia solo la base de pruebas y vuelve a sembrar`);
     }
     console.log(`Se conserva la cuenta existente (${email}); el seed no cambia su contraseña.`);
+    if (!existing.username) {
+      await User.updateOne({ _id: existing._id }, { $set: { username } });
+    }
     await ensureProfile(existing._id, profile);
     return;
   }
 
-  const user = await User.create({ email, passwordHash: await hashPassword(password), role: roleId });
+  const user = await User.create({ email, username, passwordHash: await hashPassword(password), role: roleId });
 
   try {
     await ensureProfile(user._id, profile);
@@ -272,6 +278,7 @@ async function seed({ reset = false } = {}) {
 
     await ensureUser({
       email: adminAccount.email,
+      username: adminAccount.username,
       password: adminAccount.password,
       roleId: roleIdByName.ADMIN,
       profile: { name: adminAccount.name, addresses: [] },
@@ -280,6 +287,7 @@ async function seed({ reset = false } = {}) {
     for (const user of sampleUsers) {
       await ensureUser({
         email: user.email,
+        username: user.username,
         password: user.password,
         roleId: roleIdByName.USER,
         profile: { name: user.name, phone: user.phone, addresses: user.addresses },

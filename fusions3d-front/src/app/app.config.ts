@@ -10,6 +10,7 @@ import {
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 
 import { routes } from './app.routes';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 
@@ -26,6 +27,6 @@ export const appConfig: ApplicationConfig = {
       withComponentInputBinding(),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
     ),
-    provideHttpClient(withInterceptors([loadingInterceptor, errorInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor, errorInterceptor])),
   ],
 };

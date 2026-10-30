@@ -1,6 +1,7 @@
 import { Component, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { UsersStore } from '../../../../core/store/users.store';
+import { AuthStore } from '../../../../core/store/auth.store';
 import { UserPayload } from '../../../../core/models/user.model';
 import { UserForm } from '../../components/user-form/user-form';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
@@ -8,7 +9,8 @@ import { showSuccess } from '../../../../shared/utils/alert.util';
 
 @Component({ selector: 'app-user-edit', imports: [UserForm, ErrorState], templateUrl: './user-edit.html' })
 export class UserEditPage {
-  readonly id = input.required<string>(); protected readonly store = inject(UsersStore); private readonly router = inject(Router);
+  readonly id = input.required<string>(); protected readonly store = inject(UsersStore); private readonly router = inject(Router); private readonly auth = inject(AuthStore);
+  protected isCurrentUser(userId: string): boolean { return this.auth.user()?.id === userId; }
   protected readonly user = this.store.selected; protected readonly saving = signal(false);
   constructor() { effect(() => { const id = this.id(); untracked(() => void this.store.loadById(id)); }); }
   protected retry(): void { void this.store.loadById(this.id()); }

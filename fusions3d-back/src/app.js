@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { connectDB } = require('./config/database');
@@ -12,6 +13,7 @@ const printVariantRoutes = require('./routes/printVariant.routes');
 const authRoutes = require('./routes/auth.routes');
 const profileRoutes = require('./routes/profile.routes');
 const roleRoutes = require('./routes/role.routes');
+const userRoutes = require('./routes/user.routes');
 const { _auth } = require('./middlewares/auth.middleware');
 const { _admin } = require('./middlewares/admin.middleware');
 const { validateJwtConfig } = require('./utils/jwt.util');
@@ -31,10 +33,12 @@ app.use(morgan('dev'));
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:4200',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.get('/health', (_req, res) => {
   res.status(200).json({
@@ -54,8 +58,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/materials', materialRoutes);
 app.use('/api/print-variants', printVariantRoutes);
 app.use('/api/roles', roleRoutes);
-
-// User administration routes are not mounted until the admin UI uses the new User/Profile contracts.
+app.use('/api/users', userRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

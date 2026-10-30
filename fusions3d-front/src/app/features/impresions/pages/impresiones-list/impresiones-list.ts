@@ -4,6 +4,7 @@ import { Impresion } from '../../../../core/models/impresion.model';
 import { ImpresionsStore } from '../../../../core/store/impresions.store';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
+import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { TableSkeleton } from '../../../../shared/components/skeleton/table-skeleton/table-skeleton';
 import { confirmAction, showSuccess } from '../../../../shared/utils/alert.util';
 import { ImpresionTable } from '../../components/impresion-table/impresion-table';
@@ -11,7 +12,7 @@ import { ImpresionTable } from '../../components/impresion-table/impresion-table
 /** Página de listado: catálogo de impresiones 3D (vista de administración). */
 @Component({
   selector: 'app-impresiones-list',
-  imports: [RouterLink, TableSkeleton, ImpresionTable, EmptyState, ErrorState],
+  imports: [RouterLink, TableSkeleton, ImpresionTable, EmptyState, ErrorState, PageHeader],
   templateUrl: './impresiones-list.html',
 })
 export class ImpresionesListPage {

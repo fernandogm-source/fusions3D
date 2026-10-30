@@ -5,9 +5,10 @@ import { Material } from '../../../../core/models/material.model';
 import { MaterialTable } from '../../components/material-table/material-table';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
+import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { confirmAction, showSuccess } from '../../../../shared/utils/alert.util';
 
-@Component({ selector: 'app-materials-list', imports: [MaterialTable, EmptyState, ErrorState], templateUrl: './materials-list.html' })
+@Component({ selector: 'app-materials-list', imports: [MaterialTable, EmptyState, ErrorState, PageHeader], templateUrl: './materials-list.html' })
 export class MaterialsListPage {
   protected readonly store = inject(MaterialsStore);
   private readonly router = inject(Router);

@@ -1,0 +1,78 @@
+<div class="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
+  <!-- Panel de marca (solo en escritorio) -->
+  <aside class="relative hidden overflow-hidden border-r border-line bg-gradient-to-br from-elevated via-base to-base p-12 lg:flex lg:flex-col lg:justify-between">
+    <div class="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-brand/20 blur-3xl" aria-hidden="true"></div>
+    <div class="absolute -bottom-40 right-0 h-96 w-96 rounded-full bg-brand-dark/15 blur-3xl" aria-hidden="true"></div>
+
+    <div class="relative flex items-center gap-3">
+      <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-dark shadow-[0_10px_24px_-10px_rgb(255_96_0/0.9)]" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6 text-white" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+        </svg>
+      </span>
+      <span class="font-display text-xl font-bold tracking-tight text-ink">Fusions<span class="text-brand">3D</span></span>
+    </div>
+
+    <div class="relative max-w-lg">
+      <p class="text-sm font-medium text-brand-light">Panel de gestión</p>
+      <h2 class="mt-3 font-display text-5xl font-bold leading-[1.1] tracking-tight text-ink">
+        Tu catálogo de impresiones 3D, bajo control.
+      </h2>
+      <ul class="mt-8 flex flex-col gap-4 text-sm text-ink-muted">
+        <li class="flex items-start gap-3">
+          <span class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand/15 text-brand-light ring-1 ring-inset ring-brand/25" aria-hidden="true">✓</span>
+          Impresiones, categorías y materiales en un solo lugar.
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand/15 text-brand-light ring-1 ring-inset ring-brand/25" aria-hidden="true">✓</span>
+          Variantes con costes, márgenes y tiempos de impresión.
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand/15 text-brand-light ring-1 ring-inset ring-brand/25" aria-hidden="true">✓</span>
+          Usuarios y roles con acceso controlado.
+        </li>
+      </ul>
+    </div>
+
+    <p class="relative text-xs text-ink-faint">Fusions3D — Objetos impresos en 3D</p>
+  </aside>
+
+  <!-- Formulario -->
+  <main class="flex items-center justify-center px-4 py-12 sm:px-6">
+    <div class="page-enter w-full max-w-md">
+      <div class="mb-8 flex flex-col items-center gap-4 text-center lg:items-start lg:text-left">
+        <span class="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-dark shadow-[0_10px_24px_-10px_rgb(255_96_0/0.9)] lg:hidden" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-7 w-7 text-white" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+          </svg>
+        </span>
+        <div>
+          <h1 class="font-display text-3xl font-bold tracking-tight text-ink">Iniciar sesión</h1>
+          <p class="mt-2 text-sm text-ink-muted">Introduce tu correo y tu contraseña para continuar.</p>
+        </div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="card flex flex-col gap-6 p-6 sm:p-8">
+        <div class="flex flex-col gap-2">
+          <label for="login-email" class="label">Correo electrónico <span class="text-brand">*</span></label>
+          <input id="login-email" type="email" formControlName="email" autocomplete="email" class="input" [class.input-error]="getError('email', 'El correo')" />
+          @if (getError('email', 'El correo'); as message) { <span class="field-error">{{ message }}</span> }
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="login-password" class="label">Contraseña <span class="text-brand">*</span></label>
+          <input id="login-password" type="password" formControlName="password" autocomplete="current-password" class="input" [class.input-error]="getError('password', 'La contraseña')" />
+          @if (getError('password', 'La contraseña'); as message) { <span class="field-error">{{ message }}</span> }
+        </div>
+
+        @if (errorMessage()) {
+          <p role="alert" class="rounded-lg border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">{{ errorMessage() }}</p>
+        }
+
+        <button type="submit" [disabled]="submitting()" class="btn btn-primary w-full py-3">
+          {{ submitting() ? 'Entrando…' : 'Iniciar sesión' }}
+        </button>
+      </form>
+    </div>
+  </main>
+</div>

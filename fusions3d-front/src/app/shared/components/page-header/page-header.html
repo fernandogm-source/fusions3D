@@ -1,0 +1,17 @@
+<header class="flex flex-col gap-5 border-b border-line/70 pb-8 sm:flex-row sm:items-end sm:justify-between">
+  <div class="min-w-0">
+    @if (eyebrow()) {
+      <span class="badge badge-brand">
+        <span class="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true"></span>
+        {{ eyebrow() }}
+      </span>
+    }
+    <h1 class="page-title mt-3">{{ title() }}</h1>
+    @if (description()) {
+      <p class="mt-2 max-w-2xl text-sm text-ink-muted">{{ description() }}</p>
+    }
+  </div>
+  <div class="flex flex-wrap gap-3">
+    <ng-content />
+  </div>
+</header>

@@ -1,21 +1,11 @@
-<!-- Cabecera -->
-<div class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-  <div>
-    <p class="text-sm font-medium text-brand-light">
-      @if (trashView()) { Papelera } @else { Catálogo }
-    </p>
-    <h1 class="page-title mt-1">
-      @if (trashView()) { Impresiones eliminadas } @else { Impresiones 3D }
-    </h1>
-    <p class="mt-2 text-sm text-ink-muted">
-      @if (store.loading()) {
-        Cargando catálogo…
-      } @else {
-        {{ store.total() }} producto{{ store.total() === 1 ? '' : 's' }} {{ trashView() ? 'en la papelera' : 'en el catálogo' }}
-      }
-    </p>
-  </div>
-  <div class="flex flex-wrap gap-3">
+<section class="page-enter flex flex-col gap-8">
+  <app-page-header
+    [eyebrow]="trashView() ? 'Papelera' : 'Catálogo'"
+    [title]="trashView() ? 'Impresiones eliminadas' : 'Impresiones 3D'"
+    [description]="store.loading()
+      ? 'Cargando catálogo…'
+      : store.total() + ' producto' + (store.total() === 1 ? '' : 's') + (trashView() ? ' en la papelera' : ' en el catálogo')"
+  >
     @if (trashView()) {
       <button type="button" (click)="setTrashView(false)" class="btn btn-secondary">Volver al catálogo</button>
     } @else {
@@ -24,42 +14,42 @@
         <span aria-hidden="true" class="text-base leading-none">+</span> Nueva impresión
       </a>
     }
-  </div>
-</div>
+  </app-page-header>
 
-<!-- Skeletons mientras carga por primera vez -->
-@if (store.loading() && !store.loaded()) {
-  <app-table-skeleton [rows]="6" />
-}
+  <!-- Skeletons mientras carga por primera vez -->
+  @if (store.loading() && !store.loaded()) {
+    <app-table-skeleton [rows]="6" />
+  }
 
-<!-- Error de la API -->
-@if (store.hasError() && !store.loading()) {
-  <app-error-state
-    title="No se ha podido cargar el catálogo"
-    [message]="store.error() ?? 'Error desconocido'"
-    (retry)="retry()"
-  />
-}
+  <!-- Error de la API -->
+  @if (store.hasError() && !store.loading()) {
+    <app-error-state
+      title="No se ha podido cargar el catálogo"
+      [message]="store.error() ?? 'Error desconocido'"
+      (retry)="retry()"
+    />
+  }
 
-<!-- Sin resultados -->
-@if (store.isEmpty() && !store.hasError()) {
-  <app-empty-state
-    [title]="trashView() ? 'La papelera está vacía' : 'Todavía no hay impresiones'"
-    [message]="trashView() ? 'Las impresiones eliminadas aparecerán aquí.' : 'Crea tu primera impresión 3D para empezar a vender.'"
-  >
-    @if (!trashView()) {
-      <a routerLink="/impresiones/nueva" class="btn btn-primary mt-2">Crear impresión</a>
-    }
-  </app-empty-state>
-}
+  <!-- Sin resultados -->
+  @if (store.isEmpty() && !store.hasError()) {
+    <app-empty-state
+      [title]="trashView() ? 'La papelera está vacía' : 'Todavía no hay impresiones'"
+      [message]="trashView() ? 'Las impresiones eliminadas aparecerán aquí.' : 'Crea tu primera impresión 3D para empezar a vender.'"
+    >
+      @if (!trashView()) {
+        <a routerLink="/impresiones/nueva" class="btn btn-primary mt-2">Crear impresión</a>
+      }
+    </app-empty-state>
+  }
 
-<!-- Listado -->
-@if (!store.loading() && !store.hasError() && !store.isEmpty()) {
-  <app-impresion-table
-    [impresions]="store.impresions()"
-    [deletedMode]="trashView()"
-    (delete)="delete($event)"
-    (toggleActive)="toggleActive($event)"
-    (restore)="restore($event)"
-  />
-}
+  <!-- Listado -->
+  @if (!store.loading() && !store.hasError() && !store.isEmpty()) {
+    <app-impresion-table
+      [impresions]="store.impresions()"
+      [deletedMode]="trashView()"
+      (delete)="delete($event)"
+      (toggleActive)="toggleActive($event)"
+      (restore)="restore($event)"
+    />
+  }
+</section>

@@ -1,9 +1,12 @@
-import { Component, DestroyRef, inject, output, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
+import { AuthStore } from '../../../core/store/auth.store';
 
 const TITLES: [RegExp, string][] = [
+  [/^\/inicio/, 'Inicio'],
+  [/^\/perfil/, 'Mi perfil'],
   [/^\/impresiones\/nueva/, 'Nueva impresión'],
   [/^\/impresiones\/[^/]+\/editar/, 'Editar impresión'],
   [/^\/impresiones\/[^/]+/, 'Detalle de impresión'],
@@ -24,7 +27,13 @@ export class Topbar {
   readonly menuToggle = output();
 
   private readonly router = inject(Router);
+  protected readonly auth = inject(AuthStore);
   protected readonly title = signal('Fusions3D');
+  protected readonly initial = computed(() => this.auth.user()?.username.charAt(0).toUpperCase() ?? '');
+
+  protected logout(): void {
+    void this.auth.logout();
+  }
 
   constructor() {
     this.updateTitle(this.router.url);

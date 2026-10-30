@@ -1,0 +1,67 @@
+<section class="page-enter flex flex-col gap-8">
+  <app-page-header
+    eyebrow="Inicio"
+    [title]="'Hola, ' + username()"
+    description="Resumen del catálogo y de la administración de Fusions3D."
+  />
+
+  @if (loading()) {
+    <div class="card p-10 text-center text-ink-muted">Cargando resumen…</div>
+  } @else if (error()) {
+    <app-error-state title="No se pudo cargar el resumen" [message]="error()!" (retry)="retry()" />
+  } @else {
+    <div class="grid gap-5 sm:grid-cols-2">
+      <div class="card relative overflow-hidden p-6">
+        <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand/15 blur-3xl" aria-hidden="true"></div>
+        <p class="text-sm font-medium text-ink-muted">Registros totales</p>
+        <p class="mt-2 font-display text-5xl font-bold tabular-nums text-ink">{{ totalRecords() }}</p>
+      </div>
+      <div class="card relative overflow-hidden p-6">
+        <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-success/15 blur-3xl" aria-hidden="true"></div>
+        <p class="text-sm font-medium text-ink-muted">Activos ahora</p>
+        <p class="mt-2 font-display text-5xl font-bold tabular-nums text-success">{{ activeRecords() }}</p>
+      </div>
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      @for (counter of counters(); track counter.label) {
+        <a [routerLink]="counter.link" class="card card-interactive group relative flex flex-col gap-5 overflow-hidden p-6">
+          <span class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand to-brand-light opacity-60 transition-opacity group-hover:opacity-100" aria-hidden="true"></span>
+          <div class="flex items-center justify-between">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-brand/10 text-brand-light ring-1 ring-inset ring-brand/20">
+              @switch (counter.icon) {
+                @case ('catalog') {
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
+                }
+                @case ('tag') {
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /></svg>
+                }
+                @case ('layers') {
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3" /></svg>
+                }
+                @case ('cube') {
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" /></svg>
+                }
+                @case ('shield') {
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                }
+                @case ('users') {
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+                }
+              }
+            </span>
+            <span class="text-xs font-medium text-brand-light opacity-0 transition-opacity duration-300 group-hover:opacity-100">Ver →</span>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-ink-muted">{{ counter.label }}</p>
+            <p class="mt-1 font-display text-4xl font-bold tabular-nums text-ink">{{ counter.total }}</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="badge badge-success">{{ counter.active }} activos</span>
+            <span class="badge badge-muted">{{ counter.total - counter.active }} inactivos</span>
+          </div>
+        </a>
+      }
+    </div>
+  }
+</section>

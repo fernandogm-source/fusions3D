@@ -65,9 +65,17 @@ function getAccessTokenExpiration() {
   return getJwtConfig().expiresIn;
 }
 
+const EXPIRATION_UNIT_MS = { s: 1000, m: 60 * 1000, h: 60 * 60 * 1000, d: 24 * 60 * 60 * 1000 };
+
+function getAccessTokenMaxAge() {
+  const [, value, unit] = getJwtConfig().expiresIn.match(/^(\d+)(s|m|h|d)$/);
+  return Number(value) * EXPIRATION_UNIT_MS[unit];
+}
+
 module.exports = {
   signAccessToken,
   verifyAccessToken,
   validateJwtConfig,
-  getAccessTokenExpiration
+  getAccessTokenExpiration,
+  getAccessTokenMaxAge
 };

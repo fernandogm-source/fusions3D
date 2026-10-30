@@ -33,11 +33,11 @@ class AuthService {
 
     return {
       accessToken,
-      tokenType: 'Bearer',
       expiresIn: getAccessTokenExpiration(),
       user: {
         id: String(user._id),
         email: user.email,
+        username: user.username,
         role: role.name
       }
     };

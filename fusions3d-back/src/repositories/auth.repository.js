@@ -16,7 +16,7 @@ class AuthRepository {
       isActive: true,
       deletedAt: null
     })
-      .select('email role isActive deletedAt')
+      .select('email username role isActive deletedAt')
       .populate(ROLE_POPULATE)
       .lean();
   }

@@ -30,21 +30,18 @@ Content-Type: application/json
 }
 ```
 
-Guarda `data.accessToken` de la respuesta como variable `accessToken` y añade este header a las peticiones del panel:
+El login devuelve `data.user` y emite el token en la cookie `fusions3d_session` (HttpOnly, `SameSite=Lax`, ruta `/api`). Postman guarda y reenvía esa cookie automáticamente. Cualquier usuario con cuenta y rol activos puede iniciar sesión. Las rutas de administración requieren rol `ADMIN` (`403` para el resto); los usuarios normales solo pueden usar Profile.
 
-```http
-Authorization: Bearer {{accessToken}}
-```
+Si necesitas un cliente sin cookies, también se acepta la cabecera `Authorization: Bearer <token>`, pero el token ya no se devuelve en el cuerpo de la respuesta.
 
-`GET {{baseUrl}}/api/auth/me` devuelve la identidad del token actual.
+`GET {{baseUrl}}/api/auth/me` devuelve la identidad de la sesión actual.
 
 ## Cerrar sesión
 
-El endpoint revoca el token presentado; después de responder, ese token ya no puede volver a utilizarse.
+El endpoint revoca el token de la sesión, borra la cookie y responde `{ success: true, data: null, message }`. Después de responder, ese token ya no puede volver a utilizarse.
 
 ```http
 POST {{baseUrl}}/api/auth/logout
-Authorization: Bearer {{accessToken}}
 ```
 
 Respuesta esperada:
@@ -52,6 +49,7 @@ Respuesta esperada:
 ```json
 {
   "success": true,
+  "data": null,
   "message": "Sesión cerrada correctamente"
 }
 ```
@@ -62,17 +60,16 @@ El usuario autenticado consulta y modifica su propio perfil. ADMIN puede indicar
 
 ```http
 GET {{baseUrl}}/api/profiles/getprofile
-Authorization: Bearer {{accessToken}}
 ```
 
 ```http
 PATCH {{baseUrl}}/api/profiles/updateprofile
-Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 ```
 
 ```json
 {
+  "username": "nuevo.usuario",
   "name": "Nombre de usuario",
   "phone": "+34 600 000 000",
   "addresses": [

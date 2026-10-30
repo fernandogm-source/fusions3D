@@ -5,9 +5,10 @@ import { Role } from '../../../../core/models/role.model';
 import { RoleTable } from '../../components/role-table/role-table';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
+import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { confirmAction, showSuccess } from '../../../../shared/utils/alert.util';
 
-@Component({ selector: 'app-roles-list', imports: [RoleTable, EmptyState, ErrorState], templateUrl: './roles-list.html' })
+@Component({ selector: 'app-roles-list', imports: [RoleTable, EmptyState, ErrorState, PageHeader], templateUrl: './roles-list.html' })
 export class RolesListPage {
   protected readonly store = inject(RolesStore); private readonly router = inject(Router);
   constructor() { void this.store.loadAll(); }

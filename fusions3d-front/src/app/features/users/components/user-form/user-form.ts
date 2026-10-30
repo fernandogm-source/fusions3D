@@ -6,6 +6,10 @@ import { User, UserPayload } from '../../../../core/models/user.model';
 import { Role } from '../../../../core/models/role.model';
 import { RolesService } from '../../../../core/services/roles.service';
 import { showError } from '../../../../shared/utils/alert.util';
+import { getControlErrorMessage } from '../../../../shared/utils/custom-validators';
+
+const PASSWORD_MIN_LENGTH = 12;
+const USERNAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
 
 @Component({ selector: 'app-user-form', imports: [ReactiveFormsModule, RouterLink], templateUrl: './user-form.html' })
 export class UserForm {
@@ -15,64 +19,59 @@ export class UserForm {
   readonly submitLabel = input('Guardar usuario');
   readonly cancelUrl = input('/admin/users');
   readonly submitting = input(false);
+  /** Impide cambiar el rol (por ejemplo, en la propia cuenta). */
+  readonly lockRole = input(false);
   readonly formSubmit = output<UserPayload>();
   protected readonly roles = signal<Role[]>([]);
-  protected readonly formError = signal<string | null>(null);
   protected readonly form = this.fb.group({
-    name: ['', [Validators.required, Validators.maxLength(100)]],
+    username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30), Validators.pattern(USERNAME_PATTERN)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    phone: [''],
-    roles: this.fb.control<string[]>([]),
-    street: [''], city: [''], state: [''], postalCode: [''], country: [''],
-    isDefault: [false],
+    password: ['', [Validators.required, Validators.minLength(PASSWORD_MIN_LENGTH)]],
+    role: [''],
   });
 
   constructor() {
-    void firstValueFrom(this.rolesService.getActive()).then((roles) => this.roles.set(roles))
+    void firstValueFrom(this.rolesService.getActive())
+      .then((roles) => this.roles.set(roles))
       .catch(() => showError('No se pudieron cargar los roles.'));
+
     effect(() => {
       const user = this.initialValue();
       const passwordControl = this.form.controls.password;
       if (user) {
         passwordControl.removeValidators(Validators.required);
         passwordControl.updateValueAndValidity({ emitEvent: false });
-        const address = user.addresses?.[0];
-        this.form.patchValue({
-          name: user.name, email: user.email, phone: user.phone ?? '',
-          roles: user.roles.map((role) => typeof role === 'string' ? role : role._id),
-          street: address?.street ?? '', city: address?.city ?? '', state: address?.state ?? '',
-          postalCode: address?.postalCode ?? '', country: address?.country ?? '', isDefault: address?.isDefault ?? false,
-        });
+        this.form.patchValue({ username: user.username, email: user.email, role: user.role });
       } else {
         passwordControl.addValidators(Validators.required);
         passwordControl.updateValueAndValidity({ emitEvent: false });
       }
     });
+
+    effect(() => {
+      const roleControl = this.form.controls.role;
+      if (this.lockRole()) roleControl.disable({ emitEvent: false });
+      else roleControl.enable({ emitEvent: false });
+    });
+  }
+
+  protected fieldError(name: 'username' | 'email' | 'password', label: string): string | null {
+    return getControlErrorMessage(this.form.controls[name], label);
   }
 
   protected submit(): void {
-    this.formError.set(null);
-    if (this.form.invalid || this.submitting()) { this.form.markAllAsTouched(); return; }
-    const value = this.form.getRawValue();
-    const hasAddress = [value.street, value.city, value.state, value.postalCode, value.country].some((part) => part.trim());
-    const addressRequired = [value.street, value.city, value.postalCode, value.country].every((part) => part.trim());
-    if (hasAddress && !addressRequired) {
-      this.formError.set('Completa calle, ciudad, código postal y país, o deja la dirección vacía.');
+    if (this.form.invalid || this.submitting()) {
+      this.form.markAllAsTouched();
       return;
     }
+
+    const value = this.form.getRawValue();
     const payload: UserPayload = {
-      name: value.name.trim(), email: value.email.trim(), roles: value.roles,
-      phone: value.phone.trim() || null,
+      username: value.username.trim().toLowerCase(),
+      email: value.email.trim().toLowerCase(),
     };
     if (value.password) payload.password = value.password;
-    if (hasAddress) {
-      const previous = this.initialValue()?.addresses ?? [];
-      payload.addresses = [{
-        street: value.street.trim(), city: value.city.trim(), state: value.state.trim(),
-        postalCode: value.postalCode.trim(), country: value.country.trim(), isDefault: value.isDefault,
-      }, ...previous.slice(1)];
-    }
+    if (value.role) payload.role = value.role;
     this.formSubmit.emit(payload);
   }
 }

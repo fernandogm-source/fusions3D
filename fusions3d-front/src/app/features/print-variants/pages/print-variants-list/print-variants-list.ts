@@ -5,9 +5,10 @@ import { PrintVariant } from '../../../../core/models/print-variant.model';
 import { PrintVariantTable } from '../../components/print-variant-table/print-variant-table';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
+import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { confirmAction, showSuccess } from '../../../../shared/utils/alert.util';
 
-@Component({ selector: 'app-print-variants-list', imports: [PrintVariantTable, EmptyState, ErrorState], templateUrl: './print-variants-list.html' })
+@Component({ selector: 'app-print-variants-list', imports: [PrintVariantTable, EmptyState, ErrorState, PageHeader], templateUrl: './print-variants-list.html' })
 export class PrintVariantsListPage {
   protected readonly store = inject(PrintVariantsStore); private readonly router = inject(Router);
   constructor() { void this.store.loadAll(); }

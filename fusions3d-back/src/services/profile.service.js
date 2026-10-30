@@ -1,5 +1,7 @@
 const profileRepository = require('../repositories/profile.repository');
 const userRepository = require('../repositories/auth.repository');
+const userWriteRepository = require('../repositories/user.repository');
+const userService = require('./user.service');
 const { isOwnerOrAdmin } = require('../utils/authorization.util');
 const { AppError } = require('../utils/app.error');
 const { ADMIN_ROLE_NAME } = require('../utils/role.util');
@@ -18,8 +20,19 @@ class ProfileService {
 
   async updateProfile(requester, requestedUserId, data) {
     const user = await this.resolveTargetUser(requester, requestedUserId);
+    const { username, ...profileData } = data;
+
+    if (username !== undefined) {
+      await userService.assertUsernameAvailable(username, user._id);
+      const updated = await userWriteRepository.updateById(user._id, { username, updatedAt: new Date() });
+
+      if (!updated) {
+        throw new AppError('Usuario no encontrado', 404, 'USER_NOT_FOUND');
+      }
+    }
+
     const fallbackName = user.email.split('@')[0];
-    return profileRepository.updateByUserId(user._id, data, fallbackName);
+    return profileRepository.updateByUserId(user._id, profileData, fallbackName);
   }
 
   async resolveTargetUser(requester, requestedUserId) {

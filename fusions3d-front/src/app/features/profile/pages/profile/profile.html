@@ -1,0 +1,150 @@
+<section class="page-enter flex flex-col gap-8">
+  <app-page-header
+    eyebrow="Cuenta"
+    title="Mi perfil"
+    description="Gestiona tus datos de contacto, direcciones y nombre de usuario."
+  />
+
+  @if (store.loading() && !store.profile()) {
+    <div class="card p-10 text-center text-ink-muted">Cargando perfil…</div>
+  } @else if (store.error() && !store.profile()) {
+    <app-error-state title="No se pudo cargar el perfil" [message]="store.error()!" (retry)="store.load()" />
+  } @else if (store.profile()) {
+    <div class="grid items-start gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
+      <!-- Resumen de la cuenta -->
+      <aside class="card flex flex-col items-center gap-4 p-6 text-center lg:sticky lg:top-24">
+        <span class="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-brand to-brand-dark font-display text-3xl font-bold text-white ring-4 ring-brand/15 shadow-[0_12px_28px_-12px_rgb(255_96_0/0.9)]" aria-hidden="true">
+          {{ initial() }}
+        </span>
+        <div class="min-w-0">
+          <p class="font-display text-lg font-semibold text-ink">{{ store.profile()?.name }}</p>
+          <p class="text-sm text-ink-muted">{{ '@' + auth.user()?.username }}</p>
+        </div>
+        <span class="badge" [class]="auth.isAdmin() ? 'badge-brand' : 'badge-muted'">{{ roleLabel() }}</span>
+
+        <dl class="mt-2 grid w-full gap-4 border-t border-line pt-5 text-left">
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wider text-ink-faint">Correo</dt>
+            <dd class="mt-1 break-all text-sm font-medium text-ink">{{ auth.user()?.email }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wider text-ink-faint">Direcciones guardadas</dt>
+            <dd class="mt-1 text-sm font-medium text-ink">{{ addresses.length }}</dd>
+          </div>
+        </dl>
+      </aside>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="flex min-w-0 flex-col gap-6">
+        <!-- Datos personales -->
+        <section class="card p-6 sm:p-8">
+          <div class="mb-6">
+            <h2 class="font-display text-lg font-semibold text-ink">Datos personales</h2>
+            <p class="mt-1 text-sm text-ink-muted">Cómo te identificamos en la tienda.</p>
+          </div>
+
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div class="flex flex-col gap-2">
+              <label for="profile-username" class="label">Nombre de usuario <span class="text-brand">*</span></label>
+              <input id="profile-username" formControlName="username" maxlength="30" autocomplete="off" class="input" [class.input-error]="fieldError('username', 'El nombre de usuario')" />
+              @if (fieldError('username', 'El nombre de usuario'); as message) { <span class="field-error">{{ message }}</span> }
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="profile-name" class="label">Nombre <span class="text-brand">*</span></label>
+              <input id="profile-name" formControlName="name" maxlength="100" class="input" [class.input-error]="fieldError('name', 'El nombre')" />
+              @if (fieldError('name', 'El nombre'); as message) { <span class="field-error">{{ message }}</span> }
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="profile-phone" class="label">Teléfono</label>
+              <input id="profile-phone" formControlName="phone" maxlength="30" class="input" />
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="profile-avatar" class="label">URL de avatar <span class="text-ink-faint">(opcional)</span></label>
+              <input id="profile-avatar" formControlName="avatarUrl" type="url" placeholder="https://…" class="input" [class.input-error]="fieldError('avatarUrl', 'La URL del avatar')" />
+              @if (fieldError('avatarUrl', 'La URL del avatar'); as message) { <span class="field-error">{{ message }}</span> }
+            </div>
+          </div>
+        </section>
+
+        <!-- Direcciones -->
+        <section class="card p-6 sm:p-8" formArrayName="addresses">
+          <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 class="font-display text-lg font-semibold text-ink">Direcciones</h2>
+              <p class="mt-1 text-sm text-ink-muted">Solo una dirección puede ser la predeterminada.</p>
+            </div>
+            <button type="button" (click)="addAddress()" class="btn btn-secondary self-start sm:self-auto">+ Añadir dirección</button>
+          </div>
+
+          @if (!addresses.length) {
+            <div class="rounded-xl border border-dashed border-line-strong px-6 py-10 text-center text-sm text-ink-muted">
+              Todavía no tienes direcciones guardadas.
+            </div>
+          }
+
+          <div class="flex flex-col gap-5">
+            @for (address of addresses.controls; track $index; let i = $index) {
+              <article [formGroupName]="i" class="rounded-xl border border-line bg-base/50 p-5">
+                <header class="mb-5 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-muted">Dirección {{ i + 1 }}</span>
+                    @if (addresses.at(i).controls.isDefault.value) {
+                      <span class="badge badge-brand">Predeterminada</span>
+                    }
+                  </div>
+                  <button type="button" (click)="removeAddress(i)" class="btn btn-action btn-action-delete">Eliminar</button>
+                </header>
+
+                <div class="grid gap-5 sm:grid-cols-2">
+                  <div class="flex flex-col gap-2 sm:col-span-2">
+                    <label [for]="'address-street-' + i" class="label">Calle <span class="text-brand">*</span></label>
+                    <input [id]="'address-street-' + i" formControlName="street" class="input" [class.input-error]="addressError(i, 'street', 'La calle')" />
+                    @if (addressError(i, 'street', 'La calle'); as message) { <span class="field-error">{{ message }}</span> }
+                  </div>
+
+                  <div class="flex flex-col gap-2">
+                    <label [for]="'address-city-' + i" class="label">Ciudad <span class="text-brand">*</span></label>
+                    <input [id]="'address-city-' + i" formControlName="city" class="input" [class.input-error]="addressError(i, 'city', 'La ciudad')" />
+                    @if (addressError(i, 'city', 'La ciudad'); as message) { <span class="field-error">{{ message }}</span> }
+                  </div>
+
+                  <div class="flex flex-col gap-2">
+                    <label [for]="'address-state-' + i" class="label">Provincia / estado</label>
+                    <input [id]="'address-state-' + i" formControlName="state" class="input" />
+                  </div>
+
+                  <div class="flex flex-col gap-2">
+                    <label [for]="'address-postal-' + i" class="label">Código postal <span class="text-brand">*</span></label>
+                    <input [id]="'address-postal-' + i" formControlName="postalCode" class="input" [class.input-error]="addressError(i, 'postalCode', 'El código postal')" />
+                    @if (addressError(i, 'postalCode', 'El código postal'); as message) { <span class="field-error">{{ message }}</span> }
+                  </div>
+
+                  <div class="flex flex-col gap-2">
+                    <label [for]="'address-country-' + i" class="label">País <span class="text-brand">*</span></label>
+                    <input [id]="'address-country-' + i" formControlName="country" class="input" [class.input-error]="addressError(i, 'country', 'El país')" />
+                    @if (addressError(i, 'country', 'El país'); as message) { <span class="field-error">{{ message }}</span> }
+                  </div>
+
+                  <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-base px-3.5 py-3 text-sm text-ink sm:col-span-2">
+                    <input type="checkbox" formControlName="isDefault" (change)="markDefault(i)" class="h-4 w-4 accent-brand" />
+                    Usar como dirección predeterminada
+                  </label>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+
+        @if (store.error()) {
+          <p role="alert" class="rounded-lg border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">{{ store.error() }}</p>
+        }
+
+        <div class="flex justify-end">
+          <button type="submit" [disabled]="submitting()" class="btn btn-primary min-w-44">{{ submitting() ? 'Guardando…' : 'Guardar cambios' }}</button>
+        </div>
+      </form>
+    </div>
+  }
+</section>
