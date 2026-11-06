@@ -1,0 +1,27 @@
+<div class="flex flex-col gap-3" role="radiogroup" aria-label="Variantes disponibles">
+  @for (variant of variants(); track variant._id) {
+    <button
+      type="button"
+      role="radio"
+      class="card flex items-center justify-between gap-4 p-4 text-left transition-all duration-200 hover:border-line-strong"
+      [class]="variant._id === selectedId() ? 'border-brand ring-2 ring-brand/30' : ''"
+      [attr.aria-checked]="variant._id === selectedId()"
+      (click)="select.emit(variant._id)"
+    >
+      <span class="flex items-center gap-3">
+        <span
+          class="h-8 w-8 shrink-0 rounded-full ring-1 ring-line-strong"
+          [style.background-color]="variant.colorHex ?? '#64748b'"
+          aria-hidden="true"
+        ></span>
+        <span class="flex flex-col">
+          <span class="font-medium text-ink">{{ variant.color }}</span>
+          <span class="text-xs text-ink-muted">
+            {{ variant.materialId?.name ?? 'Material' }} · {{ printTime(variant.printTime) }}
+          </span>
+        </span>
+      </span>
+      <span class="font-display text-base font-semibold text-ink">{{ price(variant.salePrice) }}</span>
+    </button>
+  }
+</div>

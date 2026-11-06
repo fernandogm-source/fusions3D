@@ -1,0 +1,82 @@
+<div class="page-enter flex flex-col gap-8">
+  <nav aria-label="Migas de pan" class="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+    <a routerLink="/" class="hover:text-ink">Inicio</a>
+    <span aria-hidden="true">/</span>
+    <a routerLink="/shop" class="hover:text-ink">Catálogo</a>
+    @if (store.print()?.categoryId; as category) {
+      <span aria-hidden="true">/</span>
+      <a [routerLink]="'/shop'" [queryParams]="{ category: category.slug }" class="hover:text-ink">{{ category.name }}</a>
+    }
+  </nav>
+
+  @if (store.loading() && !store.print()) {
+    <div class="grid gap-8 lg:grid-cols-2" aria-busy="true" aria-label="Cargando impresión">
+      <div class="aspect-[4/3] animate-pulse rounded-2xl border border-line bg-surface"></div>
+      <div class="flex flex-col gap-4">
+        <div class="h-8 w-2/3 animate-pulse rounded bg-surface"></div>
+        <div class="h-4 w-full animate-pulse rounded bg-surface"></div>
+        <div class="h-4 w-5/6 animate-pulse rounded bg-surface"></div>
+      </div>
+    </div>
+  } @else if (store.notFound()) {
+    <app-empty-state title="Impresión no encontrada" message="Puede que se haya retirado o que el enlace no sea correcto.">
+      <a routerLink="/shop" class="btn btn-primary">Volver al catálogo</a>
+    </app-empty-state>
+  } @else if (store.error()) {
+    <app-error-state title="No se ha podido cargar la impresión" [message]="store.error()!" (retry)="retry()" />
+  } @else if (store.print(); as print) {
+    <div class="grid gap-10 lg:grid-cols-2 lg:items-start">
+      <app-carousel title="Imágenes">
+        @for (image of images(); track $index) {
+          <figure class="w-full shrink-0 snap-start overflow-hidden rounded-2xl border border-line bg-elevated">
+            <img [src]="image.imageUrl" [alt]="image.altText || print.name" class="aspect-[4/3] w-full object-cover" />
+          </figure>
+        }
+      </app-carousel>
+
+      <div class="flex flex-col gap-7">
+        <div class="flex flex-col gap-3">
+          @if (print.categoryId; as category) {
+            <span class="badge badge-brand w-fit">{{ category.name }}</span>
+          }
+          <h1 class="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">{{ print.name }}</h1>
+          <p class="font-display text-2xl font-semibold text-brand-light">
+            {{ selectedPrice() || priceRange() }}
+          </p>
+        </div>
+
+        <p class="whitespace-pre-line text-base leading-relaxed text-ink-muted">{{ print.description }}</p>
+
+        @if (store.selectedVariant(); as variant) {
+          <dl class="card grid grid-cols-2 gap-x-6 gap-y-4 p-5 text-sm">
+            <div>
+              <dt class="text-ink-faint">Material</dt>
+              <dd class="font-medium text-ink">{{ variant.materialId?.name ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-ink-faint">Color</dt>
+              <dd class="font-medium text-ink">{{ variant.color }}</dd>
+            </div>
+            <div>
+              <dt class="text-ink-faint">Tiempo de impresión</dt>
+              <dd class="font-medium text-ink">{{ printTime(variant.printTime) }}</dd>
+            </div>
+            <div>
+              <dt class="text-ink-faint">Referencia</dt>
+              <dd class="font-medium text-ink">{{ variant.sku }}</dd>
+            </div>
+          </dl>
+        }
+
+        <section class="flex flex-col gap-3" aria-labelledby="variantes-titulo">
+          <h2 id="variantes-titulo" class="font-display text-lg font-semibold text-ink">Elige variante</h2>
+          <app-variant-selector
+            [variants]="print.variants"
+            [selectedId]="store.selectedVariant()?._id ?? null"
+            (select)="store.selectVariant($event)"
+          />
+        </section>
+      </div>
+    </div>
+  }
+</div>

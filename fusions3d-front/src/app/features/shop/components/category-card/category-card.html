@@ -1,0 +1,21 @@
+<a
+  routerLink="/shop"
+  [queryParams]="{ category: category().slug }"
+  class="card card-interactive group relative flex aspect-[4/3] overflow-hidden"
+  [attr.aria-label]="'Ver impresiones de ' + category().name"
+>
+  <img
+    [src]="image()"
+    [alt]="category().image?.altText || category().name"
+    loading="lazy"
+    (error)="imageFailed.set(true)"
+    class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+  />
+  <span class="absolute inset-0 bg-gradient-to-t from-base via-base/50 to-transparent" aria-hidden="true"></span>
+  <div class="relative mt-auto flex w-full flex-col gap-1 p-4">
+    <h3 class="font-display text-lg font-semibold text-white">{{ category().name }}</h3>
+    <span class="text-xs text-ink-muted">
+      {{ category().count === 1 ? '1 impresión' : category().count + ' impresiones' }}
+    </span>
+  </div>
+</a>

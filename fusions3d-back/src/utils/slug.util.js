@@ -1,8 +1,12 @@
 const slugify = require('slugify');
 const Print = require('../models/print.model');
 
+function toSlug(text) {
+  return slugify(String(text), { lower: true, strict: true });
+}
+
 async function generateSlug(text, Model = Print) {
-  const baseSlug = slugify(text, { lower: true, strict: true });
+  const baseSlug = toSlug(text);
   let slug = baseSlug;
   let counter = 1;
 
@@ -14,4 +18,4 @@ async function generateSlug(text, Model = Print) {
   return slug;
 }
 
-module.exports = { generateSlug };
+module.exports = { toSlug, generateSlug };

@@ -1,0 +1,5 @@
+@if (src(); as url) {
+  <img [src]="url" alt="" (error)="onError(url)" class="h-full w-full object-cover" />
+} @else {
+  {{ initial() }}
+}

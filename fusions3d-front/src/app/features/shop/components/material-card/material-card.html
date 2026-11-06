@@ -1,0 +1,16 @@
+<a
+  routerLink="/shop"
+  [queryParams]="{ material: material().slug }"
+  class="card card-interactive flex h-full flex-col gap-4 p-5"
+  [attr.aria-label]="'Ver impresiones en ' + material().name"
+>
+  <span class="grid h-12 w-12 place-items-center rounded-xl bg-brand/10 font-display text-sm font-bold text-brand-light ring-1 ring-brand/25">
+    {{ material().name.slice(0, 3) }}
+  </span>
+  <div class="mt-auto flex flex-col gap-1">
+    <h3 class="font-display text-lg font-semibold text-ink">{{ material().name }}</h3>
+    <span class="text-xs text-ink-muted">
+      {{ material().count === 1 ? '1 variante disponible' : material().count + ' variantes disponibles' }}
+    </span>
+  </div>
+</a>

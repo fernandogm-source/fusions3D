@@ -5,6 +5,7 @@ import { AuthStore } from '../../../../core/store/auth.store';
 import { ProfileStore } from '../../../../core/store/profile.store';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
+import { UserAvatar } from '../../../../shared/components/user-avatar/user-avatar';
 import { showSuccess } from '../../../../shared/utils/alert.util';
 import { getControlErrorMessage, urlValidator } from '../../../../shared/utils/custom-validators';
 
@@ -23,7 +24,7 @@ type AddressGroup = ReturnType<typeof createAddressGroup>;
 type AddressField = 'street' | 'city' | 'postalCode' | 'country';
 
 /** Página "Mi perfil": datos de contacto, direcciones y username del usuario autenticado. */
-@Component({ selector: 'app-profile', imports: [ReactiveFormsModule, ErrorState, PageHeader], templateUrl: './profile.html' })
+@Component({ selector: 'app-profile', imports: [ReactiveFormsModule, ErrorState, PageHeader, UserAvatar], templateUrl: './profile.html' })
 export class ProfilePage {
   private readonly fb: NonNullableFormBuilder = inject(FormBuilder).nonNullable;
   protected readonly store = inject(ProfileStore);

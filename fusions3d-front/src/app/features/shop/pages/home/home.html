@@ -1,0 +1,59 @@
+<div class="page-enter flex flex-col gap-14">
+  <section class="relative overflow-hidden rounded-3xl border border-line bg-gradient-to-br from-surface via-elevated to-base px-6 py-14 sm:px-12">
+    <div class="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand/20 blur-3xl" aria-hidden="true"></div>
+    <div class="relative flex max-w-2xl flex-col gap-5">
+      <span class="badge badge-brand w-fit">Impresión 3D a medida</span>
+      <h1 class="font-display text-4xl font-bold tracking-tight text-ink sm:text-5xl">
+        Objetos únicos, impresos en 3D
+      </h1>
+      <p class="text-base text-ink-muted">
+        Explora figuras, decoración y accesorios. Elige material, color y precio, y encuentra la pieza perfecta.
+      </p>
+      <div class="flex flex-wrap gap-3 pt-2">
+        <a routerLink="/shop" class="btn btn-primary">Ver catálogo</a>
+      </div>
+    </div>
+  </section>
+
+  @if (store.error() && !store.home()) {
+    <app-error-state title="No se ha podido cargar la tienda" [message]="store.error()!" (retry)="retry()" />
+  } @else if (store.loading() && !store.home()) {
+    <div class="flex flex-col gap-4" aria-busy="true" aria-label="Cargando la tienda">
+      @for (row of [1, 2, 3, 4]; track row) {
+        <div class="h-56 animate-pulse rounded-2xl border border-line bg-surface"></div>
+      }
+    </div>
+  } @else if (store.home(); as home) {
+    @if (home.categories.length) {
+      <app-carousel title="Categorías" subtitle="Encuentra la temática que buscas">
+        @for (category of home.categories; track category._id) {
+          <app-category-card class="w-72 shrink-0 snap-start" [category]="category" />
+        }
+      </app-carousel>
+    }
+
+    @if (home.materials.length) {
+      <app-carousel title="Materiales" subtitle="Desde PLA ligero hasta resinas de detalle">
+        @for (material of home.materials; track material._id) {
+          <app-material-card class="w-64 shrink-0 snap-start" [material]="material" />
+        }
+      </app-carousel>
+    }
+
+    @if (home.colors.length) {
+      <app-carousel title="Colores" subtitle="Filtra por el color que prefieras">
+        @for (color of home.colors; track color.slug) {
+          <app-color-card class="w-64 shrink-0 snap-start" [color]="color" />
+        }
+      </app-carousel>
+    }
+
+    @if (home.latestPrints.length) {
+      <app-carousel title="Últimas impresiones" subtitle="Lo último que hemos añadido al catálogo">
+        @for (print of home.latestPrints; track print._id) {
+          <app-print-card class="w-72 shrink-0 snap-start" [print]="print" />
+        }
+      </app-carousel>
+    }
+  }
+</div>

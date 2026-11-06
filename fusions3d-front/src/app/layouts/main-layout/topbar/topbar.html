@@ -22,8 +22,10 @@
           Administración
         </span>
       }
-      <span class="hidden text-sm font-medium text-ink sm:inline">{{ auth.user()?.username }}</span>
-      <span class="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-brand to-brand-dark text-sm font-bold text-white shadow-[0_8px_18px_-10px_rgb(255_96_0/0.9)]" aria-hidden="true">{{ initial() }}</span>
+      <a [routerLink]="'/perfil'" aria-label="Ir a mi perfil" class="flex cursor-pointer items-center gap-3">
+        <span class="hidden text-sm font-medium text-ink sm:inline">{{ auth.user()?.username }}</span>
+        <app-user-avatar class="h-9 w-9 text-sm shadow-[0_8px_18px_-10px_rgb(255_96_0/0.9)]" [url]="profile.profile()?.avatarUrl" [initial]="initial()" />
+      </a>
       <button
         type="button"
         (click)="logout()"

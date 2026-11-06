@@ -10,6 +10,14 @@ const materialSchema = new mongoose.Schema(
       minlength: 1,
       maxlength: 50
     },
+    slug: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      lowercase: true,
+      default: null
+    },
     isActive: {
       type: Boolean,
       default: true

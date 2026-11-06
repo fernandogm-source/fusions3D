@@ -1,0 +1,79 @@
+<aside class="card flex flex-col gap-6 p-5" aria-label="Filtros">
+  <div class="flex items-center justify-between">
+    <h2 class="font-display text-lg font-semibold text-ink">Filtros</h2>
+    <button type="button" class="btn btn-ghost !px-2 !py-1 text-xs" (click)="clear.emit()">Limpiar</button>
+  </div>
+
+  @if (filters(); as data) {
+    <fieldset class="flex flex-col gap-3">
+      <legend class="label mb-1">Categoría</legend>
+      @for (category of data.categories; track category.slug) {
+        <label class="flex cursor-pointer items-center justify-between gap-3 text-sm text-ink">
+          <span class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              class="h-4 w-4 accent-brand"
+              [checked]="selectedCategories().includes(category.slug)"
+              (change)="onToggle('category', category.slug)"
+            />
+            {{ category.name }}
+          </span>
+          <span class="text-xs text-ink-faint">{{ category.count }}</span>
+        </label>
+      }
+    </fieldset>
+
+    <fieldset class="flex flex-col gap-3">
+      <legend class="label mb-1">Material</legend>
+      @for (material of data.materials; track material.slug) {
+        <label class="flex cursor-pointer items-center justify-between gap-3 text-sm text-ink">
+          <span class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              class="h-4 w-4 accent-brand"
+              [checked]="selectedMaterials().includes(material.slug)"
+              (change)="onToggle('material', material.slug)"
+            />
+            {{ material.name }}
+          </span>
+          <span class="text-xs text-ink-faint">{{ material.count }}</span>
+        </label>
+      }
+    </fieldset>
+
+    <fieldset class="flex flex-col gap-3">
+      <legend class="label mb-1">Color</legend>
+      @for (color of data.colors; track color.slug) {
+        <label class="flex cursor-pointer items-center justify-between gap-3 text-sm text-ink">
+          <span class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              class="h-4 w-4 accent-brand"
+              [checked]="selectedColors().includes(color.slug)"
+              (change)="onToggle('color', color.slug)"
+            />
+            <span
+              class="h-3.5 w-3.5 rounded-full ring-1 ring-line-strong"
+              [style.background-color]="color.hex ?? '#64748b'"
+              aria-hidden="true"
+            ></span>
+            {{ color.name }}
+          </span>
+          <span class="text-xs text-ink-faint">{{ color.count }}</span>
+        </label>
+      }
+    </fieldset>
+
+    <div class="flex flex-col gap-3">
+      <span class="label">Precio</span>
+      <app-price-range-slider
+        [bounds]="data.priceRange"
+        [min]="minPrice()"
+        [max]="maxPrice()"
+        (rangeChange)="priceChange.emit($event)"
+      />
+    </div>
+  } @else {
+    <p class="text-sm text-ink-muted">Cargando filtros…</p>
+  }
+</aside>

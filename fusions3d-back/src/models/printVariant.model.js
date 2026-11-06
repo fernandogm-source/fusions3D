@@ -28,6 +28,18 @@ const printVariantSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100
     },
+    colorSlug: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: null
+    },
+    colorHex: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: null
+    },
     salePrice: {
       type: Number,
       required: true,
@@ -58,5 +70,8 @@ const printVariantSchema = new mongoose.Schema(
     timestamps: true
   }
 );
+
+printVariantSchema.index({ printId: 1, isActive: 1, deletedAt: 1, salePrice: 1 });
+printVariantSchema.index({ materialId: 1, colorSlug: 1, isActive: 1 });
 
 module.exports = mongoose.model('PrintVariant', printVariantSchema);

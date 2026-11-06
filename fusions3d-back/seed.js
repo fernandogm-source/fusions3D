@@ -12,70 +12,477 @@ const Image = require("./src/models/image.model");
 const RevokedToken = require("./src/models/revoked-token.model");
 const { hashPassword } = require("./src/utils/password.util");
 const { buildSkuBase } = require("./src/utils/sku.util");
+const { toSlug } = require("./src/utils/slug.util");
 
 const roles = ["ADMIN", "USER"].map((name) => ({ name, isActive: true, deletedAt: null }));
 
-const materials = ["PLA", "PETG", "ABS", "TPU", "Resin"].map((name) => ({ name, isActive: true, deletedAt: null }));
+const materials = ["PLA", "PETG", "ABS", "TPU", "Resin", "Nylon"].map((name) => ({
+  name,
+  slug: toSlug(name),
+  isActive: true,
+  deletedAt: null,
+}));
+
+const COLORS = {
+  Negro: "#1F1F1F",
+  Blanco: "#F5F5F5",
+  Gris: "#9CA3AF",
+  Azul: "#2563EB",
+  Rojo: "#DC2626",
+  Verde: "#16A34A",
+  Amarillo: "#FACC15",
+  Naranja: "#FF6000",
+  Morado: "#7C3AED",
+  Rosa: "#EC4899",
+  Turquesa: "#14B8A6",
+  Beige: "#D6C3A5",
+};
 
 const categories = [
-  { name: "Accesorios y Escritorio", slug: "accesorios-y-escritorio" },
-  { name: "Hogar y Decoración", slug: "hogar-y-decoracion" },
-  { name: "Figuras y Coleccionables", slug: "figuras-y-coleccionables" },
-  { name: "Electrónica y Maker", slug: "electronica-y-maker" },
-].map((category) => ({ ...category, status: "published", isActive: true, deletedAt: null }));
-
-const printData = [
   {
-    name: "Soporte para móvil",
-    description: "Soporte de escritorio para teléfono móvil, optimizado para impresión 3D.",
-    categorySlug: "accesorios-y-escritorio",
+    name: "Accesorios y Escritorio",
+    slug: "accesorios-y-escritorio",
     status: "published",
-    slug: "soporte-para-movil",
-    imageUrl: "https://images.pexels.com/photos/29148783/pexels-photo-29148783.jpeg?auto=compress&cs=tinysrgb&w=900",
   },
   {
-    name: "Maceta geométrica",
-    description: "Maceta decorativa con diseño geométrico y drenaje inferior.",
-    categorySlug: "hogar-y-decoracion",
+    name: "Hogar y Decoración",
+    slug: "hogar-y-decoracion",
     status: "published",
-    slug: "maceta-geometrica",
-    imageUrl: "https://images.pexels.com/photos/7222203/pexels-photo-7222203.jpeg?auto=compress&cs=tinysrgb&w=900",
+  },
+  {
+    name: "Figuras y Coleccionables",
+    slug: "figuras-y-coleccionables",
+    status: "published",
+  },
+  {
+    name: "Electrónica y Maker",
+    slug: "electronica-y-maker",
+    status: "published",
+  },
+  {
+    name: "Juguetes y Juegos",
+    slug: "juguetes-y-juegos",
+    status: "published",
+  },
+  {
+    name: "Joyería y Complementos",
+    slug: "joyeria-y-complementos",
+    status: "published",
+  },
+  {
+    name: "Arte y Diseño",
+    slug: "arte-y-diseno",
+    status: "published",
+  },
+  {
+    name: "Próximamente",
+    slug: "proximamente",
+    status: "draft",
+  },
+].map((category) => ({ ...category, isActive: true, deletedAt: null }));
+
+const GALLERY_SIZE = 4;
+
+/** Foto real de picsum.photos. La misma semilla devuelve siempre la misma imagen. */
+function picsum(seed) {
+  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/600`;
+}
+
+/** Foto de muestra identificada por un texto; la semilla sale del texto. */
+function photo(text) {
+  return picsum(toSlug(text));
+}
+
+/** Galería de una impresión: sus imágenes propias y, si faltan, fotos de picsum hasta completar GALLERY_SIZE. */
+function gallery(print) {
+  const urls = [...new Set(print.images)];
+  for (let n = 1; urls.length < GALLERY_SIZE; n++) {
+    urls.push(picsum(`${print.slug}-${n}`));
+  }
+  return urls.slice(0, GALLERY_SIZE);
+}
+
+/** Atajo para escribir variantes: material, color, precio de venta, coste, minutos de impresión. */
+function variant(material, color, salePrice, costPrice, printTime, isActive = true) {
+  return { material, color, salePrice, costPrice, printTime, isActive };
+}
+
+const printData = [
+  // ---------- Accesorios y Escritorio ----------
+  {
+    name: "Soporte para móvil",
+    slug: "soporte-para-movil",
+    categorySlug: "accesorios-y-escritorio",
+    status: "published",
+    description:
+      "Soporte de escritorio para teléfono móvil, con ángulo de visión regulable y base antideslizante. " +
+      "Compatible con la mayoría de smartphones de hasta 9 cm de ancho. Ideal para videollamadas y recetas en la cocina.",
+    images: [
+      "https://images.pexels.com/photos/29148783/pexels-photo-29148783.jpeg?auto=compress&cs=tinysrgb&w=900",
+      photo("Soporte para móvil - detalle"),
+    ],
+    variants: [
+      variant("PLA", "Negro", 12.5, 4.2, 180),
+      variant("PETG", "Azul", 15.9, 5.3, 210),
+      variant("PLA", "Blanco", 12.5, 4.1, 175),
+      variant("PETG", "Rojo", 15.9, 5.4, 210),
+    ],
   },
   {
     name: "Organizador de cables",
-    description: "Organizador compacto para mantener ordenados cables de escritorio.",
+    slug: "organizador-de-cables",
     categorySlug: "accesorios-y-escritorio",
     status: "draft",
-    slug: "organizador-de-cables",
-    imageUrl: "https://images.pexels.com/photos/19583534/pexels-photo-19583534.jpeg?auto=compress&cs=tinysrgb&w=900",
+    description:
+      "Organizador compacto para mantener ordenados cables de escritorio. Se fija con adhesivo o tornillo " +
+      "y admite hasta seis cables de cargador a la vez.",
+    images: [
+      "https://images.pexels.com/photos/19583534/pexels-photo-19583534.jpeg?auto=compress&cs=tinysrgb&w=900",
+    ],
+    variants: [
+      variant("PLA", "Gris", 8.5, 2.3, 120),
+      variant("TPU", "Negro", 9.9, 3.1, 140),
+    ],
   },
+  {
+    name: "Soporte para auriculares",
+    slug: "soporte-para-auriculares",
+    categorySlug: "accesorios-y-escritorio",
+    status: "published",
+    description:
+      "Soporte estable para auriculares de diadema con base pesada que no se vuelca. " +
+      "Diseño minimalista que libera espacio sobre la mesa.",
+    images: [photo("Soporte para auriculares"), photo("Soporte para auriculares - vista lateral")],
+    variants: [
+      variant("PLA", "Negro", 14.9, 5.0, 230),
+      variant("PETG", "Gris", 16.5, 5.8, 250),
+      variant("ABS", "Blanco", 15.5, 5.2, 240),
+    ],
+  },
+  {
+    name: "Llavero personalizado",
+    slug: "llavero-personalizado",
+    categorySlug: "accesorios-y-escritorio",
+    status: "published",
+    description:
+      "Llavero ligero con anilla metálica incluida. Disponible en varios materiales y colores, " +
+      "perfecto como detalle o para identificar tus llaves.",
+    images: [photo("Llavero personalizado"), photo("Llavero personalizado - detalle")],
+    variants: [
+      variant("PLA", "Rojo", 3.5, 0.9, 25),
+      variant("PLA", "Verde", 3.5, 0.9, 25),
+      variant("TPU", "Negro", 4.5, 1.4, 35),
+      variant("Nylon", "Naranja", 6.0, 2.1, 45),
+    ],
+  },
+  {
+    name: "Portalápices geométrico",
+    slug: "portalapices-geometrico",
+    categorySlug: "accesorios-y-escritorio",
+    status: "published",
+    description:
+      "Portalápices de superficie facetada con fondo reforzado para que no se mueva. " +
+      "Capacidad para bolígrafos, lápices y pinceles de maquillaje.",
+    images: [photo("Portalápices geométrico")],
+    variants: [
+      variant("PLA", "Blanco", 9.9, 3.0, 150),
+      variant("PETG", "Turquesa", 11.5, 3.6, 170),
+    ],
+  },
+
+  // ---------- Hogar y Decoración ----------
+  {
+    name: "Maceta geométrica",
+    slug: "maceta-geometrica",
+    categorySlug: "hogar-y-decoracion",
+    status: "published",
+    description:
+      "Maceta decorativa con diseño geométrico y drenaje inferior. Pensada para plantas pequeñas y suculentas. " +
+      "Incluye plato de recogida de agua; el diámetro aproximado es de 12 cm.",
+    images: [
+      "https://images.pexels.com/photos/7222203/pexels-photo-7222203.jpeg?auto=compress&cs=tinysrgb&w=900",
+      photo("Maceta geométrica - vista superior"),
+    ],
+    variants: [
+      variant("PETG", "Blanco", 18.9, 6.75, 360),
+      variant("PLA", "Gris", 16.5, 5.9, 330),
+      variant("Resin", "Beige", 24.5, 9.2, 420),
+    ],
+  },
+  {
+    name: "Lámpara de mesa",
+    slug: "lampara-de-mesa",
+    categorySlug: "hogar-y-decoracion",
+    status: "published",
+    description:
+      "Lámpara de mesa con pantalla translúcida que difumina la luz. Compatible con bombillas LED E27 (no incluidas). " +
+      "Cable de 1,5 m con interruptor en la base.",
+    images: [photo("Lámpara de mesa"), photo("Lámpara de mesa - encendida")],
+    variants: [
+      variant("PLA", "Blanco", 34.9, 12.0, 900),
+      variant("PLA", "Naranja", 36.9, 12.5, 900),
+      variant("PETG", "Beige", 39.9, 13.4, 960),
+    ],
+  },
+  {
+    name: "Posavasos hexagonal",
+    slug: "posavasos-hexagonal",
+    categorySlug: "hogar-y-decoracion",
+    status: "published",
+    description:
+      "Juego de posavasos con forma hexagonal y superficie antideslizante. " +
+      "Resistentes al calor de tazas y vasos recién servidos.",
+    images: [photo("Posavasos hexagonal")],
+    variants: [
+      variant("PLA", "Verde", 6.5, 2.0, 90),
+      variant("PETG", "Azul", 7.5, 2.4, 105),
+    ],
+  },
+  {
+    name: "Percha de pared",
+    slug: "percha-de-pared",
+    categorySlug: "hogar-y-decoracion",
+    status: "published",
+    description:
+      "Percha de pared con tres ganchos reforzados para abrigos, bolsos y toallas. " +
+      "Incluye tacos y tornillos para fijación sencilla.",
+    images: [photo("Percha de pared")],
+    variants: [
+      variant("PLA", "Negro", 11.9, 3.9, 200),
+      variant("ABS", "Gris", 13.9, 4.5, 230),
+    ],
+  },
+
+  // ---------- Figuras y Coleccionables ----------
   {
     name: "Figura decorativa",
-    description: "Figura decorativa de sobremesa con acabado pensado para impresión FDM.",
+    slug: "figura-decorativa",
     categorySlug: "figuras-y-coleccionables",
     status: "published",
-    slug: "figura-decorativa",
-    imageUrl: "https://images.pexels.com/photos/14158951/pexels-photo-14158951.jpeg?auto=compress&cs=tinysrgb&w=900",
+    description:
+      "Figura decorativa de sobremesa con acabado pensado para impresión FDM y resina. " +
+      "Altura aproximada de 15 cm, base plana para mantenerse de pie.",
+    images: [
+      "https://images.pexels.com/photos/14158951/pexels-photo-14158951.jpeg?auto=compress&cs=tinysrgb&w=900",
+      photo("Figura decorativa - perfil"),
+    ],
+    variants: [
+      variant("Resin", "Gris", 24.9, 9.8, 540),
+      variant("PLA", "Blanco", 19.9, 7.0, 420),
+    ],
   },
   {
+    name: "Dragón articulado",
+    slug: "dragon-articulado",
+    categorySlug: "figuras-y-coleccionables",
+    status: "published",
+    description:
+      "Dragón articulado impreso en una sola pieza: las alas y la cola se mueven sin montaje. " +
+      "Envergadura de unos 25 cm, con escamas detalladas.",
+    images: [photo("Dragón articulado"), photo("Dragón articulado - alas")],
+    variants: [
+      variant("PLA", "Verde", 29.9, 10.0, 900),
+      variant("PLA", "Morado", 31.9, 10.6, 930),
+      variant("TPU", "Negro", 35.0, 13.2, 1020),
+    ],
+  },
+  {
+    name: "Estatua minimalista",
+    slug: "estatua-minimalista",
+    categorySlug: "figuras-y-coleccionables",
+    status: "published",
+    description:
+      "Estatua minimalista de líneas limpias, pensada como pieza de colección. " +
+      "Acabado mate en PLA y resina de alto detalle para las versiones de color.",
+    images: [photo("Estatua minimalista")],
+    variants: [
+      variant("PLA", "Blanco", 22.5, 7.8, 480),
+      variant("Resin", "Negro", 28.5, 10.9, 600),
+    ],
+  },
+
+  // ---------- Electrónica y Maker ----------
+  {
     name: "Caja para electrónica",
-    description: "Caja modular para pequeños proyectos electrónicos y placas de desarrollo.",
+    slug: "caja-para-electronica",
     categorySlug: "electronica-y-maker",
     status: "archived",
-    slug: "caja-para-electronica",
-    imageUrl: "https://images.pexels.com/photos/20341728/pexels-photo-20341728.jpeg?auto=compress&cs=tinysrgb&w=900",
+    description:
+      "Caja modular para pequeños proyectos electrónicos y placas de desarrollo. " +
+      "Tapa a presión y orificios de ventilación. Versión retirada del catálogo.",
+    images: [
+      "https://images.pexels.com/photos/20341728/pexels-photo-20341728.jpeg?auto=compress&cs=tinysrgb&w=900",
+    ],
+    variants: [variant("ABS", "Negro", 16.75, 5.6, 300)],
+  },
+  {
+    name: "Carcasa para Raspberry Pi",
+    slug: "carcasa-para-raspberry-pi",
+    categorySlug: "electronica-y-maker",
+    status: "published",
+    description:
+      "Carcasa para Raspberry Pi 4 con ventilación lateral y acceso a todos los puertos. " +
+      "Incluye espacio para un pequeño ventilador de 30 mm y tornillería de montaje.",
+    images: [photo("Carcasa Raspberry Pi"), photo("Carcasa Raspberry Pi - puertos")],
+    variants: [
+      variant("ABS", "Negro", 14.5, 5.0, 240),
+      variant("PETG", "Azul", 13.9, 4.6, 230),
+    ],
+  },
+  {
+    name: "Brazo de sujeción para cámara",
+    slug: "brazo-de-sujecion-para-camara",
+    categorySlug: "electronica-y-maker",
+    status: "published",
+    description:
+      "Brazo articulado para sujetar cámaras de acción o pequeños micrófonos. Tuerca de rosca estándar 1/4\". " +
+      "Fabricado en nailon para una resistencia superior a las vibraciones.",
+    images: [photo("Brazo de sujeción")],
+    variants: [variant("Nylon", "Negro", 22.5, 8.0, 420)],
+  },
+
+  // ---------- Juguetes y Juegos ----------
+  {
+    name: "Coche de carreras",
+    slug: "coche-de-carreras",
+    categorySlug: "juguetes-y-juegos",
+    status: "published",
+    description:
+      "Coche de carreras de diseño aerodinámico para niños a partir de 5 años. " +
+      "Ruedas giratorias y chasis reforzado para aguantar las caídas del juego.",
+    images: [photo("Coche de carreras"), photo("Coche de carreras - lateral")],
+    variants: [
+      variant("PLA", "Rojo", 9.9, 3.2, 150),
+      variant("PLA", "Amarillo", 9.9, 3.2, 150),
+    ],
+  },
+  {
+    name: "Puzzle 3D de animales",
+    slug: "puzzle-3d-de-animales",
+    categorySlug: "juguetes-y-juegos",
+    status: "published",
+    description:
+      "Puzzle tridimensional con piezas de encaje sin pegamento. Incluye cinco animales de la granja " +
+      "y una guía de montaje ilustrada para niños de 6 años en adelante.",
+    images: [photo("Puzzle 3D de animales")],
+    variants: [
+      variant("PLA", "Verde", 15.5, 5.1, 360),
+      variant("PLA", "Naranja", 15.5, 5.1, 360),
+    ],
+  },
+  {
+    name: "Peonza clásica",
+    slug: "peonza-clasica",
+    categorySlug: "juguetes-y-juegos",
+    status: "published",
+    description:
+      "Peonza de equilibrio estable con punta de acero recambiable. Gira durante más de un minuto " +
+      "y es uno de los juguetes más resistentes de nuestro catálogo.",
+    images: [photo("Peonza clásica")],
+    variants: [
+      variant("PLA", "Morado", 4.5, 1.2, 45),
+      variant("PLA", "Turquesa", 4.5, 1.2, 45),
+    ],
+  },
+
+  // ---------- Joyería y Complementos ----------
+  {
+    name: "Pendientes geométricos",
+    slug: "pendientes-geometricos",
+    categorySlug: "joyeria-y-complementos",
+    status: "published",
+    description:
+      "Pendientes ligeros de resina con diseño geométrico. Incluyen cierre de presión o gancho " +
+      "de plata de ley. No recomendados para uso continuado en piel sensible.",
+    images: [photo("Pendientes geométricos"), photo("Pendientes geométricos - detalle")],
+    variants: [
+      variant("Resin", "Negro", 6.9, 2.1, 120),
+      variant("Resin", "Rosa", 6.9, 2.1, 120),
+      variant("Resin", "Blanco", 7.5, 2.4, 130),
+    ],
+  },
+  {
+    name: "Colgante con nombre",
+    slug: "colgante-con-nombre",
+    categorySlug: "joyeria-y-complementos",
+    status: "published",
+    description:
+      "Colgante flexible en TPU con el nombre que elijas. Muy resistente al agua y ligero. " +
+      "Se entrega con cordón ajustable de 45 cm.",
+    images: [photo("Colgante con nombre")],
+    variants: [
+      variant("TPU", "Rosa", 8.5, 2.6, 110),
+      variant("TPU", "Azul", 8.5, 2.6, 110),
+    ],
+  },
+
+  // ---------- Arte y Diseño ----------
+  {
+    name: "Jarrón espiral",
+    slug: "jarron-espiral",
+    categorySlug: "arte-y-diseno",
+    status: "published",
+    description:
+      "Jarrón de espiral continua de 20 cm, impreso en una sola pasada sin soportes. " +
+      "Apto para flores secas; no es impermeable por las juntas del modelo.",
+    images: [photo("Jarrón espiral"), photo("Jarrón espiral - vista lateral")],
+    variants: [
+      variant("PLA", "Blanco", 27.5, 9.0, 600),
+      variant("PETG", "Azul", 29.9, 9.8, 660),
+    ],
+  },
+  {
+    name: "Escultura abstracta",
+    slug: "escultura-abstracta",
+    categorySlug: "arte-y-diseno",
+    status: "published",
+    description:
+      "Escultura de formas orgánicas pensada para estanterías y mesas de centro. " +
+      "Impresa en resina de alta precisión con altura aproximada de 25 cm.",
+    images: [photo("Escultura abstracta")],
+    variants: [
+      variant("Resin", "Gris", 49.9, 18.0, 1200),
+      variant("Resin", "Negro", 52.0, 18.6, 1260),
+    ],
+  },
+  {
+    name: "Reloj de pared hexagonal",
+    slug: "reloj-de-pared-hexagonal",
+    categorySlug: "arte-y-diseno",
+    status: "published",
+    description:
+      "Reloj de pared de 30 cm con marcadores geométricos. Admite mecanismo de cuarzo estándar " +
+      "(no incluido). Diseño limpio para cualquier estancia.",
+    images: [photo("Reloj de pared hexagonal"), photo("Reloj de pared - detalle")],
+    variants: [
+      variant("PLA", "Negro", 32.9, 11.5, 780),
+      variant("PLA", "Blanco", 32.9, 11.5, 780),
+    ],
+  },
+
+  // ---------- Casos de prueba: no visibles en la tienda ----------
+  {
+    name: "Prototipo retirado",
+    slug: "prototipo-retirado",
+    categorySlug: "figuras-y-coleccionables",
+    status: "published",
+    isActive: false,
+    description: "Impresión desactivada temporalmente por el equipo. No debe aparecer en la tienda.",
+    images: [photo("Prototipo retirado")],
+    variants: [variant("PLA", "Gris", 10.0, 3.5, 200)],
+  },
+  {
+    name: "Pieza en revisión",
+    slug: "pieza-en-revision",
+    categorySlug: "arte-y-diseno",
+    status: "draft",
+    description: "Pieza en borrador: todavía no se ha publicado.",
+    images: [],
+    variants: [variant("PETG", "Azul", 19.0, 6.0, 300)],
   },
 ];
 
-const variantData = [
-  { printSlug: "soporte-para-movil", materialName: "PLA", color: "Negro", salePrice: 12.5, costPrice: 4.2, printTime: 180 },
-  { printSlug: "soporte-para-movil", materialName: "PETG", color: "Azul", salePrice: 15.9, costPrice: 5.3, printTime: 210 },
-  { printSlug: "maceta-geometrica", materialName: "PETG", color: "Blanco", salePrice: 18.9, costPrice: 6.75, printTime: 360 },
-  { printSlug: "organizador-de-cables", materialName: "PLA", color: "Gris", salePrice: 8.5, costPrice: 2.3, printTime: 120 },
-  { printSlug: "figura-decorativa", materialName: "Resin", color: "Gris", salePrice: 24.9, costPrice: 9.8, printTime: 540 },
-  { printSlug: "caja-para-electronica", materialName: "ABS", color: "Negro", salePrice: 16.75, costPrice: 5.6, printTime: 300 },
-].map((variant) => ({ ...variant, isActive: true, deletedAt: null }));
-
+/** Usuarios de prueba: no se modifican. */
 const adminAccount = {
   email: "admin@fusions3d.local",
   username: "admin",
@@ -176,52 +583,68 @@ async function seedCatalog() {
 
   const printBySlug = {};
   for (const print of printData) {
-    const { categorySlug, imageUrl: _imageUrl, ...data } = print;
+    const { categorySlug, images: _images, variants: _variants, isActive = true, ...data } = print;
     const saved = await upsert(Print, { slug: print.slug }, {
       ...data,
       categoryId: categoryBySlug[categorySlug],
-      isActive: true,
+      isActive,
       deletedAt: null,
     });
     printBySlug[print.slug] = saved._id;
   }
   console.log(`${printData.length} impresiones preparadas.`);
 
-  const printByName = Object.fromEntries(printData.map((print) => [print.slug, print.name]));
+  const usedSkus = new Set();
+  const reserveSku = (base) => {
+    let sku = base;
+    let counter = 2;
+    while (usedSkus.has(sku)) {
+      sku = `${base}-${counter}`;
+      counter++;
+    }
+    usedSkus.add(sku);
+    return sku;
+  };
 
-  for (const variant of variantData) {
-    const sku = buildSkuBase(printByName[variant.printSlug], variant.materialName, variant.color);
+  let variantCount = 0;
+  for (const print of printData) {
+    for (const item of print.variants) {
+      const sku = reserveSku(buildSkuBase(print.name, item.material, item.color));
 
-    await upsert(PrintVariant, {
-      printId: printBySlug[variant.printSlug],
-      materialId: materialByName[variant.materialName],
-      color: variant.color,
-    }, {
-      printId: printBySlug[variant.printSlug],
-      materialId: materialByName[variant.materialName],
-      sku,
-      color: variant.color,
-      salePrice: variant.salePrice,
-      costPrice: variant.costPrice,
-      printTime: variant.printTime,
-      isActive: variant.isActive,
-      deletedAt: variant.deletedAt,
-    });
+      await upsert(PrintVariant, {
+        printId: printBySlug[print.slug],
+        materialId: materialByName[item.material],
+        color: item.color,
+      }, {
+        printId: printBySlug[print.slug],
+        materialId: materialByName[item.material],
+        sku,
+        color: item.color,
+        colorSlug: toSlug(item.color),
+        colorHex: COLORS[item.color] ?? null,
+        salePrice: item.salePrice,
+        costPrice: item.costPrice,
+        printTime: item.printTime,
+        isActive: item.isActive,
+        deletedAt: null,
+      });
+      variantCount++;
+    }
   }
-  console.log(`${variantData.length} variantes preparadas.`);
+  console.log(`${variantCount} variantes preparadas.`);
 
   const imageOwners = [
     ...categories.map((category) => ({
       entityType: "Category",
       entityId: categoryBySlug[category.slug],
       label: category.name,
-      imageUrls: [`https://placehold.co/800x600/ff6000/ffffff?text=${encodeURIComponent(category.name)}`],
+      imageUrls: [picsum(`categoria-${category.slug}`)],
     })),
     ...printData.map((print) => ({
       entityType: "Print",
       entityId: printBySlug[print.slug],
       label: print.name,
-      imageUrls: [print.imageUrl],
+      imageUrls: gallery(print),
     })),
   ];
 
@@ -240,7 +663,7 @@ async function seedCatalog() {
       isActive: true,
     }));
 
-    await Image.insertMany(images);
+    if (images.length > 0) await Image.insertMany(images);
     imageCount += images.length;
   }
   console.log(`${imageCount} imágenes de ejemplo preparadas.`);

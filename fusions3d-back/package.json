@@ -9,7 +9,11 @@
     "seed": "node seed.js",
     "seed:reset": "node seed.js --reset --confirm-reset",
     "migrate:remove-variant-name": "node scripts/remove-print-variant-name.js",
-    "migrate:user-roles": "node scripts/migrate-user-roles.js"
+    "migrate:user-roles": "node scripts/migrate-user-roles.js",
+    "migrate:material-slugs": "node scripts/backfill-material-slugs.js",
+    "migrate:variant-color-slugs": "node scripts/backfill-variant-color-slugs.js",
+    "migrate:drop-print-text-index": "node scripts/drop-print-text-index.js",
+    "test": "node --test \"tests/unit/**/*.test.js\" \"tests/integration/**/*.test.js\""
   },
   "dependencies": {
     "argon2": "^0.45.1",
@@ -26,12 +30,14 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "mongodb-memory-server": "^10.4.3",
     "nodemon": "^3.1.9"
   },
   "engines": {
     "node": ">=20"
   },
   "allowScripts": {
-    "argon2@0.45.1": true
+    "argon2@0.45.1": true,
+    "mongodb-memory-server@10.4.3": true
   }
 }

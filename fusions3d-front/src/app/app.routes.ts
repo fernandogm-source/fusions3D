@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { authGuard } from './core/guards/auth.guard';
+import { SHOP_ROUTES } from './features/shop/shop.routes';
 
 export const routes: Routes = [
   {
@@ -9,10 +10,14 @@ export const routes: Routes = [
   },
   {
     path: '',
+    loadComponent: () => import('./layouts/shop-layout/shop-layout').then((m) => m.ShopLayout),
+    children: SHOP_ROUTES,
+  },
+  {
+    path: '',
     loadComponent: () => import('./layouts/main-layout/main-layout').then((m) => m.MainLayout),
     canActivate: [authGuard],
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'inicio' },
       {
         path: 'inicio',
         canActivate: [adminGuard],

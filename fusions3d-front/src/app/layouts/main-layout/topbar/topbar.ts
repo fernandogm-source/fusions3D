@@ -1,8 +1,10 @@
 import { Component, computed, DestroyRef, inject, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthStore } from '../../../core/store/auth.store';
+import { ProfileStore } from '../../../core/store/profile.store';
+import { UserAvatar } from '../../../shared/components/user-avatar/user-avatar';
 
 const TITLES: [RegExp, string][] = [
   [/^\/inicio/, 'Inicio'],
@@ -21,6 +23,7 @@ const TITLES: [RegExp, string][] = [
 /** Barra superior: botón de menú en móvil y título de la sección actual. */
 @Component({
   selector: 'app-topbar',
+  imports: [RouterLink, UserAvatar],
   templateUrl: './topbar.html',
 })
 export class Topbar {
@@ -28,6 +31,7 @@ export class Topbar {
 
   private readonly router = inject(Router);
   protected readonly auth = inject(AuthStore);
+  protected readonly profile = inject(ProfileStore);
   protected readonly title = signal('Fusions3D');
   protected readonly initial = computed(() => this.auth.user()?.username.charAt(0).toUpperCase() ?? '');
 

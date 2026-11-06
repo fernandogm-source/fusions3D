@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ProfileStore } from '../../core/store/profile.store';
 import { Loader } from '../../shared/components/loader/loader';
 import { Sidebar } from './sidebar/sidebar';
 import { Topbar } from './topbar/topbar';
@@ -11,6 +12,11 @@ import { Topbar } from './topbar/topbar';
   templateUrl: './main-layout.html',
 })
 export class MainLayout {
+  private readonly profile = inject(ProfileStore);
   protected readonly year = new Date().getFullYear();
   protected readonly sidebarOpen = signal(false);
+
+  constructor() {
+    void this.profile.load();
+  }
 }

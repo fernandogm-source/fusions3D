@@ -1,0 +1,22 @@
+<div
+  class="grid grid-cols-1 gap-6 transition-opacity duration-200 sm:grid-cols-2 xl:grid-cols-3"
+  [class.opacity-60]="loading() && prints().length > 0"
+  [attr.aria-busy]="loading()"
+>
+  @if (loading() && prints().length === 0) {
+    @for (item of skeletonItems; track item) {
+      <div class="card h-80 animate-pulse" aria-hidden="true">
+        <div class="aspect-[4/3] rounded-t-2xl bg-elevated"></div>
+        <div class="flex flex-col gap-3 p-4">
+          <div class="h-3 w-1/3 rounded bg-elevated"></div>
+          <div class="h-4 w-3/4 rounded bg-elevated"></div>
+          <div class="h-3 w-1/2 rounded bg-elevated"></div>
+        </div>
+      </div>
+    }
+  } @else {
+    @for (print of prints(); track print._id) {
+      <app-print-card [print]="print" />
+    }
+  }
+</div>

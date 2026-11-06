@@ -1,0 +1,57 @@
+<div class="page-enter flex flex-col gap-8">
+  <header class="flex flex-col gap-5">
+    <div class="flex flex-col gap-2">
+      <h1 class="page-title">Catálogo</h1>
+      <p class="text-sm text-ink-muted" aria-live="polite">{{ resultsLabel() }}</p>
+    </div>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+      <select
+        class="input sm:w-64"
+        aria-label="Ordenar resultados"
+        (change)="onSort($any($event.target).value)"
+      >
+        @if (query().q) {
+          <option value="relevance" [selected]="query().sort === 'relevance'">Relevancia</option>
+        }
+        <option value="newest" [selected]="query().sort === 'newest'">Novedades</option>
+        <option value="price_asc" [selected]="query().sort === 'price_asc'">Precio: menor a mayor</option>
+        <option value="price_desc" [selected]="query().sort === 'price_desc'">Precio: mayor a menor</option>
+        <option value="name" [selected]="query().sort === 'name'">Nombre</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="grid grid-cols-1 gap-8 lg:grid-cols-[18rem_minmax(0,1fr)]">
+    <app-shop-filters
+      class="lg:sticky lg:top-24 lg:self-start"
+      [filters]="store.filters()"
+      [selectedCategories]="query().category"
+      [selectedMaterials]="query().material"
+      [selectedColors]="query().color"
+      [minPrice]="query().minPrice"
+      [maxPrice]="query().maxPrice"
+      (toggle)="onToggle($event)"
+      (priceChange)="onPrice($event)"
+      (clear)="onClear()"
+    />
+
+    <div class="flex min-w-0 flex-col gap-8">
+      @if (store.error()) {
+        <app-error-state title="No se han podido cargar las impresiones" [message]="store.error()!" (retry)="retry()" />
+      } @else if (store.isEmpty()) {
+        <app-empty-state title="Sin resultados" message="Prueba con otros filtros o con una búsqueda distinta.">
+          <button type="button" class="btn btn-secondary" (click)="onClear()">Limpiar filtros</button>
+        </app-empty-state>
+      } @else {
+        <app-print-list [prints]="store.prints()" [loading]="store.loading()" />
+
+        <app-pagination
+          [page]="query().page"
+          [totalPages]="store.meta()?.totalPages ?? 0"
+          (pageChange)="onPage($event)"
+        />
+      }
+    </div>
+  </div>
+</div>

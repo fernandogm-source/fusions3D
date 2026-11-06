@@ -1,5 +1,7 @@
 const repository = require('../repositories/material.repository');
+const Material = require('../models/material.model');
 const { AppError } = require('../utils/app.error');
+const { generateSlug } = require('../utils/slug.util');
 const dependencyRestriction = require('./dependency-restriction.service');
 
 class MaterialService {
@@ -22,13 +24,23 @@ class MaterialService {
   }
 
   async create(data) {
-    return repository.create(data);
+    const slug = await generateSlug(data.name, Material);
+    return repository.create({ ...data, slug });
   }
 
   async update(id, body) {
     const cleanData = { ...body };
     delete cleanData._id;
     delete cleanData.deletedAt;
+    delete cleanData.slug;
+
+    if (cleanData.name !== undefined) {
+      const existing = await repository.findByIdWithDeleted(id);
+
+      if (existing && existing.name !== cleanData.name) {
+        cleanData.slug = await generateSlug(cleanData.name, Material);
+      }
+    }
 
     const material = await repository.updateById(id, cleanData);
 

@@ -1,6 +1,8 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthStore } from '../../../core/store/auth.store';
+import { ProfileStore } from '../../../core/store/profile.store';
+import { UserAvatar } from '../../../shared/components/user-avatar/user-avatar';
 
 interface NavLink {
   label: string;
@@ -20,7 +22,7 @@ interface NavSection {
  */
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, UserAvatar],
   templateUrl: './sidebar.html',
 })
 export class Sidebar {
@@ -28,6 +30,8 @@ export class Sidebar {
   readonly close = output();
 
   protected readonly auth = inject(AuthStore);
+  protected readonly profile = inject(ProfileStore);
+  protected readonly initial = computed(() => this.auth.user()?.username.charAt(0).toUpperCase() ?? '');
 
   protected readonly homePath = computed(() => (this.auth.isAdmin() ? '/inicio' : '/perfil'));
 

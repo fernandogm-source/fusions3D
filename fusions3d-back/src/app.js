@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { connectDB } = require('./config/database');
 const printRoutes = require('./routes/print.routes');
+const shopRoutes = require('./routes/shop.routes');
 const categoryRoutes = require('./routes/category.routes');
 const materialRoutes = require('./routes/material.routes');
 const printVariantRoutes = require('./routes/printVariant.routes');
@@ -51,6 +52,7 @@ app.get('/health', (_req, res) => {
 // Login is public; the current API is an admin panel, so every other /api route is ADMIN-only.
 app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
+app.use('/api/shop', shopRoutes);
 app.use('/api', _auth, _admin);
 
 app.use('/api/prints', printRoutes);

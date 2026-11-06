@@ -4,6 +4,7 @@ const Print = require('../models/print.model');
 const Material = require('../models/material.model');
 const { AppError } = require('../utils/app.error');
 const { buildSkuBase, generateSku } = require('../utils/sku.util');
+const { toSlug } = require('../utils/slug.util');
 const { attachDependencyIssues } = require('../utils/dependency-issues.util');
 
 const DEPENDENCIES = [
@@ -60,8 +61,9 @@ class PrintVariantService {
     const material = await this.ensureMaterialExists(data.materialId);
 
     const sku = await this.resolveSku(print, material, data.color);
+    const colorSlug = toSlug(data.color);
 
-    return repository.create({ ...data, sku });
+    return repository.create({ ...data, sku, colorSlug });
   }
 
   async resolveSku(print, material, color) {
@@ -83,6 +85,7 @@ class PrintVariantService {
 
     if (cleanData.color !== undefined) {
       cleanData.color = cleanData.color.trim();
+      cleanData.colorSlug = toSlug(cleanData.color);
     }
 
     const skuInputsChanged =

@@ -13,9 +13,7 @@
     <div class="grid items-start gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
       <!-- Resumen de la cuenta -->
       <aside class="card flex flex-col items-center gap-4 p-6 text-center lg:sticky lg:top-24">
-        <span class="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-brand to-brand-dark font-display text-3xl font-bold text-white ring-4 ring-brand/15 shadow-[0_12px_28px_-12px_rgb(255_96_0/0.9)]" aria-hidden="true">
-          {{ initial() }}
-        </span>
+        <app-user-avatar class="h-20 w-20 font-display text-3xl ring-4 ring-brand/15 shadow-[0_12px_28px_-12px_rgb(255_96_0/0.9)]" [url]="store.profile()?.avatarUrl" [initial]="initial()" />
         <div class="min-w-0">
           <p class="font-display text-lg font-semibold text-ink">{{ store.profile()?.name }}</p>
           <p class="text-sm text-ink-muted">{{ '@' + auth.user()?.username }}</p>

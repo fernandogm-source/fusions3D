@@ -57,6 +57,9 @@ const printSchema = new mongoose.Schema(
   }
 );
 
+printSchema.index({ status: 1, isActive: 1, deletedAt: 1, categoryId: 1 });
+printSchema.index({ createdAt: -1, _id: -1 });
+
 printSchema.virtual('images', {
   ref: 'Image',
   localField: '_id',

@@ -1,0 +1,18 @@
+<a
+  routerLink="/shop"
+  [queryParams]="{ color: color().slug }"
+  class="card card-interactive flex h-full items-center gap-4 p-5"
+  [attr.aria-label]="'Ver impresiones en color ' + color().name"
+>
+  <span
+    class="h-12 w-12 shrink-0 rounded-full ring-2 ring-line-strong shadow-[0_8px_18px_-10px_rgb(0_0_0/0.9)]"
+    [style.background-color]="swatch()"
+    aria-hidden="true"
+  ></span>
+  <div class="flex flex-col gap-1">
+    <h3 class="font-display text-lg font-semibold text-ink">{{ color().name }}</h3>
+    <span class="text-xs text-ink-muted">
+      {{ color().count === 1 ? '1 variante' : color().count + ' variantes' }}
+    </span>
+  </div>
+</a>

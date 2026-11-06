@@ -67,7 +67,12 @@
 
   <!-- Pie -->
   <div class="m-4 rounded-xl border border-line bg-elevated/60 p-4">
-    <p class="text-xs font-semibold text-ink">{{ auth.isAdmin() ? 'Fusions3D Admin' : 'Fusions3D' }}</p>
-    <p class="mt-0.5 text-xs text-ink-faint">{{ auth.isAdmin() ? 'Gestión de catálogo y usuarios' : 'Tu cuenta' }}</p>
+    <a routerLink="/perfil" (click)="close.emit()" aria-label="Ir a mi perfil" class="flex cursor-pointer items-center gap-3">
+      <app-user-avatar class="h-10 w-10 text-sm shadow-[0_8px_18px_-10px_rgb(255_96_0/0.9)]" [url]="profile.profile()?.avatarUrl" [initial]="initial()" />
+      <div class="min-w-0">
+        <p class="truncate text-sm font-semibold text-ink">{{ auth.user()?.username }}</p>
+        <p class="truncate text-xs text-ink-faint">{{ auth.isAdmin() ? 'Administrador' : 'Usuario' }}</p>
+      </div>
+    </a>
   </div>
 </aside>
