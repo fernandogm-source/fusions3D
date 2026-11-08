@@ -31,7 +31,7 @@ src/
 └── app.js
 ```
 
-La API actual sirve al panel de administración. Las rutas del panel pasan por los middlewares `_auth` y `_admin`, en ese orden. El login es público; `/api/auth/me`, logout y Profile requieren `_auth`. Profile es un dominio separado de Auth y permite al propietario gestionar sus propios datos; ADMIN puede seleccionar cualquier perfil mediante `?userId=<id>`, incluso si la cuenta está inactiva o eliminada lógicamente. Las rutas `/api/roles` están activas para ADMIN. La ruta `/api/users` está activa para ADMIN y el router exige `_auth` y `_admin` por sí mismo. El email y el nombre de usuario (`username`) deben ser únicos, incluso frente a usuarios eliminados lógicamente (`EMAIL_ALREADY_EXISTS` y `USERNAME_ALREADY_EXISTS`, 409). El `username` tiene entre 3 y 30 caracteres (`a-z`, `0-9`, `.`, `_` y `-`), se guarda en minúsculas y lo puede cambiar un ADMIN desde `/api/users` o el propio usuario desde `/api/profiles/updateprofile`. El login sigue usando solo el email. Un ADMIN no puede cambiar su propio rol ni desactivarse o eliminarse (`SELF_MODIFICATION_FORBIDDEN`), y ninguna operación puede dejar el sistema sin ningún administrador activo (`LAST_ADMIN`). `Image` es un modelo asociado que se popula en impresiones y categorías.
+La API sirve a la tienda pública y al panel de administración. Las rutas de la tienda (`/api/shop/*`) son públicas. Las rutas del panel pasan por los middlewares `_auth` y `_admin`, en ese orden. El login es público; `/api/auth/me`, logout y Profile requieren `_auth`. Profile es un dominio separado de Auth y permite al propietario gestionar sus propios datos; ADMIN puede seleccionar cualquier perfil mediante `?userId=<id>`, incluso si la cuenta está inactiva o eliminada lógicamente. Las rutas `/api/roles` están activas para ADMIN. La ruta `/api/users` está activa para ADMIN y el router exige `_auth` y `_admin` por sí mismo. El email y el nombre de usuario (`username`) deben ser únicos, incluso frente a usuarios eliminados lógicamente (`EMAIL_ALREADY_EXISTS` y `USERNAME_ALREADY_EXISTS`, 409). El `username` tiene entre 3 y 30 caracteres (`a-z`, `0-9`, `.`, `_` y `-`), se guarda en minúsculas y lo puede cambiar un ADMIN desde `/api/users` o el propio usuario desde `/api/profiles/updateprofile`. El login sigue usando solo el email. Un ADMIN no puede cambiar su propio rol ni desactivarse o eliminarse (`SELF_MODIFICATION_FORBIDDEN`), y ninguna operación puede dejar el sistema sin ningún administrador activo (`LAST_ADMIN`). `Image` es un modelo asociado que se popula en impresiones y categorías.
 
 ## Instalación y ejecución
 
@@ -154,6 +154,17 @@ Base URL: `http://localhost:3000`. Todos los recursos de negocio usan el prefijo
 `{resource}` puede ser `prints`, `categories`, `materials`, `print-variants` o `roles`. Todas estas rutas, incluidas las lecturas, requieren una sesión de ADMIN: la cookie `fusions3d_session` que emite el login, o `Authorization: Bearer <token>` para clientes sin cookies. La ruta `/api/users` también está montada y requiere ADMIN.
 
 Las rutas de Profile requieren un token válido y comprueban propiedad. ADMIN puede especificar `?userId=<id>` para consultar o actualizar el perfil de otro usuario, incluso si su cuenta está inactiva o eliminada lógicamente. El `userId` no se acepta en el cuerpo de actualización. `avatarUrl` acepta una URL HTTP/HTTPS o `null` para quitar el avatar; la imagen se aloja fuera de la API.
+
+### Tienda pública
+
+Estas rutas no requieren sesión.
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/api/shop/home` | Datos de la página de inicio de la tienda |
+| GET | `/api/shop/filters` | Opciones de filtrado del catálogo |
+| GET | `/api/shop/prints` | Listado público de impresiones (acepta parámetros de búsqueda y filtrado) |
+| GET | `/api/shop/prints/:slug` | Detalle público de una impresión por slug |
 
 ### Rutas adicionales
 

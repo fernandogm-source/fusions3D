@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { authGuard } from './core/guards/auth.guard';
+import { adminMatch, nonAdminMatch } from './core/guards/role-match.guard';
 import { SHOP_ROUTES } from './features/shop/shop.routes';
 
 export const routes: Routes = [
@@ -11,7 +12,15 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./layouts/shop-layout/shop-layout').then((m) => m.ShopLayout),
-    children: SHOP_ROUTES,
+    children: [
+      ...SHOP_ROUTES,
+      {
+        path: 'perfil',
+        canMatch: [nonAdminMatch],
+        canActivate: [authGuard],
+        loadChildren: () => import('./features/profile/profile.routes').then((m) => m.PROFILE_ROUTES),
+      },
+    ],
   },
   {
     path: '',
@@ -25,6 +34,7 @@ export const routes: Routes = [
       },
       {
         path: 'perfil',
+        canMatch: [adminMatch],
         loadChildren: () => import('./features/profile/profile.routes').then((m) => m.PROFILE_ROUTES),
       },
       {

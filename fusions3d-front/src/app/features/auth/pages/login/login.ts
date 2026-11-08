@@ -1,14 +1,12 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../../../core/store/auth.store';
 import { getControlErrorMessage } from '../../../../shared/utils/custom-validators';
 import { getErrorMessage } from '../../../../shared/utils/error-message.util';
 
-const DEFAULT_TARGET = '/inicio';
-
 /** Formulario de inicio de sesión con email y contraseña. */
-@Component({ selector: 'app-login', imports: [ReactiveFormsModule], templateUrl: './login.html' })
+@Component({ selector: 'app-login', imports: [ReactiveFormsModule, RouterLink], templateUrl: './login.html' })
 export class LoginPage {
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly auth = inject(AuthStore);
@@ -57,6 +55,6 @@ export class LoginPage {
   private target(): string {
     const url = this.returnUrl();
     const isInternal = !!url && url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/login');
-    return isInternal ? url : DEFAULT_TARGET;
+    return isInternal ? url : '/';
   }
 }

@@ -9,8 +9,10 @@ Aplicación full-stack para gestionar un catálogo de piezas impresas en 3D. El 
 
 ## Funcionalidades
 
-- Gestión de impresiones, categorías, materiales, variantes y roles. La gestión de usuarios está pendiente (ver [limitaciones](#limitaciones-conocidas)).
-- Autenticación JWT en la API: login, consulta de la sesión, logout y perfil propio.
+- Gestión de impresiones, categorías, materiales, variantes, roles y usuarios desde el panel de administración.
+- Tienda pública con inicio, catálogo y detalle de impresiones, y una cabecera compartida con buscador, navegación y acceso a la sesión. Esa misma cabecera aparece en el panel de administración.
+- Autenticación JWT en la API: login, consulta de la sesión, logout y perfil propio. El frontend inicia sesión con una cookie `HttpOnly`.
+- Tras iniciar sesión se vuelve a la página de origen o al inicio. Los admins abren el panel desde el enlace "Panel" de la cabecera.
 - Alta y edición de los recursos; las impresiones también tienen vista de detalle.
 - Activación/desactivación y borrado lógico con restauración desde la papelera. Desactivar o borrar lógicamente una categoría, impresión, material o rol se bloquea si conserva dependientes (`409 DEPENDENTS_EXIST`); no se aplica una cascada.
 - Slugs para impresiones y categorías; SKU generado como identificador de variantes (sin nombre personalizado).
@@ -108,10 +110,11 @@ Todos los recursos están bajo `/api`; la tabla completa está en el [README del
 | Materiales | `/api/materials` |
 | Variantes | `/api/print-variants` |
 | Roles | `/api/roles` |
-| Usuarios | `/api/users` (pendiente: no montada) |
+| Usuarios | `/api/users` |
+| Tienda pública | `/api/shop` |
 | Health check | `/health` |
 
-Los recursos CRUD incluyen listados, consulta individual, creación, actualización, activación, borrado lógico y restauración. Impresiones/categorías tienen consulta por slug; las variantes, por SKU y por impresión. Las rutas de usuarios todavía no están disponibles.
+Los recursos CRUD incluyen listados, consulta individual, creación, actualización, activación, borrado lógico y restauración. Impresiones/categorías tienen consulta por slug; las variantes, por SKU y por impresión.
 
 Las altas, los cambios de referencia y las reactivaciones requieren dependencias disponibles; si no lo están, la API responde con `409 DEPENDENCY_UNAVAILABLE`. Para evitar referencias colgantes, desactivar o borrar lógicamente categorías, impresiones, materiales y roles responde con `409 DEPENDENTS_EXIST` mientras tengan dependientes asociados, incluso si estos están inactivos o en la papelera. Hay que quitar o reasignar esas referencias antes de continuar.
 
@@ -122,14 +125,13 @@ Las altas, los cambios de referencia y las reactivaciones requieren dependencias
 
 ## Seguridad y despliegue
 
-La API protege sus rutas con JWT: todas las rutas de negocio (`/api/*`, salvo login y Profile) requieren un token de un usuario con rol `ADMIN`. Antes de publicarla, revisa `JWT_SECRET`, `CORS_ORIGIN` y `TRUST_PROXY`. El panel de administración todavía no implementa el login ni envía el token (ver limitaciones), por lo que no funciona contra la API protegida.
+La API protege sus rutas con JWT: todas las rutas de negocio (`/api/*`, salvo login y Profile) requieren un token de un usuario con rol `ADMIN`. Antes de publicarla, revisa `JWT_SECRET`, `CORS_ORIGIN` y `TRUST_PROXY`. El frontend inicia sesión mediante la cookie `HttpOnly` que emite la API.
 
 El archivo `fusions3d-front/src/environments/environment.ts` todavía apunta a `http://localhost:3000/api`; hay que configurarlo con la URL del backend real antes del build de producción. Configura también `CORS_ORIGIN` con el dominio del frontend.
 
 ## Limitaciones conocidas
 
 - No hay subida de archivos ni endpoints independientes para imágenes; las URLs de imágenes de impresiones se gestionan al crear o actualizar la impresión.
-- El backend no tiene una suite de tests configurada.
-- El panel de administración no tiene pantalla de login ni envía el token JWT a la API; sus peticiones recibirán `401` hasta que se implemente.
-- La gestión de usuarios está pendiente: `/api/users` no está montada en la API y el módulo de usuarios del frontend no está terminado.
+- El backend tiene tests unitarios e integración con `npm test`, pero la cobertura es parcial (sobre todo shop, búsqueda, slugs y query builder).
+- La topbar antigua del panel (`layouts/main-layout/topbar`) ya no se usa y está pendiente de eliminar. En móvil el panel no tiene botón de menú, así que el sidebar solo se ve en escritorio.
 - `fusions3d-back/POSTMAN.md` documenta las peticiones actuales para probar la API. No hay una colección JSON de Postman importable en el repositorio.

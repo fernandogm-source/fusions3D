@@ -1,0 +1,75 @@
+<header class="sticky top-0 z-30 border-b border-line/80 bg-base/80 backdrop-blur-xl">
+  <div class="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+    <a routerLink="/" class="shrink-0 font-display text-xl font-bold tracking-tight text-ink" aria-label="Fusions3D - Inicio">
+      Fusions<span class="text-brand">3D</span>
+    </a>
+
+    <div class="hidden flex-1 justify-center md:flex">
+      <div class="w-full max-w-md">
+        <app-search-input
+          [value]="searchValue()"
+          placeholder="Buscar impresiones…"
+          (valueChange)="onSearch($event)"
+        />
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1">
+      <button
+        type="button"
+        class="btn btn-ghost !p-2 md:hidden"
+        aria-label="Buscar"
+        [attr.aria-expanded]="mobileSearchOpen()"
+        (click)="mobileSearchOpen.set(!mobileSearchOpen())"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
+        </svg>
+      </button>
+
+      <nav class="flex items-center gap-1" aria-label="Principal">
+        <a routerLink="/" routerLinkActive="nav-link-active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link px-2 text-xs sm:px-3 sm:text-sm">Inicio</a>
+        <a routerLink="/shop" routerLinkActive="nav-link-active" class="nav-link px-2 text-xs sm:px-3 sm:text-sm">Catálogo</a>
+        @if (auth.isAdmin()) {
+          <a routerLink="/inicio" routerLinkActive="nav-link-active" class="nav-link px-2 text-xs sm:px-3 sm:text-sm">Panel</a>
+        }
+      </nav>
+
+      @if (auth.isAuthenticated()) {
+        <div class="ml-2 flex items-center gap-2">
+          <a routerLink="/perfil" aria-label="Ir a mi perfil" class="flex items-center gap-2">
+            <span class="hidden text-sm font-medium text-ink sm:inline">{{ auth.user()?.username }}</span>
+            <app-user-avatar class="h-8 w-8 text-sm shadow-[0_8px_18px_-10px_rgb(255_96_0/0.9)]" [url]="profile.profile()?.avatarUrl" [initial]="initial()" />
+          </a>
+          <button
+            type="button"
+            (click)="logout()"
+            class="btn btn-ghost !p-2"
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+            </svg>
+          </button>
+        </div>
+      } @else {
+        <a
+          routerLink="/login"
+          [queryParams]="{ returnUrl: currentUrl() }"
+          class="btn btn-primary ml-1 px-3 py-1.5 text-xs sm:text-sm"
+        >Iniciar Sesion</a>
+      }
+    </div>
+  </div>
+
+  @if (mobileSearchOpen()) {
+    <div class="border-t border-line/70 px-4 py-3 md:hidden">
+      <app-search-input
+        [value]="searchValue()"
+        placeholder="Buscar impresiones…"
+        (valueChange)="onSearch($event)"
+      />
+    </div>
+  }
+</header>

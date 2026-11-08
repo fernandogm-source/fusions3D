@@ -1,8 +1,8 @@
 # Fusions3D — Frontend
 
-Aplicación SPA de administración y catálogo de Fusions3D, desarrollada con Angular 20 y TypeScript. Consume la API REST de `fusions3d-back`.
+Aplicación SPA de la tienda pública y del panel de administración de Fusions3D, desarrollada con Angular 20 y TypeScript. Consume la API REST de `fusions3d-back`.
 
-El diseño usa un tema oscuro con acento naranja, una sidebar adaptable, Tailwind CSS 4, Inter y Space Grotesk.
+El diseño usa un tema oscuro con acento naranja, Tailwind CSS 4, Inter y Space Grotesk. La tienda usa una cabecera compartida; el panel usa una sidebar en escritorio.
 
 ## Requisitos e instalación
 
@@ -44,20 +44,26 @@ La aplicación usa componentes standalone, rutas lazy-loaded, Reactive Forms, Rx
 ```text
 src/app/
 ├── core/
-│   ├── interceptors/  # Loading y errores HTTP
+│   ├── guards/        # authGuard, adminGuard y adminMatch/nonAdminMatch (canMatch)
+│   ├── interceptors/  # Sesión (cookies y 401), loading y errores HTTP
 │   ├── models/        # Modelos tipados por recurso
 │   ├── services/      # Servicios HTTP tipados por recurso + ApiService
-│   └── store/         # Stores Signals con caché/selección y CRUD
+│   └── store/         # Stores Signals: auth, profile, caché/selección y CRUD
 ├── features/
-│   ├── impresions/    # Catálogo de prints (nombre histórico de la carpeta)
+│   ├── auth/          # Login (/login)
+│   ├── shop/          # Tienda pública: inicio, catálogo y detalle
+│   ├── profile/       # Perfil del usuario
+│   ├── dashboard/     # Inicio del panel (/inicio)
+│   ├── impresions/    # Impresiones (nombre histórico de la carpeta)
 │   ├── categories/
 │   ├── materials/
 │   ├── print-variants/
 │   ├── roles/
 │   └── users/
 ├── layouts/
-│   └── main-layout/   # Sidebar, topbar, outlet y loader global
-└── shared/            # Componentes, validadores y utilidades comunes
+│   ├── shop-layout/   # Layout público: cabecera compartida, outlet y pie
+│   └── main-layout/   # Layout del panel: sidebar, cabecera compartida, outlet y loader
+└── shared/            # Componentes (incl. store-header), validadores y utilidades comunes
 ```
 
 Cada feature de negocio tiene sus propias rutas, páginas y componentes específicos:
@@ -74,24 +80,61 @@ features/<recurso>/
     └── <recurso>-edit/
 ```
 
-La feature de impresiones también incluye una página de detalle (`/impresiones/:slug`); las demás features no tienen ruta de detalle en la interfaz actual.
+La feature de impresiones también incluye una página de detalle en el panel (`/impresiones/:slug`). La tienda pública tiene su propio detalle (`/shop/:slug`).
 
-Los modelos, servicios y stores tipados están en `core/`. Los formularios usan esos servicios para cargar referencias relacionadas (por ejemplo, materiales/prints para una variante y roles para un usuario); las operaciones CRUD pasan por el store del recurso.
+### Cabecera compartida
+
+`shared/components/store-header/` (`app-store-header`) es la cabecera que comparten la tienda y el panel. Contiene:
+
+- Logo, buscador (escritorio y móvil) y navegación "Inicio" / "Catálogo".
+- Enlace "Panel" (solo para ADMIN).
+- Sin sesión: botón "Entrar" que lleva a `/login` conservando la página actual en `returnUrl`.
+- Con sesión: avatar y nombre del usuario (enlace a `/perfil`) y botón de cerrar sesión.
+
+En el panel, la cabecera sustituye a la antigua topbar. En móvil no hay botón de menú, así que el sidebar solo se muestra en escritorio. El componente `layouts/main-layout/topbar/` ya no se usa.
 
 ## Rutas de la aplicación
 
+### Públicas (layout de tienda)
+
+| Página | Ruta |
+|---|---|
+| Inicio de la tienda | `/` |
+| Catálogo | `/shop` |
+| Detalle de impresión | `/shop/:slug` |
+| Login | `/login` |
+
+### Sesión iniciada (cliente)
+
+| Página | Ruta | Notas |
+|---|---|---|
+| Perfil | `/perfil` | Dentro del layout de tienda, con la cabecera compartida |
+
+### Panel de administración (solo ADMIN)
+
 | Feature | Listado / papelera | Crear | Detalle | Editar |
 |---|---|---|---|---|
+| Inicio | `/inicio` | — | — | — |
+| Perfil | `/perfil` | — | — | — |
 | Impresiones | `/impresiones` | `/impresiones/nueva` | `/impresiones/:slug` | `/impresiones/:id/editar` |
 | Categorías | `/admin/categories` | `/admin/categories/nueva` | — | `/admin/categories/:id/editar` |
 | Materiales | `/admin/materials` | `/admin/materials/nuevo` | — | `/admin/materials/:id/editar` |
 | Variantes | `/admin/print-variants` | `/admin/print-variants/nueva` | — | `/admin/print-variants/:id/editar` |
 | Roles | `/admin/roles` | `/admin/roles/nuevo` | — | `/admin/roles/:id/editar` |
-| Usuarios (pendiente) | `/admin/users` | `/admin/users/nuevo` | — | `/admin/users/:id/editar` |
+| Usuarios | `/admin/users` | `/admin/users/nuevo` | — | `/admin/users/:id/editar` |
 
-La papelera se abre desde el listado de cada feature y no tiene una ruta independiente.
+El perfil de un admin se muestra dentro del panel (con sidebar). El de un cliente se muestra dentro del layout de tienda.
 
-Las features se cargan bajo demanda con `loadChildren`. Las vistas de papelera son accesos separados; no se añaden filtros por estado.
+La papelera se abre desde el listado de cada feature y no tiene una ruta independiente. Las features se cargan bajo demanda con `loadChildren`.
+
+## Autenticación y navegación
+
+- El login (`/login`) envía las credenciales a la API. La API devuelve la sesión en una cookie `HttpOnly`; el frontend no guarda tokens en el navegador.
+- `AuthStore` mantiene el usuario actual. `restoreSession()` consulta `/api/auth/me` una sola vez por carga y se llama desde las guardas y desde la cabecera.
+- Tras iniciar sesión, el usuario vuelve a `returnUrl` si existe; si no, va a `/` (admins y clientes).
+- `authGuard` exige sesión y redirige a `/login` con `returnUrl`. `adminGuard` exige rol ADMIN; un cliente que intente entrar en el panel se redirige a `/perfil`.
+- `adminMatch` y `nonAdminMatch` eligen la variante de `/perfil` según el rol: el admin la ve dentro del panel y el cliente dentro de la tienda.
+- El interceptor de autenticación envía las cookies con cada petición y redirige a `/login` cuando la API responde `401`.
 
 ## API consumida
 
@@ -99,12 +142,15 @@ Base URL: `${environment.apiUrl}`. Recursos:
 
 | Feature | Endpoint |
 |---|---|
+| Autenticación | `/auth` (`login`, `me`, `logout`) |
+| Perfil | `/profiles` |
+| Tienda pública | `/shop` |
 | Impresiones | `/prints` |
 | Categorías | `/categories` |
 | Materiales | `/materials` |
 | Variantes | `/print-variants` |
 | Roles | `/roles` |
-| Usuarios (pendiente: la API no monta `/users`) | `/users` |
+| Usuarios | `/users` |
 
 Los recursos usan la envolvente `{ success, data }`; `ApiService` desenvuelve `data` y aplica timeout. Los errores se traducen en `error-message.util.ts` y se notifican mediante el interceptor/SweetAlert2.
 
@@ -115,13 +161,11 @@ Las impresiones y categorías pueden incluir imágenes pobladas; las variantes n
 - Los stores usan Signals para lista, selección, caché, carga, error y operaciones CRUD. `DependencyRefreshStore` notifica cambios en categorías, impresiones, materiales y roles; el store de variantes actualiza sus listados relacionados sin recargar la página.
 - Los formularios son componentes propios de cada feature y reciben el registro inicial en modo edición. Las variantes no tienen nombre personalizado: se identifican por SKU y muestran impresión, material y color.
 - La lista y la papelera se mantienen como vistas separadas, sin filtros de estado.
-- `ApiService` centraliza las peticiones y la envoltura de respuesta; los interceptores gestionan carga y errores.
+- `ApiService` centraliza las peticiones y la envoltura de respuesta; los interceptores gestionan sesión, carga y errores.
 - Los listados de impresiones y variantes muestran avisos `dependencyIssues` cuando una referencia está ausente, eliminada o inactiva. La API devuelve `409 DEPENDENCY_UNAVAILABLE` si una operación requiere una dependencia que no está disponible y `409 DEPENDENTS_EXIST` si se intenta desactivar o borrar lógicamente un recurso con dependientes. Los errores de acciones se notifican mediante el interceptor sin sustituir la vista ya cargada; los fallos al cargar muestran el estado de error. En ciertos conflictos de dependencias durante la edición, la interfaz vuelve al listado.
 
 ## Seguridad
 
-La API exige un token JWT de un usuario con rol `ADMIN`, pero el frontend todavía no tiene pantalla de login, guard de rutas ni envía el token en `ApiService`. Por tanto, las peticiones a la API protegida recibirán `401` hasta que se implemente. Ocultar enlaces o añadir un guard de frontend no protegería por sí solo los endpoints: la protección real está en la API.
-
-La feature de usuarios está pendiente: su ruta de API no está montada y el servicio aún no está adaptado a su contrato.
+Las guardas del frontend solo mejoran la navegación: ocultar enlaces o bloquear rutas no protege los datos. La protección real está en la API, que exige una sesión válida y, para las rutas de administración, rol `ADMIN`.
 
 > [← Volver al README principal](../README.md)
