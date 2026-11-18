@@ -1,4 +1,5 @@
 const service = require('../services/print.service');
+const aiService = require('../services/ai.service');
 
 class PrintController {
   async getAll(_req, res, next) {
@@ -41,6 +42,15 @@ class PrintController {
     try {
       const data = await service.create(req.body);
       res.status(201).json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async describeWithAi(req, res, next) {
+    try {
+      const data = await aiService.describePrint(req.body);
+      res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
     }

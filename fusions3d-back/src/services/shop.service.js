@@ -1,9 +1,13 @@
 const repository = require('../repositories/shop.repository');
+const aiService = require('./ai.service');
 const { AppError } = require('../utils/app.error');
 const { buildMatch, buildSort } = require('../utils/query-builder.util');
 const { tokenize, buildSearchMatch } = require('../utils/search.util');
 
 const HOME_LATEST_LIMIT = 12;
+const CHAT_PRODUCT_LIMIT = 5;
+const CHAT_KEYWORD_MIN_LENGTH = 4;
+const CHAT_KEYWORD_MAX_SEARCHES = 3;
 
 const byName = (a, b) => a.name.localeCompare(b.name);
 
@@ -180,6 +184,53 @@ class ShopService {
       colors,
       latestPrints: latest.data
     };
+  }
+
+  async chat(messages) {
+    const lastMessage = messages[messages.length - 1].content;
+    const prints = await this.findChatPrints(lastMessage);
+
+    const { reply } = await aiService.chat({
+      messages,
+      products: prints.map((print) => ({
+        name: print.name,
+        category: print.categoryName,
+        slug: print.slug,
+        minPrice: print.minPrice,
+        maxPrice: print.maxPrice
+      }))
+    });
+
+    return { reply };
+  }
+
+  /**
+   * Busca productos con la frase completa. Si no hay coincidencias, busca por cada
+   * palabra larga por separado, porque la búsqueda exige que coincidan todas las palabras.
+   */
+  async findChatPrints(text) {
+    const search = async (q) => (await this.getPrints({ q, page: 1, limit: CHAT_PRODUCT_LIMIT })).data;
+
+    const results = await search(text.slice(0, 100));
+    if (results.length > 0) return results;
+
+    const keywords = [...new Set(
+      text
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+        .split(/\s+/)
+        .filter((word) => word.length >= CHAT_KEYWORD_MIN_LENGTH)
+    )].slice(0, CHAT_KEYWORD_MAX_SEARCHES);
+
+    const found = new Map();
+
+    for (const keyword of keywords) {
+      for (const print of await search(keyword)) {
+        found.set(print.slug, print);
+      }
+    }
+
+    return [...found.values()].slice(0, CHAT_PRODUCT_LIMIT);
   }
 }
 

@@ -27,9 +27,19 @@
 
   <!-- Descripción -->
   <div class="flex flex-col gap-2">
-    <label for="description" class="label">
-      Descripción <span class="text-brand" aria-hidden="true">*</span>
-    </label>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <label for="description" class="label">
+        Descripción <span class="text-brand" aria-hidden="true">*</span>
+      </label>
+      <button
+        type="button"
+        class="btn btn-secondary"
+        [disabled]="generatingDescription() || submitting()"
+        (click)="generateDescription()"
+      >
+        {{ generatingDescription() ? 'Generando…' : 'Generar con IA' }}
+      </button>
+    </div>
     <textarea
       id="description"
       formControlName="description"
@@ -71,7 +81,7 @@
         }
       </select>
       @if (hasError('categoryId')) {
-        <p role="alert" class="field-error">Selecciona una categoría.</p>
+        <p role="alert" class="field-error">Necesitas seleccionar una categoría.</p>
       }
     </div>
 

@@ -26,6 +26,11 @@ const updatePrintSchema = z.object({
   message: 'Debes enviar al menos un campo para actualizar'
 });
 
+const describePrintSchema = z.object({
+  name: z.string().trim().min(1, 'El nombre es obligatorio').max(120),
+  category: z.string().trim().min(1, 'Necesitas seleccionar una categoría para generar la descripción con IA').max(80)
+});
+
 const activeSchema = z.object({
   active: z.boolean({ required_error: 'El campo active es obligatorio' })
 });
@@ -41,6 +46,7 @@ const slugParamSchema = z.object({
 module.exports = {
   createPrintSchema,
   updatePrintSchema,
+  describePrintSchema,
   activeSchema,
   idParamSchema,
   slugParamSchema

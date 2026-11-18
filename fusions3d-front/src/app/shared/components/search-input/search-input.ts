@@ -10,7 +10,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 export class SearchInput {
   readonly value = input<string>('');
   readonly placeholder = input<string>('Buscar…');
-  readonly debounceMs = input<number>(150);
+  readonly debounceMs = input<number>(350);
   readonly valueChange = output<string>();
 
   protected readonly text = signal('');

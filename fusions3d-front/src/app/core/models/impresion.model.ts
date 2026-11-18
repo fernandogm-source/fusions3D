@@ -39,3 +39,19 @@ export interface ImpresionCreatePayload {
  * pero el backend exige al menos un campo).
  */
 export type ImpresionUpdatePayload = Partial<ImpresionCreatePayload>;
+
+/**
+ * Datos enviados al asistente IA para generar una descripción.
+ */
+export interface ImpresionDescribeRequest {
+  name: string;
+  category: string;
+}
+
+/**
+ * Borrador de descripción devuelto por el asistente IA.
+ */
+export interface ImpresionDescription {
+  description: string;
+  shortDescription: string;
+}

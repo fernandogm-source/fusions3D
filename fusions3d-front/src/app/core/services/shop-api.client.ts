@@ -28,13 +28,37 @@ export class ShopApiClient {
       url.searchParams.set(key, value);
     }
 
-    const timeout = AbortSignal.timeout(this.timeoutMs);
+    return this.send<T>(url, { headers: { Accept: 'application/json' } }, signal);
+  }
+
+  async post<T extends { success: true; data: unknown }>(
+    path: string,
+    payload: unknown,
+    signal?: AbortSignal,
+    timeoutMs = this.timeoutMs,
+  ): Promise<T> {
+    return this.send<T>(
+      `${this.baseUrl}${path}`,
+      {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      },
+      signal,
+      timeoutMs,
+    );
+  }
+
+  private async send<T extends { success: true; data: unknown }>(
+    url: string | URL,
+    init: RequestInit,
+    signal?: AbortSignal,
+    timeoutMs = this.timeoutMs,
+  ): Promise<T> {
+    const timeout = AbortSignal.timeout(timeoutMs);
     const combined = signal ? AbortSignal.any([signal, timeout]) : timeout;
 
-    const response = await fetch(url, {
-      headers: { Accept: 'application/json' },
-      signal: combined,
-    });
+    const response = await fetch(url, { ...init, signal: combined });
 
     const body = await response.json().catch(() => null);
 

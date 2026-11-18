@@ -9,6 +9,7 @@ import {
   ImpresionCreatePayload,
   ImpresionStatus,
 } from '../../../../core/models/impresion.model';
+import { ImpresionesService } from '../../../../core/services/impresiones.service';
 import {
   getControlErrorMessage,
 } from '../../../../shared/utils/custom-validators';
@@ -27,6 +28,7 @@ import { showError } from '../../../../shared/utils/alert.util';
 export class ImpresionForm {
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly categoriesService = inject(CategoriesService);
+  private readonly impresionesService = inject(ImpresionesService);
 
   readonly initialValue = input<Impresion | null>(null);
   readonly submitLabel = input('Crear impresión');
@@ -38,6 +40,7 @@ export class ImpresionForm {
   readonly formSubmit = output<ImpresionCreatePayload>();
   protected readonly categories = signal<PrintCategory[]>([]);
   protected readonly imageUrls = signal<string[]>([]);
+  protected readonly generatingDescription = signal(false);
 
   protected readonly statusOptions = computed<{ value: ImpresionStatus; label: string }[]>(() => {
     const base = [
@@ -87,6 +90,34 @@ export class ImpresionForm {
 
   protected errorMessage(controlName: string, label: string): string | null {
     return getControlErrorMessage(this.form.get(controlName), label);
+  }
+
+  protected generateDescription(): void {
+    const name = this.form.controls.name.value.trim();
+
+    if (!name || this.generatingDescription()) {
+      this.form.controls.name.markAsTouched();
+      showError('Escribe el nombre de la impresión antes de generar la descripción.');
+      return;
+    }
+
+    const categoryName = this.categories().find((category) => category._id === this.form.controls.categoryId.value)?.name;
+
+    if (!categoryName) {
+      this.form.controls.categoryId.markAsTouched();
+      showError('Necesitas seleccionar una categoría para generar la descripción con IA.');
+      return;
+    }
+
+    this.generatingDescription.set(true);
+
+    firstValueFrom(this.impresionesService.describeWithAi({ name, category: categoryName }))
+      .then((result) => {
+        this.form.controls.description.setValue(result.description.slice(0, 2000));
+        this.form.controls.description.markAsDirty();
+      })
+      .catch(() => showError('No se pudo generar la descripción. Inténtalo de nuevo en unos minutos.'))
+      .finally(() => this.generatingDescription.set(false));
   }
 
   protected addImageUrl(): void {

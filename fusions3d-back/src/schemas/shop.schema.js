@@ -41,4 +41,14 @@ const printsQuerySchema = z.object({
   { message: 'minPrice no puede ser mayor que maxPrice', path: ['minPrice'] }
 );
 
-module.exports = { printsQuerySchema };
+const chatSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string().trim().min(1).max(1000)
+  })).min(1).max(20).refine(
+    (messages) => messages.at(-1)?.role === 'user',
+    { message: 'El último mensaje debe ser del usuario' }
+  )
+});
+
+module.exports = { printsQuerySchema, chatSchema };

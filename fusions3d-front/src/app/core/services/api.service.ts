@@ -28,10 +28,10 @@ export class ApiService {
       .pipe(timeout(this.timeoutMs), map((res) => this.unwrap(res)));
   }
 
-  post<T>(endpoint: string, body: unknown): Observable<T> {
+  post<T>(endpoint: string, body: unknown, timeoutMs = this.timeoutMs): Observable<T> {
     return this.http
       .post<ApiResponse<T>>(this.buildUrl(endpoint), body)
-      .pipe(timeout(this.timeoutMs), map((res) => this.unwrap(res)));
+      .pipe(timeout(timeoutMs), map((res) => this.unwrap(res)));
   }
 
   patch<T>(endpoint: string, body: unknown): Observable<T> {
