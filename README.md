@@ -81,7 +81,15 @@ npm install
 npm start
 ```
 
-Abre `http://localhost:4200`. En desarrollo, el frontend usa `http://localhost:3000/api`.
+### 4. Gateway
+
+```bash
+cd fusions3d-gateway
+npm install
+npm run dev
+```
+
+El gateway escucha en `http://localhost:4000` y reenvía `/api/*` al backend (puerto 3000). Abre `http://localhost:4200`. En desarrollo, el frontend usa `http://localhost:4000/api`.
 
 ## Comandos
 
@@ -132,7 +140,7 @@ La API protege sus rutas con JWT: todas las rutas de negocio (`/api/*`, salvo lo
 
 La sesión se guarda en dos cookies `HttpOnly`: `fusions3d_access` (1 hora, ruta `/api`) y `fusions3d_refresh` (7 días, ruta `/api/auth`). El frontend gestiona los 401: si el access token ha caducado, pide `/api/auth/refresh` y reintenta la petición; si la sesión ha terminado, pide `/api/auth/logout` y lleva al login con un aviso. Detalles en el [README del backend](./fusions3d-back/README.md#notas-importantes).
 
-El archivo `fusions3d-front/src/environments/environment.ts` todavía apunta a `http://localhost:3000/api`; hay que configurarlo con la URL del backend real antes del build de producción. Configura también `CORS_ORIGIN` con el dominio del frontend.
+El archivo `fusions3d-front/src/environments/environment.ts` todavía apunta a `http://localhost:4000/api` (el gateway); hay que configurarlo con la URL pública del gateway antes del build de producción. Configura también `CORS_ORIGIN` con el dominio del frontend.
 
 ## Limitaciones conocidas
 
