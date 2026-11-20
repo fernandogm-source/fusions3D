@@ -14,9 +14,19 @@ export class LoginPage {
 
   /** Ruta a la que volver tras iniciar sesión (query param `returnUrl`). */
   readonly returnUrl = input<string | undefined>(undefined);
+  /** Motivo de llegada a la pantalla (query param `reason`, p. ej. `expired`). */
+  readonly reason = input<string | undefined>(undefined);
+  /** Indica que la cuenta se acaba de crear (query param `registered`). */
+  readonly registered = input<string | undefined>(undefined);
 
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+
+  protected get infoMessage(): string | null {
+    if (this.reason() === 'expired') return 'Tu sesión ha expirado. Inicia sesión de nuevo.';
+    if (this.registered() === '1') return 'Cuenta creada correctamente. Ya puedes iniciar sesión.';
+    return null;
+  }
   protected readonly form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]],
@@ -51,10 +61,11 @@ export class LoginPage {
     }
   }
 
-  /** Solo acepta rutas internas para evitar redirecciones a otros dominios. */
+  /** Solo acepta rutas internas para evitar redirecciones a otros dominios. Sin `returnUrl`, los admins van al panel. */
   private target(): string {
     const url = this.returnUrl();
     const isInternal = !!url && url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/login');
-    return isInternal ? url : '/';
+    if (isInternal) return url;
+    return this.auth.isAdmin() ? '/inicio' : '/';
   }
 }

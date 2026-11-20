@@ -10,6 +10,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
   {
+    path: 'register',
+    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.REGISTER_ROUTES),
+  },
+  {
     path: '',
     loadComponent: () => import('./layouts/shop-layout/shop-layout').then((m) => m.ShopLayout),
     children: [

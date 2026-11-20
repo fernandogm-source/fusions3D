@@ -7,3 +7,11 @@ export const AUTH_ROUTES: Routes = [
     title: 'Iniciar sesión | Fusions3D',
   },
 ];
+
+export const REGISTER_ROUTES: Routes = [
+  {
+    path: '',
+    loadComponent: () => import('./pages/register/register').then((m) => m.RegisterPage),
+    title: 'Crear cuenta | Fusions3D',
+  },
+];

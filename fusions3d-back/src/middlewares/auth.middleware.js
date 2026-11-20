@@ -1,10 +1,11 @@
 const repository = require('../repositories/auth.repository');
 const revokedTokenRepository = require('../repositories/revoked-token.repository');
-const { verifyAccessToken } = require('../utils/jwt.util');
+const { verifyAccessToken, isTokenExpiredError } = require('../utils/jwt.util');
 const { AppError } = require('../utils/app.error');
-const { SESSION_COOKIE_NAME } = require('../utils/session-cookie.util');
+const { ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME } = require('../utils/session-cookie.util');
 
 const AUTHENTICATION_ERROR = () => new AppError('Authentication required', 401, 'AUTHENTICATION_REQUIRED');
+const ACCESS_EXPIRED_ERROR = () => new AppError('El token de acceso ha expirado', 401, 'ACCESS_TOKEN_EXPIRED');
 
 function extractToken(req) {
   const authorization = req.get('authorization');
@@ -14,21 +15,22 @@ function extractToken(req) {
     return match[1].trim();
   }
 
-  return req.cookies?.[SESSION_COOKIE_NAME] || null;
+  return req.cookies?.[ACCESS_COOKIE_NAME] || null;
 }
 
 async function _auth(req, _res, next) {
   const token = extractToken(req);
 
   if (!token) {
-    return next(AUTHENTICATION_ERROR());
+    // El navegador elimina la cookie del access token al caducar; si queda el refresh, hay que renovar.
+    return next(req.cookies?.[REFRESH_COOKIE_NAME] ? ACCESS_EXPIRED_ERROR() : AUTHENTICATION_ERROR());
   }
 
   let payload;
   try {
     payload = verifyAccessToken(token);
-  } catch (_error) {
-    return next(AUTHENTICATION_ERROR());
+  } catch (error) {
+    return next(isTokenExpiredError(error) ? ACCESS_EXPIRED_ERROR() : AUTHENTICATION_ERROR());
   }
 
   try {
@@ -52,10 +54,6 @@ async function _auth(req, _res, next) {
       email: user.email,
       username: user.username,
       role: role.name
-    };
-    req.auth = {
-      tokenId: payload.jti,
-      expiresAt: new Date(payload.exp * 1000)
     };
     return next();
   } catch (error) {

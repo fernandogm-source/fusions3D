@@ -11,8 +11,9 @@ Aplicación full-stack para gestionar un catálogo de piezas impresas en 3D. El 
 
 - Gestión de impresiones, categorías, materiales, variantes, roles y usuarios desde el panel de administración.
 - Tienda pública con inicio, catálogo y detalle de impresiones, y una cabecera compartida con buscador, navegación y acceso a la sesión. Esa misma cabecera aparece en el panel de administración.
-- Autenticación JWT en la API: login, consulta de la sesión, logout y perfil propio. El frontend inicia sesión con una cookie `HttpOnly`.
-- Tras iniciar sesión se vuelve a la página de origen o al inicio. Los admins abren el panel desde el enlace "Panel" de la cabecera.
+- Registro público de clientes (`/register`): crea una cuenta con rol `USER` y su perfil, y lleva al login.
+- Autenticación JWT con dos tokens en cookies `HttpOnly`: un access token de 1 hora y un refresh token de 7 días. Si el access token caduca, el frontend lo renueva en silencio; si la sesión ha terminado, cierra sesión y pide iniciarla de nuevo.
+- Login, consulta de la sesión, logout y perfil propio. La misma pantalla de login sirve a admins y clientes; tras entrar, los admins van al panel y los clientes a la tienda, salvo que haya una página de origen.
 - Alta y edición de los recursos; las impresiones también tienen vista de detalle.
 - Activación/desactivación y borrado lógico con restauración desde la papelera. Desactivar o borrar lógicamente una categoría, impresión, material o rol se bloquea si conserva dependientes (`409 DEPENDENTS_EXIST`); no se aplica una cascada.
 - Slugs para impresiones y categorías; SKU generado como identificador de variantes (sin nombre personalizado).
@@ -50,9 +51,11 @@ NODE_ENV=development
 TRUST_PROXY=
 JWT_SECRET=<secreto aleatorio de al menos 32 bytes>
 JWT_EXPIRES_IN=1h
+JWT_REFRESH_SECRET=<otro secreto aleatorio, distinto de JWT_SECRET>
+JWT_REFRESH_EXPIRES_IN=7d
 ```
 
-Para generar una clave: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`. Si la API está detrás de un proxy, define `TRUST_PROXY`.
+Para generar una clave: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`. Usa una distinta para `JWT_SECRET` y para `JWT_REFRESH_SECRET`. Si la API está detrás de un proxy, define `TRUST_PROXY`.
 
 ```bash
 npm run dev
@@ -125,7 +128,9 @@ Las altas, los cambios de referencia y las reactivaciones requieren dependencias
 
 ## Seguridad y despliegue
 
-La API protege sus rutas con JWT: todas las rutas de negocio (`/api/*`, salvo login y Profile) requieren un token de un usuario con rol `ADMIN`. Antes de publicarla, revisa `JWT_SECRET`, `CORS_ORIGIN` y `TRUST_PROXY`. El frontend inicia sesión mediante la cookie `HttpOnly` que emite la API.
+La API protege sus rutas con JWT: todas las rutas de negocio (`/api/*`, salvo login, registro, renovación, logout, tienda pública y Profile) requieren un token de un usuario con rol `ADMIN`. Antes de publicarla, revisa `JWT_SECRET`, `JWT_REFRESH_SECRET`, `CORS_ORIGIN` y `TRUST_PROXY`.
+
+La sesión se guarda en dos cookies `HttpOnly`: `fusions3d_access` (1 hora, ruta `/api`) y `fusions3d_refresh` (7 días, ruta `/api/auth`). El frontend gestiona los 401: si el access token ha caducado, pide `/api/auth/refresh` y reintenta la petición; si la sesión ha terminado, pide `/api/auth/logout` y lleva al login con un aviso. Detalles en el [README del backend](./fusions3d-back/README.md#notas-importantes).
 
 El archivo `fusions3d-front/src/environments/environment.ts` todavía apunta a `http://localhost:3000/api`; hay que configurarlo con la URL del backend real antes del build de producción. Configura también `CORS_ORIGIN` con el dominio del frontend.
 

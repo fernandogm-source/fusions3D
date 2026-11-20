@@ -17,6 +17,12 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface RegisterPayload {
+  email: string;
+  username: string;
+  password: string;
+}
+
 /**
  * Respuesta del login. El token viaja en una cookie HttpOnly,
  * por lo que no aparece en el cuerpo de la respuesta.

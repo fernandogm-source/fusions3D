@@ -10,13 +10,52 @@ Define esta variable en Postman:
 baseUrl = http://localhost:3000
 adminEmail = admin@fusions3d.local
 adminPassword = Admin-Fusions3D-2026!
+clientEmail = usuario1@fusions3d.local
+clientPassword = Usuario1-Fusions3D-2026!
 ```
 
 Las rutas de negocio llevan el prefijo `/api`. Las rutas del panel requieren un token ADMIN; las de Auth y Profile aplican sus propios requisitos de autenticación. Los ejemplos asumen que la API está iniciada y MongoDB conectado.
 
+Postman guarda y reenvía automáticamente las cookies de la sesión. Para cambiar de usuario, cierra sesión antes de iniciar otra.
+
+## Registrar un cliente
+
+Crea una cuenta de cliente (rol `USER`) con su perfil. Es público y no inicia sesión: después hay que hacer login.
+
+```http
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "cliente@ejemplo.com",
+  "username": "cliente.nuevo",
+  "password": "ClienteSeguro-2026!"
+}
+```
+
+Respuesta esperada (`201`):
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "<USER_ID>",
+      "email": "cliente@ejemplo.com",
+      "username": "cliente.nuevo"
+    }
+  },
+  "message": "Cuenta creada correctamente"
+}
+```
+
+Reglas: email válido y único; `username` de 3 a 30 caracteres (`a-z`, `0-9`, `.`, `_`, `-`) y único; contraseña de al menos 12 caracteres. Cualquier otro campo (por ejemplo `role`) se rechaza con `400 VALIDATION_ERROR`. Si el email o el usuario ya existen, responde `409`. Con más de 10 registros desde la misma IP en 15 minutos responde `429 RATE_LIMITED`.
+
 ## Iniciar sesión
 
-Provisiona primero los datos de prueba con `npm run seed`. El administrador de desarrollo es `admin@fusions3d.local` con contraseña `Admin-Fusions3D-2026!`, definida en `seed.js`.
+Provisiona primero los datos de prueba con `npm run seed`. Las cuentas de desarrollo están definidas en `seed.js`: el administrador (`adminEmail`) y un cliente (`clientEmail`). También puedes usar una cuenta creada con el registro.
 
 ```http
 POST {{baseUrl}}/api/auth/login
@@ -30,15 +69,36 @@ Content-Type: application/json
 }
 ```
 
-El login devuelve `data.user` y emite el token en la cookie `fusions3d_session` (HttpOnly, `SameSite=Lax`, ruta `/api`). Postman guarda y reenvía esa cookie automáticamente. Cualquier usuario con cuenta y rol activos puede iniciar sesión. Las rutas de administración requieren rol `ADMIN` (`403` para el resto); los usuarios normales solo pueden usar Profile.
+El login devuelve `data.user` y `data.expiresIn` (`1h`), y emite dos cookies `HttpOnly` que Postman guarda y reenvía:
 
-Si necesitas un cliente sin cookies, también se acepta la cabecera `Authorization: Bearer <token>`, pero el token ya no se devuelve en el cuerpo de la respuesta.
+| Cookie | Duración | Ruta | Uso |
+|---|---|---|---|
+| `fusions3d_access` | 1 hora | `/api` | Autentica las peticiones |
+| `fusions3d_refresh` | 7 días | `/api/auth` | Solo se envía a `/refresh` y `/logout` |
+
+Cualquier usuario con cuenta y rol activos puede iniciar sesión. Las rutas de administración requieren rol `ADMIN` (`403` para el resto); los usuarios normales solo pueden usar Profile.
+
+Si necesitas un cliente sin cookies, también se acepta la cabecera `Authorization: Bearer <access token>` para las rutas protegidas. Los tokens nunca aparecen en el cuerpo de la respuesta.
 
 `GET {{baseUrl}}/api/auth/me` devuelve la identidad de la sesión actual.
 
+## Renovar la sesión
+
+Cuando el access token caduca (pasada 1 hora), las peticiones protegidas responden `401` con `error.code = "ACCESS_TOKEN_EXPIRED"`. Renueva la sesión con el refresh token:
+
+```http
+POST {{baseUrl}}/api/auth/refresh
+```
+
+No requiere body. Si el refresh es válido, responde `200` con un access token y un refresh token nuevos en las cookies (el refresh anterior queda revocado) y `data.user`. Después reintenta la petición original.
+
+Si el refresh también ha caducado o está revocado, responde `401` con `error.code = "SESSION_EXPIRED"`. En ese caso hay que cerrar sesión e iniciarla de nuevo.
+
+Para probarlo sin esperar una hora, arranca la API con `JWT_EXPIRES_IN=20s` en el `.env`.
+
 ## Cerrar sesión
 
-El endpoint revoca el token de la sesión, borra la cookie y responde `{ success: true, data: null, message }`. Después de responder, ese token ya no puede volver a utilizarse.
+El endpoint revoca el access token y el refresh token que haya en las cookies, borra ambas cookies y responde `{ success: true, data: null, message }`. No requiere una sesión válida, así que funciona aunque el access token ya haya caducado. Después de responder, esos tokens ya no pueden volver a utilizarse.
 
 ```http
 POST {{baseUrl}}/api/auth/logout
@@ -53,6 +113,8 @@ Respuesta esperada:
   "message": "Sesión cerrada correctamente"
 }
 ```
+
+Cerrar sesión en todos los dispositivos todavía no está disponible.
 
 ## Consultar y actualizar Profile
 
@@ -278,4 +340,4 @@ Error:
 
 ## Seguridad
 
-Las rutas del panel de negocio, incluidas las lecturas, requieren rol `ADMIN`. Profile requiere autenticación y aplica propietario o ADMIN; este último puede seleccionar cualquier usuario con `?userId=<USER_ID>`. Sin token la API responde `401`; un usuario que intente acceder al perfil de otro recibe `403`. `/api/roles` está activa para ADMIN; `/api/users` sigue desactivada mientras el frontend adopta los nuevos contratos.
+Las rutas del panel de negocio, incluidas las lecturas, requieren rol `ADMIN`. Profile requiere autenticación y aplica propietario o ADMIN; este último puede seleccionar cualquier usuario con `?userId=<USER_ID>`. Sin token la API responde `401`; un usuario que intente acceder al perfil de otro recibe `403`. `/api/roles` y `/api/users` están activas para ADMIN.

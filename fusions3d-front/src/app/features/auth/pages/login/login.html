@@ -65,6 +65,10 @@
           @if (getError('password', 'La contraseña'); as message) { <span class="field-error">{{ message }}</span> }
         </div>
 
+        @if (infoMessage && !errorMessage()) {
+          <p role="status" class="rounded-lg border border-brand/25 bg-brand/10 px-4 py-3 text-sm text-ink">{{ infoMessage }}</p>
+        }
+
         @if (errorMessage()) {
           <p role="alert" class="rounded-lg border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">{{ errorMessage() }}</p>
         }
@@ -73,6 +77,10 @@
           {{ submitting() ? 'Entrando…' : 'Iniciar sesión' }}
         </button>
       </form>
+
+      <p class="mt-6 text-center text-sm text-ink-muted">
+        ¿No tienes cuenta? <a routerLink="/register" class="font-medium text-brand-light hover:underline">Regístrate</a>
+      </p>
     </div>
   </main>
 </div>

@@ -10,6 +10,7 @@ const User = require("./src/models/user.model");
 const Profile = require("./src/models/profile.model");
 const Image = require("./src/models/image.model");
 const RevokedToken = require("./src/models/revoked-token.model");
+const RefreshToken = require("./src/models/refresh-token.model");
 const { hashPassword } = require("./src/utils/password.util");
 const { buildSkuBase } = require("./src/utils/sku.util");
 const { toSlug } = require("./src/utils/slug.util");
@@ -688,7 +689,7 @@ async function seed({ reset = false } = {}) {
 
     if (reset) {
       console.warn("Modo destructivo: vaciando las colecciones de Fusions3D antes de sembrar…");
-      const collections = [Category, Material, Print, PrintVariant, Role, Image, User, Profile, RevokedToken];
+      const collections = [Category, Material, Print, PrintVariant, Role, Image, User, Profile, RevokedToken, RefreshToken];
       const deleteResults = await Promise.all(collections.map((Model) => Model.deleteMany({})));
       const deletedCount = deleteResults.reduce((total, result) => total + result.deletedCount, 0);
       console.log(`${deletedCount} documentos eliminados de ${collections.length} colecciones.`);

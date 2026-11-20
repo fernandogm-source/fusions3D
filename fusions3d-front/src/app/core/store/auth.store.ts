@@ -48,6 +48,16 @@ export class AuthStore {
     await this.router.navigateByUrl('/login');
   }
 
+  /** Cierra la sesión por caducidad: pide al servidor que limpie las cookies y vacía el estado local. */
+  async expireSession(): Promise<void> {
+    try {
+      await firstValueFrom(this.service.logout());
+    } catch {
+      // Si el servidor no responde, el estado local se limpia igualmente.
+    }
+    this.clearSession();
+  }
+
   clearSession(): void {
     this._user.set(null);
     this.sessionCheck = Promise.resolve();

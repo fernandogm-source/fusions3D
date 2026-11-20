@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Profile = require('../models/profile.model');
 const RevokedToken = require('../models/revoked-token.model');
+const RefreshToken = require('../models/refresh-token.model');
 
 async function connectDB() {
   const uri = process.env.MONGODB_URI;
@@ -13,6 +14,7 @@ async function connectDB() {
   await mongoose.connect(uri);
   await Profile.createIndexes();
   await RevokedToken.createIndexes();
+  await RefreshToken.createIndexes();
   console.log('MongoDB conectado');
 }
 

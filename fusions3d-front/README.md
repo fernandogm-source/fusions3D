@@ -37,6 +37,20 @@ La URL base se configura en `src/environments/`:
 
 **Antes de desplegar**, cambia `apiUrl` en `environment.ts` por la URL real del backend. El backend también debe permitir el origen del frontend mediante `CORS_ORIGIN`.
 
+## Sesión
+
+La sesión la gestiona la API con dos cookies `HttpOnly` que el frontend nunca lee: un access token (1 hora) y un refresh token (7 días). Las peticiones se envían con `withCredentials`, y `authInterceptor` trata los 401 según el código de error:
+
+| Código | Acción del frontend |
+|---|---|
+| `ACCESS_TOKEN_EXPIRED` | Llama a `POST /auth/refresh` y reintenta la petición original. Si varias peticiones fallan a la vez, comparten una sola renovación. |
+| `SESSION_EXPIRED` | Llama a `POST /auth/logout`, vacía el estado y lleva a `/login?reason=expired` con el aviso de sesión expirada. |
+| `AUTHENTICATION_REQUIRED` | Visitante sin sesión: solo vacía el estado local. Si la sesión se pierde mientras se usa, se trata como `SESSION_EXPIRED`. |
+
+Las rutas `/auth/login`, `/auth/register`, `/auth/refresh` y `/auth/logout` no entran en esta lógica, para evitar bucles. `/auth/me` sí puede renovar la sesión, porque se llama al arrancar la aplicación.
+
+El registro (`/register`) valida email, nombre de usuario (3 a 30 caracteres) y contraseña de al menos 12 caracteres, con confirmación. Al crear la cuenta lleva a `/login?registered=1`; no inicia sesión automáticamente.
+
 ## Organización
 
 La aplicación usa componentes standalone, rutas lazy-loaded, Reactive Forms, RxJS y Signals.
@@ -45,12 +59,12 @@ La aplicación usa componentes standalone, rutas lazy-loaded, Reactive Forms, Rx
 src/app/
 ├── core/
 │   ├── guards/        # authGuard, adminGuard y adminMatch/nonAdminMatch (canMatch)
-│   ├── interceptors/  # Sesión (cookies y 401), loading y errores HTTP
+│   ├── interceptors/  # Sesión (renovación y 401), loading y errores HTTP
 │   ├── models/        # Modelos tipados por recurso
 │   ├── services/      # Servicios HTTP tipados por recurso + ApiService
 │   └── store/         # Stores Signals: auth, profile, caché/selección y CRUD
 ├── features/
-│   ├── auth/          # Login (/login)
+│   ├── auth/          # Login (/login) y registro de clientes (/register)
 │   ├── shop/          # Tienda pública: inicio, catálogo y detalle
 │   ├── profile/       # Perfil del usuario
 │   ├── dashboard/     # Inicio del panel (/inicio)

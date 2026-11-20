@@ -10,7 +10,7 @@ API REST de Fusions3D, desarrollada con Node.js, Express y MongoDB.
 - Zod 4 para validar cuerpos y parámetros
 - Helmet, CORS y Morgan
 - `argon2` para hash de contraseñas
-- `jsonwebtoken` para JWT y `express-rate-limit` para limitar intentos de login
+- `jsonwebtoken` para JWT (access y refresh tokens) y `express-rate-limit` para limitar intentos de login, registro y renovación de sesión
 - `slugify` para slugs
 
 ## Arquitectura
@@ -22,7 +22,7 @@ src/
 ├── config/       # Conexión a MongoDB
 ├── controllers/  # Controladores HTTP por recurso
 ├── middlewares/  # Validación, autenticación, autorización y errores
-├── models/       # Category, Image, Material, Print, PrintVariant, User, Profile, RevokedToken
+├── models/       # Category, Image, Material, Print, PrintVariant, User, Profile, RevokedToken, RefreshToken
 ├── repositories/ # Consultas Mongoose
 ├── routes/       # Rutas Express por recurso
 ├── schemas/      # Esquemas Zod por recurso
@@ -31,7 +31,7 @@ src/
 └── app.js
 ```
 
-La API sirve a la tienda pública y al panel de administración. Las rutas de la tienda (`/api/shop/*`) son públicas. Las rutas del panel pasan por los middlewares `_auth` y `_admin`, en ese orden. El login es público; `/api/auth/me`, logout y Profile requieren `_auth`. Profile es un dominio separado de Auth y permite al propietario gestionar sus propios datos; ADMIN puede seleccionar cualquier perfil mediante `?userId=<id>`, incluso si la cuenta está inactiva o eliminada lógicamente. Las rutas `/api/roles` están activas para ADMIN. La ruta `/api/users` está activa para ADMIN y el router exige `_auth` y `_admin` por sí mismo. El email y el nombre de usuario (`username`) deben ser únicos, incluso frente a usuarios eliminados lógicamente (`EMAIL_ALREADY_EXISTS` y `USERNAME_ALREADY_EXISTS`, 409). El `username` tiene entre 3 y 30 caracteres (`a-z`, `0-9`, `.`, `_` y `-`), se guarda en minúsculas y lo puede cambiar un ADMIN desde `/api/users` o el propio usuario desde `/api/profiles/updateprofile`. El login sigue usando solo el email. Un ADMIN no puede cambiar su propio rol ni desactivarse o eliminarse (`SELF_MODIFICATION_FORBIDDEN`), y ninguna operación puede dejar el sistema sin ningún administrador activo (`LAST_ADMIN`). `Image` es un modelo asociado que se popula en impresiones y categorías.
+La API sirve a la tienda pública y al panel de administración. Las rutas de la tienda (`/api/shop/*`) son públicas. Las rutas del panel pasan por los middlewares `_auth` y `_admin`, en ese orden. Register, login, refresh y logout son públicos; `/api/auth/me` y Profile requieren `_auth`. Profile es un dominio separado de Auth y permite al propietario gestionar sus propios datos; ADMIN puede seleccionar cualquier perfil mediante `?userId=<id>`, incluso si la cuenta está inactiva o eliminada lógicamente. Las rutas `/api/roles` están activas para ADMIN. La ruta `/api/users` está activa para ADMIN y el router exige `_auth` y `_admin` por sí mismo. El email y el nombre de usuario (`username`) deben ser únicos, incluso frente a usuarios eliminados lógicamente (`EMAIL_ALREADY_EXISTS` y `USERNAME_ALREADY_EXISTS`, 409). El `username` tiene entre 3 y 30 caracteres (`a-z`, `0-9`, `.`, `_` y `-`), se guarda en minúsculas y lo puede cambiar un ADMIN desde `/api/users` o el propio usuario desde `/api/profiles/updateprofile`. El login sigue usando solo el email. Un ADMIN no puede cambiar su propio rol ni desactivarse o eliminarse (`SELF_MODIFICATION_FORBIDDEN`), y ninguna operación puede dejar el sistema sin ningún administrador activo (`LAST_ADMIN`). `Image` es un modelo asociado que se popula en impresiones y categorías.
 
 ## Instalación y ejecución
 
@@ -39,7 +39,7 @@ La API sirve a la tienda pública y al panel de administración. Las rutas de la
 npm install
 ```
 
-Copia `.env.example` a `.env`. Define una clave JWT aleatoria de al menos 32 bytes (por ejemplo, con `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`). Para el frontend local, CORS debe permitir `http://localhost:4200`. Si la API está detrás de un proxy, define `TRUST_PROXY` (número de saltos o IP/subred) para que el límite de login use la IP real del cliente.
+Copia `.env.example` a `.env`. Define dos claves JWT aleatorias de al menos 32 bytes, distintas entre sí (por ejemplo, con `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`). Para el frontend local, CORS debe permitir `http://localhost:4200`. Si la API está detrás de un proxy, define `TRUST_PROXY` (número de saltos o IP/subred) para que los límites de peticiones usen la IP real del cliente.
 
 ```env
 PORT=3000
@@ -49,7 +49,11 @@ NODE_ENV=development
 TRUST_PROXY=
 JWT_SECRET=<secreto aleatorio de al menos 32 bytes>
 JWT_EXPIRES_IN=1h
+JWT_REFRESH_SECRET=<otro secreto aleatorio, distinto de JWT_SECRET>
+JWT_REFRESH_EXPIRES_IN=7d
 ```
+
+Al arrancar, la API comprueba que ambos secretos existan, tengan al menos 32 bytes y sean distintos.
 
 ```bash
 npm run dev  # desarrollo con Nodemon
@@ -74,7 +78,7 @@ Crea o actualiza el catálogo de ejemplo (materiales, categorías, impresiones, 
 
 Cada cuenta tiene su Profile: el administrador sin direcciones, y cada usuario con teléfono y una dirección predeterminada. Estas credenciales son solo de prueba y están definidas en `seed.js`.
 
-Para borrar primero los documentos de las colecciones de Fusions3D (`categories`, `materials`, `prints`, `print_variants`, `images`, `users`, `profiles` y `revoked_tokens`) y después recrear los datos de prueba, ejecuta:
+Para borrar primero los documentos de las colecciones de Fusions3D (`categories`, `materials`, `prints`, `print_variants`, `images`, `users`, `profiles`, `revoked_tokens` y `refresh_tokens`) y después recrear los datos de prueba, ejecuta:
 
 ```bash
 npm run seed:reset
@@ -82,7 +86,7 @@ npm run seed:reset
 
 Este modo requiere `--confirm-reset`, que ya incluye el script. El borrado de documentos de las colecciones de Fusions3D es irreversible: ejecútalo solo en una base de pruebas.
 
-El seed está bloqueado con `NODE_ENV=production`, tanto en modo normal como en `seed:reset`. Tampoco modifica la estructura de la base: no crea índices ni colecciones por su cuenta (`autoIndex` y `autoCreate` están desactivados), solo inserta, actualiza y borra documentos. Los índices de `profiles` y `revoked_tokens` los crea la aplicación al conectarse.
+El seed está bloqueado con `NODE_ENV=production`, tanto en modo normal como en `seed:reset`. Tampoco modifica la estructura de la base: no crea índices ni colecciones por su cuenta (`autoIndex` y `autoCreate` están desactivados), solo inserta, actualiza y borra documentos. Los índices de `profiles`, `revoked_tokens` y `refresh_tokens` los crea la aplicación al conectarse.
 
 Las contraseñas se hashean con Argon2id y nunca se devuelven por la API.
 
@@ -135,9 +139,11 @@ Base URL: `http://localhost:3000`. Todos los recursos de negocio usan el prefijo
 | Método | Endpoint | Descripción |
 |---|---|---|
 | GET | `/health` | Health check |
+| POST | `/api/auth/register` | Crear cuenta de cliente (público, limitado por IP) |
 | POST | `/api/auth/login` | Inicio de sesión (público, limitado por IP y por email) |
+| POST | `/api/auth/refresh` | Renovar el access token con el refresh token (público, limitado por IP) |
 | GET | `/api/auth/me` | Usuario autenticado actual |
-| POST | `/api/auth/logout` | Revocar el token actual |
+| POST | `/api/auth/logout` | Cerrar la sesión actual (público; revoca los tokens que haya en las cookies) |
 | GET | `/api/profiles/getprofile` | Consultar el propio perfil |
 | PATCH | `/api/profiles/updateprofile` | Actualizar el propio perfil (incluye `username`) |
 | GET | `/api/{resource}` | Listar registros no eliminados |
@@ -151,7 +157,7 @@ Base URL: `http://localhost:3000`. Todos los recursos de negocio usan el prefijo
 | PATCH | `/api/{resource}/:id/soft-delete` | Borrado lógico |
 | PATCH | `/api/{resource}/:id/restore` | Restaurar |
 
-`{resource}` puede ser `prints`, `categories`, `materials`, `print-variants` o `roles`. Todas estas rutas, incluidas las lecturas, requieren una sesión de ADMIN: la cookie `fusions3d_session` que emite el login, o `Authorization: Bearer <token>` para clientes sin cookies. La ruta `/api/users` también está montada y requiere ADMIN.
+`{resource}` puede ser `prints`, `categories`, `materials`, `print-variants` o `roles`. Todas estas rutas, incluidas las lecturas, requieren una sesión de ADMIN: la cookie `fusions3d_access` que emite el login, o `Authorization: Bearer <access token>` para clientes sin cookies. La ruta `/api/users` también está montada y requiere ADMIN.
 
 Las rutas de Profile requieren un token válido y comprueban propiedad. ADMIN puede especificar `?userId=<id>` para consultar o actualizar el perfil de otro usuario, incluso si su cuenta está inactiva o eliminada lógicamente. El `userId` no se acepta en el cuerpo de actualización. `avatarUrl` acepta una URL HTTP/HTTPS o `null` para quitar el avatar; la imagen se aloja fuera de la API.
 
@@ -186,6 +192,8 @@ Estas rutas no requieren sesión.
 | Role | `name` (único), `isActive`, `deletedAt` |
 | User | `email`, `username` (único), `passwordHash` (Argon2id), `role` (ObjectId de `Role`), `isActive`, `deletedAt` |
 | Profile | `userId` (único), `name`, `phone`, `addresses`, `avatarUrl` |
+| RevokedToken | `tokenId` (jti del access token revocado), `expiresAt` (TTL) |
+| RefreshToken | `tokenId` (jti), `userId`, `expiresAt` (TTL), `revokedAt` |
 
 Las imágenes se asocian mediante `entityType` y `entityId`, y se devuelven pobladas en impresiones y categorías. Al crear o actualizar una impresión se puede enviar `images` como una lista de URLs HTTP/HTTPS. En un `PATCH`, la lista reemplaza las imágenes actuales: una lista vacía las elimina todas de esa impresión. Los archivos siguen alojados externamente. Las variantes no tienen imágenes.
 
@@ -198,15 +206,27 @@ Las imágenes se asocian mediante `entityType` y `entityId`, y se devuelven pobl
 - Los `ref` de Mongoose guardan referencias `ObjectId`, pero MongoDB no impone claves foráneas. Las comprobaciones se realizan en los servicios de la API; `dependencyIssues` permite identificar relaciones inválidas ya existentes.
 - El borrado es lógico (`deletedAt`) y no elimina documentos físicamente.
 - Las contraseñas se hashean con Argon2id mediante `src/utils/password.util.js`; la lógica JWT está centralizada en `src/utils/jwt.util.js`.
-- El login emite el JWT en la cookie `HttpOnly` `fusions3d_session` (`SameSite=Lax`, `Secure` en producción, ruta `/api`); el token no aparece en el cuerpo de la respuesta. Cualquier usuario con cuenta y rol activos puede iniciar sesión; las rutas de administración siguen reservadas a `ADMIN`, y el resto de usuarios solo accede a su Profile. El logout borra la cookie y revoca el token.
+- La sesión usa dos tokens JWT, ambos en cookies `HttpOnly` (`SameSite=Lax`, `Secure` en producción) y ninguno aparece en el cuerpo de la respuesta:
+  - `fusions3d_access`: access token de 1 hora (`JWT_EXPIRES_IN`), ruta `/api`.
+  - `fusions3d_refresh`: refresh token de 7 días (`JWT_REFRESH_EXPIRES_IN`), ruta `/api/auth`, para que el navegador solo lo envíe a `/refresh` y `/logout`.
+- Cualquier usuario con cuenta y rol activos puede iniciar sesión; las rutas de administración siguen reservadas a `ADMIN`, y el resto de usuarios solo accede a su Profile.
+- `POST /api/auth/refresh` valida el refresh token y comprueba que siga registrado y activo en `refresh_tokens`. Emite un par nuevo y revoca el refresh anterior (rotación). Si el refresh no es válido, está revocado o ha caducado, borra las cookies y responde `401 SESSION_EXPIRED`.
+- Los errores 401 de autenticación tienen código distinto para que el frontend sepa qué hacer:
+  - `ACCESS_TOKEN_EXPIRED`: el access token ha caducado, o no llega pero sí hay refresh token. El cliente debe llamar a `/api/auth/refresh` y reintentar.
+  - `SESSION_EXPIRED`: la sesión ha terminado. El cliente debe cerrar sesión y pedir un nuevo inicio.
+  - `AUTHENTICATION_REQUIRED`: no hay sesión (visitante).
+- `POST /api/auth/logout` revoca el access token (en `revoked_tokens`) y el refresh token (en `refresh_tokens`) que haya en las cookies, y borra ambas cookies. No requiere un access token válido, así que funciona aunque la sesión ya haya caducado.
+- El registro (`POST /api/auth/register`) crea una cuenta con rol `USER` y su Profile. No inicia sesión: el cliente debe iniciarla después. El rol nunca se acepta desde el cuerpo de la petición.
 - El JWT contiene el identificador del usuario y el id de su rol (`roleId`). Cada petición comprueba que la cuenta siga activa y que el rol del token coincida con el rol actual del usuario en MongoDB. Si cambia el rol del usuario, el token anterior deja de ser válido.
 - Los roles son documentos de la colección `roles`. Solo el rol con nombre `ADMIN` da acceso al panel de administración; cualquier otro rol (como `USER` o uno creado desde `/api/roles`) no tiene acceso. El rol `ADMIN` no se puede renombrar, desactivar ni eliminar. Solo se pueden asignar roles activos, y no se puede desactivar o borrar un rol que tenga usuarios asignados. Las credenciales de prueba del seed están en `seed.js` y solo deben usarse en desarrollo.
-- El logout revoca el `jti` del token en MongoDB; desde ese momento, las siguientes peticiones con ese token reciben `401`. El índice TTL se crea al iniciar la conexión y elimina automáticamente los registros revocados al expirar el JWT.
+- El logout revoca el `jti` del access token en MongoDB; desde ese momento, las siguientes peticiones con ese token reciben `401`. Los refresh tokens revocados o caducados se eliminan automáticamente con un índice TTL. Los índices se crean al iniciar la conexión.
+- Cerrar sesión en todos los dispositivos todavía no está implementado: el logout solo cierra la sesión actual.
 - Los datos personales, direcciones y avatar pertenecen a `Profile`, relacionado 1:1 con `User` mediante un `userId` único. `_auth` autentica; el servicio de Profile aplica propietario o ADMIN.
 - Al crear un usuario se crea también su Profile, con el nombre derivado de la parte local del email.
 - Migración de usernames para bases existentes: `node scripts/migrate-usernames.js` solo muestra el plan (solo funciona contra `localhost` y la base `fusions3d`). Con `--apply` asigna a cada usuario sin `username` uno derivado de la parte local del email (con sufijo numérico si hay colisión) y crea el índice único. Ejecútala antes de arrancar la nueva versión de la API.
 - El login tiene dos límites: 10 intentos por IP y 5 por email cada 15 minutos. Ambos responden `429 LOGIN_RATE_LIMITED`.
-- No hay registro público. La creación de cuentas del panel se incorporará como operación administrativa en un paso posterior.
+- Registro y renovación de sesión tienen un límite de 10 peticiones por IP cada 15 minutos, responden `429 RATE_LIMITED`. Usuarios detrás de la misma IP comparten ese límite.
+- El registro público crea cuentas de cliente. La creación de cuentas desde el panel de administración sigue disponible en `/api/users`.
 - `POSTMAN.md` contiene ejemplos de las rutas actuales. No se distribuye una colección JSON importable de Postman.
 
 > [← Volver al README principal](../README.md)
