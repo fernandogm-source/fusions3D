@@ -1,0 +1,51 @@
+<main class="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6">
+  <div class="page-enter w-full max-w-md">
+    <div class="mb-8 flex flex-col items-center gap-4 text-center">
+      <a routerLink="/" class="font-display text-xl font-bold tracking-tight text-ink" aria-label="Fusions3D - Volver al inicio">
+        Fusions<span class="text-brand">3D</span>
+      </a>
+      <div>
+        <h1 class="font-display text-3xl font-bold tracking-tight text-ink">Crear cuenta</h1>
+        <p class="mt-2 text-sm text-ink-muted">Regístrate para guardar tu perfil y gestionar tus pedidos.</p>
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="card flex flex-col gap-6 p-6 sm:p-8">
+      <div class="flex flex-col gap-2">
+        <label for="register-email" class="label">Correo electrónico <span class="text-brand">*</span></label>
+        <input id="register-email" type="email" formControlName="email" autocomplete="email" class="input" [class.input-error]="getError('email', 'El correo')" />
+        @if (getError('email', 'El correo'); as message) { <span class="field-error">{{ message }}</span> }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="register-username" class="label">Nombre de usuario <span class="text-brand">*</span></label>
+        <input id="register-username" type="text" formControlName="username" autocomplete="username" class="input" [class.input-error]="getError('username', 'El nombre de usuario')" />
+        @if (getError('username', 'El nombre de usuario'); as message) { <span class="field-error">{{ message }}</span> }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="register-password" class="label">Contraseña <span class="text-brand">*</span></label>
+        <input id="register-password" type="password" formControlName="password" autocomplete="new-password" class="input" [class.input-error]="getError('password', 'La contraseña')" />
+        @if (getError('password', 'La contraseña'); as message) { <span class="field-error">{{ message }}</span> }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="register-confirm" class="label">Repite la contraseña <span class="text-brand">*</span></label>
+        <input id="register-confirm" type="password" formControlName="confirmPassword" autocomplete="new-password" class="input" [class.input-error]="getError('confirmPassword', 'La confirmación')" />
+        @if (getError('confirmPassword', 'La confirmación'); as message) { <span class="field-error">{{ message }}</span> }
+      </div>
+
+      @if (errorMessage()) {
+        <p role="alert" class="rounded-lg border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">{{ errorMessage() }}</p>
+      }
+
+      <button type="submit" [disabled]="submitting()" class="btn btn-primary w-full py-3">
+        {{ submitting() ? 'Creando cuenta…' : 'Crear cuenta' }}
+      </button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-ink-muted">
+      ¿Ya tienes cuenta? <a routerLink="/login" class="font-medium text-brand-light hover:underline">Inicia sesión</a>
+    </p>
+  </div>
+</main>
