@@ -4,6 +4,7 @@ const { AppError } = require('../utils/app.error');
 const { generateSlug } = require('../utils/slug.util');
 const { attachDependencyIssues } = require('../utils/dependency-issues.util');
 const dependencyRestriction = require('./dependency-restriction.service');
+const identifiers = require('./variant-identifiers.service');
 
 const DEPENDENCIES = [{
   field: 'categoryId',
@@ -72,10 +73,15 @@ class PrintService {
 
     cleanData.updatedAt = new Date();
 
+    const previous = await repository.findByIdWithDeleted(id);
     const print = await repository.updateById(id, cleanData);
 
     if (!print) {
       throw new AppError('Impresión no encontrada', 404, 'PRINT_NOT_FOUND');
+    }
+
+    if (previous && (print.name !== previous.name || print.slug !== previous.slug)) {
+      await identifiers.refreshForPrint(id);
     }
 
     if (images !== undefined) {

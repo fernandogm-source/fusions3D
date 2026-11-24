@@ -47,6 +47,7 @@ describe('shop-query util', () => {
 
   it('ignora un orden desconocido', () => {
     expect(parseShopQuery({ sort: 'inventado' }).sort).toBe('newest');
+    expect(parseShopQuery({ sort: 'most_liked' }).sort).toBe('most_liked');
   });
 
   it('serializa solo lo que difiere del valor por defecto', () => {

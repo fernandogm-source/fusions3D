@@ -1,6 +1,6 @@
 /** Modelos de la parte pública (tienda). Reflejan las respuestas de `/api/shop`. */
 
-export type ShopSort = 'relevance' | 'price_asc' | 'price_desc' | 'name' | 'newest';
+export type ShopSort = 'relevance' | 'price_asc' | 'price_desc' | 'name' | 'newest' | 'most_liked';
 
 export interface ShopImage {
   imageUrl: string;
@@ -19,6 +19,7 @@ export interface ShopPrintCard {
   slug: string;
   minPrice: number;
   maxPrice: number;
+  totalLikes: number;
   materials: ShopMaterialRef[];
   createdAt: string;
   categoryName: string;
@@ -28,13 +29,21 @@ export interface ShopPrintCard {
 
 export interface ShopVariant {
   _id: string;
+  slug: string;
   sku: string;
   color: string;
   colorSlug: string;
   colorHex: string | null;
   salePrice: number;
   printTime: number;
+  likesCount: number;
   materialId: { _id: string; name: string; slug: string } | null;
+}
+
+/** Respuesta de `/api/shop/variants/:id/likes`: estado del usuario y recuento actual. */
+export interface ShopVariantLike {
+  liked: boolean;
+  likesCount: number;
 }
 
 /** Detalle de impresión por slug. */

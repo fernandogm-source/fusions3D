@@ -3,6 +3,7 @@ const Material = require('../models/material.model');
 const { AppError } = require('../utils/app.error');
 const { generateSlug } = require('../utils/slug.util');
 const dependencyRestriction = require('./dependency-restriction.service');
+const identifiers = require('./variant-identifiers.service');
 
 class MaterialService {
   async getAll() {
@@ -34,10 +35,10 @@ class MaterialService {
     delete cleanData.deletedAt;
     delete cleanData.slug;
 
-    if (cleanData.name !== undefined) {
-      const existing = await repository.findByIdWithDeleted(id);
+    const previous = await repository.findByIdWithDeleted(id);
 
-      if (existing && existing.name !== cleanData.name) {
+    if (cleanData.name !== undefined) {
+      if (previous && previous.name !== cleanData.name) {
         cleanData.slug = await generateSlug(cleanData.name, Material);
       }
     }
@@ -46,6 +47,10 @@ class MaterialService {
 
     if (!material) {
       throw new AppError('Material no encontrado', 404, 'MATERIAL_NOT_FOUND');
+    }
+
+    if (previous && (material.name !== previous.name || material.slug !== previous.slug)) {
+      await identifiers.refreshForMaterial(id);
     }
 
     return material;

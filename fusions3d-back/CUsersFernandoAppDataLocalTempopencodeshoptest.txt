@@ -1,0 +1,416 @@
+✖ el listado solo incluye impresiones publicadas con categoría activa (519.6757ms)
+✖ el listado devuelve precios y materiales de cada impresión (0.6035ms)
+✖ filtra por categoría con slug (0.1207ms)
+✖ un slug desconocido devuelve listado vacío sin error (0.0445ms)
+✖ filtra por material con slug (0.0458ms)
+✖ filtra por color con slug y recalcula el precio sobre variantes que cumplen el filtro (0.0358ms)
+✖ el rango de precio descarta variantes fuera de los límites (0.0289ms)
+✖ combina varios filtros con AND entre tipos (0.0389ms)
+✖ la búsqueda por prefijo encuentra impresiones por nombre (0.0632ms)
+✖ la búsqueda funciona con una sola letra (0.1014ms)
+✖ la búsqueda no distingue mayúsculas ni tildes (0.0412ms)
+✖ la búsqueda también encuentra palabras de la descripción (0.0334ms)
+✖ la búsqueda con varias palabras exige que todas coincidan (0.0262ms)
+✖ la búsqueda ordena por relevancia: primero el nombre que empieza por el texto (0.0209ms)
+✖ la búsqueda escapa los caracteres de expresión regular (0.0213ms)
+✖ pagina el listado con offset (0.0276ms)
+✖ rechaza parámetros inválidos con 400 (0.0241ms)
+✖ el detalle devuelve variantes con hex y material, sin coste (0.0244ms)
+✖ el detalle de un borrador devuelve 404 (0.0658ms)
+✖ filters devuelve categorías, materiales, colores con slug y hex, y rango de precios (0.0232ms)
+✖ home devuelve las cuatro secciones (0.0204ms)
+✖ ordena por más gustados sumando los likes de las variantes que cumplen los filtros (0.0216ms)
+✖ rechaza un orden desconocido con 400 (0.0203ms)
+✖ C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\tests\integration\shop.test.js (0.137ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 0
+ℹ fail 24
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 60274.2474
+
+✖ failing tests:
+
+test at tests\integration\shop.test.js:79:1
+✖ el listado solo incluye impresiones publicadas con categoría activa (519.6757ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:88:1
+✖ el listado devuelve precios y materiales de cada impresión (0.6035ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:99:1
+✖ filtra por categoría con slug (0.1207ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:105:1
+✖ un slug desconocido devuelve listado vacío sin error (0.0445ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:113:1
+✖ filtra por material con slug (0.0458ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:119:1
+✖ filtra por color con slug y recalcula el precio sobre variantes que cumplen el filtro (0.0358ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:130:1
+✖ el rango de precio descarta variantes fuera de los límites (0.0289ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:136:1
+✖ combina varios filtros con AND entre tipos (0.0389ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:143:1
+✖ la búsqueda por prefijo encuentra impresiones por nombre (0.0632ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:149:1
+✖ la búsqueda funciona con una sola letra (0.1014ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:155:1
+✖ la búsqueda no distingue mayúsculas ni tildes (0.0412ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:163:1
+✖ la búsqueda también encuentra palabras de la descripción (0.0334ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:169:1
+✖ la búsqueda con varias palabras exige que todas coincidan (0.0262ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:177:1
+✖ la búsqueda ordena por relevancia: primero el nombre que empieza por el texto (0.0209ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:183:1
+✖ la búsqueda escapa los caracteres de expresión regular (0.0213ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:189:1
+✖ pagina el listado con offset (0.0276ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:199:1
+✖ rechaza parámetros inválidos con 400 (0.0241ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:206:1
+✖ el detalle devuelve variantes con hex y material, sin coste (0.0244ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:218:1
+✖ el detalle de un borrador devuelve 404 (0.0658ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:224:1
+✖ filters devuelve categorías, materiales, colores con slug y hex, y rango de precios (0.0232ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:235:1
+✖ home devuelve las cuatro secciones (0.0204ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:245:1
+✖ ordena por más gustados sumando los likes de las variantes que cumplen los filtros (0.0216ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:265:1
+✖ rechaza un orden desconocido con 400 (0.0203ms)
+  Error [MongoServerError]: E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }
+      at InsertOneOperation.handleOk (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\insert.js:51:19)
+      at tryOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:214:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async executeOperation (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+      at async Collection.insertOne (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\node_modules\mongodb\lib\collection.js:154:16) {
+    errorLabelSet: Set(0) {},
+    errorResponse: { index: 0, code: 11000, errmsg: 'E11000 duplicate key error collection: fusions3d-test.print_variants index: slug_1 dup key: { slug: null }', keyPattern: { slug: 1 }, keyValue: { slug: null } },
+    index: 0,
+    code: 11000,
+    keyPattern: { slug: 1 },
+    keyValue: { slug: null }
+  }
+
+test at tests\integration\shop.test.js:73:1
+✖ C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\tests\integration\shop.test.js (0.137ms)
+  TypeError: Cannot read properties of undefined (reading 'close')
+      at C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\tests\integration\shop.test.js:74:41
+      at new Promise (<anonymous>)
+      at TestContext.<anonymous> (C:\Users\Fernando\Desktop\2ºDAW\Servidor\Projecte-fusions3d\fusions3d-back\tests\integration\shop.test.js:74:9)
+      at TestHook.runInAsyncScope (node:async_hooks:227:14)
+      at TestHook.run (node:internal/test_runner/test:1402:25)
+      at TestHook.run (node:internal/test_runner/test:1757:18)
+      at TestHook.run (node:internal/util:581:20)
+      at Test.runHook (node:internal/test_runner/test:1289:20)
+      at after (node:internal/test_runner/test:1342:20)
+      at Test.run (node:internal/test_runner/test:1428:13)

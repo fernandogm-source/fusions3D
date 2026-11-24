@@ -40,9 +40,19 @@
             <span class="badge badge-brand w-fit">{{ category.name }}</span>
           }
           <h1 class="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">{{ print.name }}</h1>
-          <p class="font-display text-2xl font-semibold text-brand-light">
-            {{ selectedPrice() || priceRange() }}
-          </p>
+          <div class="flex flex-wrap items-center gap-4">
+            <p class="font-display text-2xl font-semibold text-brand-light">
+              {{ selectedPrice() || priceRange() }}
+            </p>
+            @if (store.selectedVariant(); as variant) {
+              <app-variant-like
+                [liked]="store.selectedLiked()"
+                [count]="variant.likesCount"
+                [pending]="store.likePending()"
+                (toggle)="store.toggleLike()"
+              />
+            }
+          </div>
         </div>
 
         <p class="whitespace-pre-line text-base leading-relaxed text-ink-muted">{{ print.description }}</p>
@@ -72,8 +82,8 @@
           <h2 id="variantes-titulo" class="font-display text-lg font-semibold text-ink">Elige variante</h2>
           <app-variant-selector
             [variants]="print.variants"
-            [selectedId]="store.selectedVariant()?._id ?? null"
-            (select)="store.selectVariant($event)"
+            [selectedSlug]="store.selectedVariant()?.slug ?? null"
+            (select)="selectVariant($event)"
           />
         </section>
       </div>

@@ -5,6 +5,11 @@
     description="Gestiona tus datos de contacto, direcciones y nombre de usuario."
   />
 
+  <nav aria-label="Secciones del perfil" class="flex gap-2 border-b border-line">
+    <a routerLink="/perfil" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="nav-link-active" class="nav-link px-3 text-sm">Mi perfil</a>
+    <a routerLink="/perfil/likes" routerLinkActive="nav-link-active" class="nav-link px-3 text-sm">Mis likes</a>
+  </nav>
+
   @if (store.loading() && !store.profile()) {
     <div class="card p-10 text-center text-ink-muted">Cargando perfil…</div>
   } @else if (store.error() && !store.profile()) {

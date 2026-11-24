@@ -1,0 +1,21 @@
+<button
+  type="button"
+  class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors duration-200 disabled:cursor-wait disabled:opacity-60"
+  [class]="liked() ? 'border-brand bg-brand/10 text-brand-light' : 'border-line text-ink-muted hover:border-line-strong hover:text-ink'"
+  [attr.aria-pressed]="liked()"
+  [attr.aria-label]="liked() ? 'Quitar me gusta' : 'Dar me gusta'"
+  [disabled]="pending()"
+  (click)="toggle.emit()"
+>
+  <svg
+    viewBox="0 0 24 24"
+    class="h-5 w-5"
+    [attr.fill]="liked() ? 'currentColor' : 'none'"
+    stroke="currentColor"
+    stroke-width="2"
+    aria-hidden="true"
+  >
+    <path stroke-linecap="round" stroke-linejoin="round" d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.3l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.8z" />
+  </svg>
+  <span>{{ count() }}</span>
+</button>

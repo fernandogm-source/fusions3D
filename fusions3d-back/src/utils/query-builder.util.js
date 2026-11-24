@@ -14,7 +14,8 @@ const SORTS = {
   price_asc: { minPrice: 1, _id: 1 },
   price_desc: { minPrice: -1, _id: -1 },
   name: { name: 1, _id: 1 },
-  newest: { createdAt: -1, _id: -1 }
+  newest: { createdAt: -1, _id: -1 },
+  most_liked: { totalLikes: -1, _id: -1 }
 };
 
 function buildCondition(name, definition, params) {

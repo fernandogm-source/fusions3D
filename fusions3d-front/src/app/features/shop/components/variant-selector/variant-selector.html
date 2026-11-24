@@ -1,12 +1,12 @@
 <div class="flex flex-col gap-3" role="radiogroup" aria-label="Variantes disponibles">
-  @for (variant of variants(); track variant._id) {
+  @for (variant of variants(); track variant.slug) {
     <button
       type="button"
       role="radio"
       class="card flex items-center justify-between gap-4 p-4 text-left transition-all duration-200 hover:border-line-strong"
-      [class]="variant._id === selectedId() ? 'border-brand ring-2 ring-brand/30' : ''"
-      [attr.aria-checked]="variant._id === selectedId()"
-      (click)="select.emit(variant._id)"
+      [class]="variant.slug === selectedSlug() ? 'border-brand ring-2 ring-brand/30' : ''"
+      [attr.aria-checked]="variant.slug === selectedSlug()"
+      (click)="select.emit(variant.slug)"
     >
       <span class="flex items-center gap-3">
         <span
@@ -21,7 +21,6 @@
           </span>
         </span>
       </span>
-      <span class="font-display text-base font-semibold text-ink">{{ price(variant.salePrice) }}</span>
     </button>
   }
 </div>

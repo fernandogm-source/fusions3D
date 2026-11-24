@@ -31,6 +31,14 @@
       </ul>
     }
 
-    <p class="mt-auto pt-2 font-display text-base font-semibold text-ink">{{ price() }}</p>
+    <div class="mt-auto flex items-center justify-between gap-3 pt-2">
+      <p class="font-display text-base font-semibold text-ink">{{ price() }}</p>
+      <span class="inline-flex items-center gap-1 text-sm text-ink-muted" [attr.aria-label]="print().totalLikes + ' me gusta'">
+        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.3l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.8z" />
+        </svg>
+        {{ print().totalLikes }}
+      </span>
+    </div>
   </div>
 </a>

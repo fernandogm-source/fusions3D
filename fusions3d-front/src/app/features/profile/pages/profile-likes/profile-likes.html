@@ -1,0 +1,57 @@
+<section class="page-enter flex flex-col gap-8">
+  <app-page-header
+    eyebrow="Cuenta"
+    title="Mis likes"
+    description="Variantes de impresiones que has marcado con me gusta."
+  />
+
+  <nav aria-label="Secciones del perfil" class="flex gap-2 border-b border-line">
+    <a routerLink="/perfil" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="nav-link-active" class="nav-link px-3 text-sm">Mi perfil</a>
+    <a routerLink="/perfil/likes" routerLinkActive="nav-link-active" class="nav-link px-3 text-sm">Mis likes</a>
+  </nav>
+
+  @if (store.loading() && !store.items().length) {
+    <div class="card p-10 text-center text-ink-muted" aria-busy="true">Cargando tus likes…</div>
+  } @else if (store.error() && !store.items().length) {
+    <app-error-state title="No se han podido cargar tus likes" [message]="store.error()!" (retry)="retry()" />
+  } @else if (!store.items().length) {
+    <app-empty-state title="Todavía no tienes likes" message="Dale me gusta a una variante en el detalle de una impresión para verla aquí.">
+      <a routerLink="/shop" class="btn btn-primary">Ir al catálogo</a>
+    </app-empty-state>
+  } @else {
+    <p class="text-sm text-ink-muted" aria-live="polite">{{ total() === 1 ? '1 variante' : total() + ' variantes' }}</p>
+
+    <ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3" [attr.aria-busy]="store.loading()">
+      @for (item of store.items(); track item.variantSlug) {
+        <li class="card flex h-full flex-col overflow-hidden">
+          <a [routerLink]="['/shop', item.printSlug]" [queryParams]="{ variant: item.variantSlug }" class="block aspect-[4/3] overflow-hidden bg-elevated">
+            <img [src]="imageOf(item)" [alt]="item.printName" loading="lazy" class="h-full w-full object-cover" />
+          </a>
+
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <a [routerLink]="['/shop', item.printSlug]" [queryParams]="{ variant: item.variantSlug }" class="font-display text-lg font-semibold leading-snug text-ink hover:text-brand-light">
+              {{ item.printName }}
+            </a>
+            <p class="text-sm text-ink-muted">{{ item.color }} · {{ item.materialName ?? 'Material' }}</p>
+
+            <div class="mt-auto flex items-center justify-between gap-3 pt-3">
+              <p class="font-display text-base font-semibold text-ink">{{ price(item.salePrice) }}</p>
+              <span class="text-sm text-ink-muted">{{ item.likesCount }} me gusta</span>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-action btn-action-delete"
+              [disabled]="store.pendingId() === item.variantSlug"
+              (click)="onUnlike(item.variantSlug)"
+            >
+              {{ store.pendingId() === item.variantSlug ? 'Quitando…' : 'Quitar like' }}
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+
+    <app-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="onPage($event)" />
+  }
+</section>

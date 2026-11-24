@@ -23,11 +23,16 @@ const printIdParamSchema = z.object({
   printId: z.string().regex(objectIdRegex, 'printId inválido')
 });
 
+const variantSlugParamSchema = z.object({
+  variantSlug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug de variante inválido').max(200)
+});
+
 module.exports = {
   objectIdRegex,
   objectId,
   usernameSchema,
   idParamSchema,
   slugParamSchema,
-  printIdParamSchema
+  printIdParamSchema,
+  variantSlugParamSchema
 };

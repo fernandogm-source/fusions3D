@@ -16,6 +16,13 @@ const printVariantSchema = new mongoose.Schema(
       uppercase: true,
       maxlength: 50
     },
+    slug: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      lowercase: true
+    },
     materialId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Material',
@@ -53,6 +60,11 @@ const printVariantSchema = new mongoose.Schema(
     printTime: {
       type: Number,
       required: true,
+      min: 0
+    },
+    likesCount: {
+      type: Number,
+      default: 0,
       min: 0
     },
     isActive: {

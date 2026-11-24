@@ -25,11 +25,11 @@ function buildSkuBase(printName, materialName, color) {
   return `${printCode}-${materialCode}-${colorCode}`;
 }
 
-async function generateSku(base, Model = PrintVariant) {
+async function generateSku(base, Model = PrintVariant, excludeId) {
   let sku = base;
   let counter = 1;
 
-  while (await Model.exists({ sku })) {
+  while (await Model.exists({ sku, ...(excludeId && { _id: { $ne: excludeId } }) })) {
     sku = `${base}-${counter}`;
     counter++;
   }

@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormArray, FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ProfileAddress } from '../../../../core/models/profile.model';
 import { AuthStore } from '../../../../core/store/auth.store';
 import { ProfileStore } from '../../../../core/store/profile.store';
@@ -24,7 +25,7 @@ type AddressGroup = ReturnType<typeof createAddressGroup>;
 type AddressField = 'street' | 'city' | 'postalCode' | 'country';
 
 /** Página "Mi perfil": datos de contacto, direcciones y username del usuario autenticado. */
-@Component({ selector: 'app-profile', imports: [ReactiveFormsModule, ErrorState, PageHeader, UserAvatar], templateUrl: './profile.html' })
+@Component({ selector: 'app-profile', imports: [ReactiveFormsModule, RouterLink, RouterLinkActive, ErrorState, PageHeader, UserAvatar], templateUrl: './profile.html' })
 export class ProfilePage {
   private readonly fb: NonNullableFormBuilder = inject(FormBuilder).nonNullable;
   protected readonly store = inject(ProfileStore);

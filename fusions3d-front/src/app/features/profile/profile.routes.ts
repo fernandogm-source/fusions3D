@@ -6,4 +6,9 @@ export const PROFILE_ROUTES: Routes = [
     loadComponent: () => import('./pages/profile/profile').then((m) => m.ProfilePage),
     title: 'Mi perfil | Fusions3D',
   },
+  {
+    path: 'likes',
+    loadComponent: () => import('./pages/profile-likes/profile-likes').then((m) => m.ProfileLikesPage),
+    title: 'Mis likes | Fusions3D',
+  },
 ];

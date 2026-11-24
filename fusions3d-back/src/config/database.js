@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Profile = require('../models/profile.model');
 const RevokedToken = require('../models/revoked-token.model');
 const RefreshToken = require('../models/refresh-token.model');
+const VariantLike = require('../models/variant-like.model');
 
 async function connectDB() {
   const uri = process.env.MONGODB_URI;
@@ -15,6 +16,7 @@ async function connectDB() {
   await Profile.createIndexes();
   await RevokedToken.createIndexes();
   await RefreshToken.createIndexes();
+  await VariantLike.createIndexes();
   console.log('MongoDB conectado');
 }
 

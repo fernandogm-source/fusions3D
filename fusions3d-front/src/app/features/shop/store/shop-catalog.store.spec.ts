@@ -18,6 +18,7 @@ function print(slug: string): ShopPrintCard {
     slug,
     minPrice: 10,
     maxPrice: 10,
+    totalLikes: 0,
     materials: [],
     createdAt: '2026-01-01T00:00:00.000Z',
     categoryName: '',

@@ -1,6 +1,6 @@
 const { z } = require('zod');
 
-const SORT_OPTIONS = ['relevance', 'price_asc', 'price_desc', 'name', 'newest'];
+const SORT_OPTIONS = ['relevance', 'price_asc', 'price_desc', 'name', 'newest', 'most_liked'];
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const listParam = (itemSchema, maxItems) => z.preprocess((value) => {

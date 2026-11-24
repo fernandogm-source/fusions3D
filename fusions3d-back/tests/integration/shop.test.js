@@ -39,13 +39,13 @@ async function seed() {
   ]);
 
   await PrintVariant.create([
-    { printId: soporte._id, materialId: pla._id, sku: 'SOP-PLA-NEG', color: 'Negro', colorSlug: 'negro', colorHex: '#1F1F1F', salePrice: 12.5, costPrice: 4, printTime: 180 },
-    { printId: soporte._id, materialId: petg._id, sku: 'SOP-PET-AZU', color: 'Azul', colorSlug: 'azul', colorHex: '#2563EB', salePrice: 15.9, costPrice: 5, printTime: 210 },
-    { printId: maceta._id, materialId: petg._id, sku: 'MAC-PET-BLA', color: 'Blanco', colorSlug: 'blanco', colorHex: '#F5F5F5', salePrice: 18.9, costPrice: 6, printTime: 360 },
-    { printId: figura._id, materialId: pla._id, sku: 'FIG-PLA-NEG', color: 'Negro', colorSlug: 'negro', colorHex: '#1F1F1F', salePrice: 24.9, costPrice: 9, printTime: 540 },
-    { printId: figura._id, materialId: retirado._id, sku: 'FIG-ABS-NEG', color: 'Negro', colorSlug: 'negro', colorHex: '#1F1F1F', salePrice: 3, costPrice: 1, printTime: 60 },
-    { printId: borrador._id, materialId: pla._id, sku: 'BOR-PLA-GRI', color: 'Gris', colorSlug: 'gris', colorHex: null, salePrice: 1, costPrice: 1, printTime: 10 },
-    { printId: figuraOculta._id, materialId: pla._id, sku: 'OCU-PLA-GRI', color: 'Gris', colorSlug: 'gris', colorHex: null, salePrice: 2, costPrice: 1, printTime: 10 }
+    { printId: soporte._id, materialId: pla._id, sku: 'SOP-PLA-NEG', slug: 'soporte-para-movil-pla-negro', color: 'Negro', colorSlug: 'negro', colorHex: '#1F1F1F', salePrice: 12.5, costPrice: 4, printTime: 180 },
+    { printId: soporte._id, materialId: petg._id, sku: 'SOP-PET-AZU', slug: 'soporte-para-movil-petg-azul', color: 'Azul', colorSlug: 'azul', colorHex: '#2563EB', salePrice: 15.9, costPrice: 5, printTime: 210 },
+    { printId: maceta._id, materialId: petg._id, sku: 'MAC-PET-BLA', slug: 'maceta-geometrica-petg-blanco', color: 'Blanco', colorSlug: 'blanco', colorHex: '#F5F5F5', salePrice: 18.9, costPrice: 6, printTime: 360 },
+    { printId: figura._id, materialId: pla._id, sku: 'FIG-PLA-NEG', slug: 'figura-dragon-pla-negro', color: 'Negro', colorSlug: 'negro', colorHex: '#1F1F1F', salePrice: 24.9, costPrice: 9, printTime: 540 },
+    { printId: figura._id, materialId: retirado._id, sku: 'FIG-ABS-NEG', slug: 'figura-dragon-abs-negro', color: 'Negro', colorSlug: 'negro', colorHex: '#1F1F1F', salePrice: 3, costPrice: 1, printTime: 60 },
+    { printId: borrador._id, materialId: pla._id, sku: 'BOR-PLA-GRI', slug: 'figura-borrador-pla-gris', color: 'Gris', colorSlug: 'gris', colorHex: null, salePrice: 1, costPrice: 1, printTime: 10 },
+    { printId: figuraOculta._id, materialId: pla._id, sku: 'OCU-PLA-GRI', slug: 'figura-oculta-pla-gris', color: 'Gris', colorSlug: 'gris', colorHex: null, salePrice: 2, costPrice: 1, printTime: 10 }
   ]);
 
   await Image.create([
@@ -240,4 +240,30 @@ test('home devuelve las cuatro secciones', async () => {
   assert.ok(Array.isArray(body.data.materials));
   assert.ok(Array.isArray(body.data.colors));
   assert.equal(body.data.latestPrints[0].slug, 'soporte-para-movil');
+});
+
+test('ordena por más gustados sumando los likes de las variantes que cumplen los filtros', async () => {
+  const likes = { 'SOP-PLA-NEG': 3, 'SOP-PET-AZU': 2, 'MAC-PET-BLA': 1, 'FIG-PLA-NEG': 0 };
+
+  try {
+    for (const [sku, likesCount] of Object.entries(likes)) {
+      await PrintVariant.updateOne({ sku }, { likesCount });
+    }
+
+    const todos = await get('/prints?sort=most_liked');
+    assert.deepEqual(todos.body.data.map((print) => print.slug), ['soporte-para-movil', 'maceta-geometrica', 'figura-dragon']);
+    assert.equal(todos.body.data[0].totalLikes, 5);
+
+    const soloPla = await get('/prints?sort=most_liked&material=pla');
+    assert.deepEqual(soloPla.body.data.map((print) => print.slug), ['soporte-para-movil', 'figura-dragon']);
+    assert.equal(soloPla.body.data[0].totalLikes, 3);
+  } finally {
+    await PrintVariant.updateMany({}, { likesCount: 0 });
+  }
+});
+
+test('rechaza un orden desconocido con 400', async () => {
+  const { status } = await get('/prints?sort=inventado');
+
+  assert.equal(status, 400);
 });

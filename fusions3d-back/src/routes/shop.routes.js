@@ -1,9 +1,11 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const controller = require('../controllers/shop.controller');
+const likeController = require('../controllers/variant-like.controller');
+const { _auth } = require('../middlewares/auth.middleware');
 const { validate } = require('../middlewares/validation.middleware');
 const { printsQuerySchema, chatSchema } = require('../schemas/shop.schema');
-const { slugParamSchema } = require('../schemas/common.schema');
+const { slugParamSchema, variantSlugParamSchema } = require('../schemas/common.schema');
 
 const router = express.Router();
 
@@ -26,5 +28,8 @@ router.get('/filters', controller.getFilters);
 router.get('/prints', validate(printsQuerySchema, 'query'), controller.getPrints);
 router.get('/prints/:slug', validate(slugParamSchema, 'params'), controller.getPrintBySlug);
 router.post('/chat', chatLimiter, validate(chatSchema), controller.chat);
+router.get('/variants/:variantSlug/likes/me', _auth, validate(variantSlugParamSchema, 'params'), likeController.getStatus);
+router.post('/variants/:variantSlug/likes', _auth, validate(variantSlugParamSchema, 'params'), likeController.like);
+router.delete('/variants/:variantSlug/likes', _auth, validate(variantSlugParamSchema, 'params'), likeController.unlike);
 
 module.exports = router;

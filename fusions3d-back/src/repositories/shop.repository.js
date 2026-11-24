@@ -48,7 +48,7 @@ class ShopRepository {
               }
             },
             { $match: { 'material.0': { $exists: true } } },
-            { $project: { _id: 0, salePrice: 1, material: { $arrayElemAt: ['$material', 0] } } }
+            { $project: { _id: 0, salePrice: 1, likesCount: 1, material: { $arrayElemAt: ['$material', 0] } } }
           ],
           as: 'variants'
         }
@@ -58,6 +58,7 @@ class ShopRepository {
         $addFields: {
           minPrice: { $min: '$variants.salePrice' },
           maxPrice: { $max: '$variants.salePrice' },
+          totalLikes: { $sum: '$variants.likesCount' },
           materials: {
             $setUnion: [{ $map: { input: '$variants', as: 'variant', in: '$$variant.material' } }]
           }
@@ -94,6 +95,7 @@ class ShopRepository {
                 slug: 1,
                 minPrice: 1,
                 maxPrice: 1,
+                totalLikes: 1,
                 materials: 1,
                 createdAt: 1,
                 categoryName: { $arrayElemAt: ['$category.name', 0] },
@@ -133,6 +135,22 @@ class ShopRepository {
       .sort({ salePrice: 1 })
       .populate({ path: 'materialId', select: 'name slug', match: ACTIVE })
       .lean();
+  }
+
+  /** Variante visible en la tienda: activa, de impresión publicada con categoría y material activos. */
+  async findVisibleVariantBySlug(slug) {
+    const variant = await PrintVariant.findOne({ slug, ...ACTIVE }).select('printId materialId').lean();
+    if (!variant) return null;
+
+    const print = await Print.findOne({ _id: variant.printId, ...PUBLISHED }).select('categoryId').lean();
+    if (!print) return null;
+
+    const [category, material] = await Promise.all([
+      Category.exists({ _id: print.categoryId, ...PUBLISHED }),
+      Material.exists({ _id: variant.materialId, ...ACTIVE })
+    ]);
+
+    return category && material ? variant : null;
   }
 
   async findPublishedCategoryIdsBySlugs(slugs) {

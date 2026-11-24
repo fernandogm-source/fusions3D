@@ -2,7 +2,7 @@ import { Params } from '@angular/router';
 import { ShopCatalogQuery, ShopSort } from '../../core/models/shop.model';
 
 export const SHOP_LIMIT = 12;
-const SHOP_SORTS: readonly ShopSort[] = ['relevance', 'price_asc', 'price_desc', 'name', 'newest'];
+const SHOP_SORTS: readonly ShopSort[] = ['relevance', 'price_asc', 'price_desc', 'name', 'newest', 'most_liked'];
 
 /** Orden por defecto: relevancia si hay búsqueda, novedades si no. */
 export function defaultSort(q: string): ShopSort {

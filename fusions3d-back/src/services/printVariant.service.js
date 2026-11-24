@@ -3,9 +3,9 @@ const Category = require('../models/category.model');
 const Print = require('../models/print.model');
 const Material = require('../models/material.model');
 const { AppError } = require('../utils/app.error');
-const { buildSkuBase, generateSku } = require('../utils/sku.util');
 const { toSlug } = require('../utils/slug.util');
 const { attachDependencyIssues } = require('../utils/dependency-issues.util');
+const identifiers = require('./variant-identifiers.service');
 
 const DEPENDENCIES = [
   {
@@ -60,15 +60,10 @@ class PrintVariantService {
     const print = await this.ensurePrintExists(data.printId);
     const material = await this.ensureMaterialExists(data.materialId);
 
-    const sku = await this.resolveSku(print, material, data.color);
+    const { sku, slug } = await identifiers.build({ print, material, color: data.color });
     const colorSlug = toSlug(data.color);
 
-    return repository.create({ ...data, sku, colorSlug });
-  }
-
-  async resolveSku(print, material, color) {
-    const base = buildSkuBase(print.name, material.name, color);
-    return generateSku(base);
+    return repository.create({ ...data, sku, slug, colorSlug });
   }
 
   async update(id, body) {
@@ -76,6 +71,7 @@ class PrintVariantService {
     delete cleanData._id;
     delete cleanData.deletedAt;
     delete cleanData.sku;
+    delete cleanData.slug;
 
     const existing = await repository.findByIdWithDeleted(id);
 
@@ -96,7 +92,14 @@ class PrintVariantService {
     if (skuInputsChanged) {
       const print = await this.ensurePrintExists(cleanData.printId ?? existing.printId);
       const material = await this.ensureMaterialExists(cleanData.materialId ?? existing.materialId);
-      cleanData.sku = await this.resolveSku(print, material, cleanData.color ?? existing.color);
+      const generated = await identifiers.build({
+        print,
+        material,
+        color: cleanData.color ?? existing.color,
+        excludeId: id
+      });
+      cleanData.sku = generated.sku;
+      cleanData.slug = generated.slug;
     }
 
     const variant = await repository.updateById(id, cleanData);
