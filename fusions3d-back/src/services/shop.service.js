@@ -88,7 +88,12 @@ class ShopService {
     }
 
     const variants = (await repository.findActiveVariantsByPrintId(print._id))
-      .filter((variant) => variant.materialId);
+      .filter((variant) => variant.materialId)
+      .map((variant) => ({
+        ...variant,
+        ratingAverage: variant.ratingAverage ?? 0,
+        ratingCount: variant.ratingCount ?? 0
+      }));
 
     if (variants.length === 0) {
       throw new AppError('Impresión no encontrada', 404, 'PRINT_NOT_FOUND');

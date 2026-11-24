@@ -73,6 +73,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/users/users.routes').then((m) => m.USERS_ROUTES),
       },
       {
+        path: 'admin/reviews',
+        canActivate: [adminGuard],
+        loadChildren: () => import('./features/reviews/reviews.routes').then((m) => m.REVIEWS_ROUTES),
+      },
+      {
         path: '**',
         loadComponent: () =>
           import('./shared/components/not-found/not-found').then((m) => m.NotFound),

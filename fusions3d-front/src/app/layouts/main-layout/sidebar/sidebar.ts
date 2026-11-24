@@ -7,7 +7,7 @@ import { UserAvatar } from '../../../shared/components/user-avatar/user-avatar';
 interface NavLink {
   label: string;
   path: string;
-  icon: 'home' | 'catalog' | 'tag' | 'layers' | 'cube' | 'shield' | 'users' | 'user';
+  icon: 'home' | 'catalog' | 'tag' | 'layers' | 'cube' | 'shield' | 'users' | 'user' | 'chat';
   adminOnly?: boolean;
 }
 
@@ -52,6 +52,7 @@ export class Sidebar {
         { label: 'Variantes', path: '/admin/print-variants', icon: 'cube', adminOnly: true },
         { label: 'Roles', path: '/admin/roles', icon: 'shield', adminOnly: true },
         { label: 'Usuarios', path: '/admin/users', icon: 'users', adminOnly: true },
+        { label: 'Comentarios', path: '/admin/reviews', icon: 'chat', adminOnly: true },
       ],
     },
     {

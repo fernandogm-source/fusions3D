@@ -51,6 +51,10 @@
                 [pending]="store.likePending()"
                 (toggle)="store.toggleLike()"
               />
+              <span class="flex items-center gap-2 text-sm text-ink-muted">
+                <app-star-rating [value]="variant.ratingAverage" />
+                <span>{{ ratingLabel(variant) }}</span>
+              </span>
             }
           </div>
         </div>
@@ -88,5 +92,7 @@
         </section>
       </div>
     </div>
+
+    <app-print-reviews [printSlug]="print.slug" [variants]="print.variants" />
   }
 </div>

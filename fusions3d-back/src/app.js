@@ -15,6 +15,7 @@ const authRoutes = require('./routes/auth.routes');
 const profileRoutes = require('./routes/profile.routes');
 const roleRoutes = require('./routes/role.routes');
 const userRoutes = require('./routes/user.routes');
+const reviewRoutes = require('./routes/review.routes');
 const { _auth } = require('./middlewares/auth.middleware');
 const { _admin } = require('./middlewares/admin.middleware');
 const { validateJwtConfig } = require('./utils/jwt.util');
@@ -61,6 +62,7 @@ app.use('/api/materials', materialRoutes);
 app.use('/api/print-variants', printVariantRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -1,0 +1,100 @@
+<section class="page-enter flex flex-col gap-8">
+  <div class="flex flex-col gap-3">
+    <a routerLink="/admin/reviews" class="text-sm font-medium text-brand-light hover:underline">← Volver a impresiones</a>
+    <app-page-header
+      eyebrow="Comentarios"
+      [title]="title()"
+      description="Comentarios de todas las variantes de esta impresión. Puedes filtrarlos por estrellas o borrarlos."
+    />
+  </div>
+
+  @if (sentimentLoading() && !sentiment()) {
+    <div class="card p-6 text-sm text-ink-muted">Analizando el sentimiento de los comentarios…</div>
+  } @else if (sentimentError(); as message) {
+    <div class="card p-6 text-sm text-ink-muted">No se pudo analizar el sentimiento: {{ message }}</div>
+  } @else if (sentiment(); as data) {
+    @if (data.sentiment) {
+      <div class="card flex flex-col gap-4 p-6">
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 class="text-base font-semibold text-ink">Sentimiento de los comentarios</h2>
+          <span class="text-xs text-ink-faint">
+            {{ data.reviewCount }} comentarios{{ data.sampleSize < data.reviewCount ? ' · analizados los ' + data.sampleSize + ' más recientes' : '' }}
+          </span>
+        </div>
+
+        <div class="flex h-3 w-full overflow-hidden rounded-full bg-surface-muted" role="img" [attr.aria-label]="'Positivos ' + data.sentiment.positive + '%, neutros ' + data.sentiment.neutral + '%, negativos ' + data.sentiment.negative + '%'">
+          <div class="h-full bg-emerald-500" [style.width.%]="data.sentiment.positive"></div>
+          <div class="h-full bg-amber-400" [style.width.%]="data.sentiment.neutral"></div>
+          <div class="h-full bg-rose-500" [style.width.%]="data.sentiment.negative"></div>
+        </div>
+
+        <div class="grid gap-3 text-sm sm:grid-cols-3">
+          <div class="flex items-center gap-2 text-ink"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>Positivos {{ data.sentiment.positive }}%</div>
+          <div class="flex items-center gap-2 text-ink"><span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>Neutros {{ data.sentiment.neutral }}%</div>
+          <div class="flex items-center gap-2 text-ink"><span class="h-2.5 w-2.5 rounded-full bg-rose-500"></span>Negativos {{ data.sentiment.negative }}%</div>
+        </div>
+
+        <p class="text-sm text-ink-muted">{{ data.sentiment.summary }}</p>
+      </div>
+    }
+  }
+
+  <div class="flex flex-wrap items-center gap-3">
+    <label for="reviews-stars" class="label">Estrellas</label>
+    <select id="reviews-stars" class="input w-auto" (change)="onStarsChange($any($event.target).value)">
+      <option value="" [selected]="stars() === null">Todas</option>
+      @for (star of starOptions; track star) {
+        <option [value]="star" [selected]="stars() === star">{{ star }} {{ star === 1 ? 'estrella' : 'estrellas' }}</option>
+      }
+    </select>
+    <span class="text-sm text-ink-muted">{{ meta().total }} comentarios</span>
+  </div>
+
+  @if (loading() && !items().length) {
+    <div class="card p-10 text-center text-ink-muted">Cargando comentarios…</div>
+  } @else if (error(); as message) {
+    <app-error-state title="No se pudieron cargar los comentarios" [message]="message" (retry)="load()" />
+  } @else if (!items().length) {
+    <app-empty-state
+      title="No hay comentarios"
+      [message]="stars() === null ? 'Esta impresión todavía no tiene comentarios.' : 'No hay comentarios con esas estrellas.'"
+    />
+  } @else {
+    <div class="card overflow-x-auto p-0">
+      <table class="w-full min-w-[760px] border-collapse text-left text-sm">
+        <thead>
+          <tr class="table-head">
+            <th class="px-5 py-3.5">Usuario</th>
+            <th class="px-5 py-3.5">Variante</th>
+            <th class="px-5 py-3.5">Estrellas</th>
+            <th class="px-5 py-3.5">Comentario</th>
+            <th class="px-5 py-3.5">Fecha</th>
+            <th class="px-5 py-3.5 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (review of items(); track review._id) {
+            <tr class="table-row">
+              <td class="px-5 py-4 font-medium text-ink">{{ review.username ?? '—' }}</td>
+              <td class="px-5 py-4 text-xs text-ink-faint">{{ variantText(review) }}</td>
+              <td class="px-5 py-4"><app-star-rating [value]="review.rating" /></td>
+              <td class="max-w-md px-5 py-4 text-ink-muted">
+                <p class="line-clamp-3 whitespace-pre-line">{{ review.comment }}</p>
+              </td>
+              <td class="whitespace-nowrap px-5 py-4 text-ink-muted">{{ review.createdAt | date: 'dd/MM/yyyy' }}</td>
+              <td class="px-5 py-4">
+                <div class="flex justify-end">
+                  <button type="button" class="btn btn-action btn-action-delete" (click)="remove(review)">Borrar</button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (meta().totalPages > 1) {
+      <app-pagination [page]="meta().page" [totalPages]="meta().totalPages" (pageChange)="load($event)" />
+    }
+  }
+</section>

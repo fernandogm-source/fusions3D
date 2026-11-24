@@ -18,6 +18,7 @@ const TITLES: [RegExp, string][] = [
   [/^\/admin\/print-variants/, 'Variantes'],
   [/^\/admin\/roles/, 'Roles'],
   [/^\/admin\/users/, 'Usuarios'],
+  [/^\/admin\/reviews/, 'Comentarios'],
 ];
 
 /** Barra superior: botón de menú en móvil y título de la sección actual. */

@@ -51,6 +51,16 @@ Las rutas `/auth/login`, `/auth/register`, `/auth/refresh` y `/auth/logout` no e
 
 Los likes de variantes necesitan sesión: si el visitante pulsa "me gusta" en la tienda, se le lleva al login conservando la página actual. `VariantLikesService` consulta el estado (`likes/me`), da y quita el like, y devuelve `{ liked, likesCount }`. El componente `shop/components/variant-like/` muestra el botón y el contador en el detalle de impresión (`/shop/:slug`). La página `/perfil/likes` (`features/profile/pages/profile-likes/`) lista las variantes marcadas, paginadas, con `ProfileLikesStore`.
 
+Las valoraciones de la tienda se muestran en el detalle de impresión (`/shop/:slug`):
+
+- Cada variante muestra su media de estrellas y el número de valoraciones (`app-star-rating`). Si no tiene ninguna, aparece "Sin valoraciones".
+- El bloque "Valoraciones" (`shop/components/print-reviews/`) incluye el resumen de la opinión generado con IA, el reparto de estrellas con filtros por valoración y la lista de comentarios, con su variante y material.
+- Cualquier visitante puede leer los comentarios. Para escribir, editar o borrar hace falta sesión: un usuario puede dejar un solo comentario por variante, editar el suyo y borrarlo. Los ADMIN pueden borrar cualquier comentario.
+- `ShopReviewsStore` (`shop/store/shop-reviews.store.ts`) gestiona la lista, los filtros, el formulario del modal y las acciones. `PrintReviewsService` y `AdminReviewsService` encapsulan las llamadas HTTP.
+- Los errores de los comentarios se muestran dentro del modal, así que `errorInterceptor` no añade el aviso emergente en esas rutas.
+
+En el panel, la sección "Comentarios" (solo ADMIN) muestra primero las impresiones con comentarios, con su número y media. Desde ahí se abre el listado de una impresión con su análisis de sentimiento (porcentajes de positivos, neutros y negativos y un resumen generado con IA) y los comentarios, filtrables por estrellas, con la opción de borrarlos.
+
 El registro (`/register`) valida email, nombre de usuario (3 a 30 caracteres) y contraseña de al menos 12 caracteres, con confirmación. Al crear la cuenta lleva a `/login?registered=1`; no inicia sesión automáticamente.
 
 ## Organización
@@ -67,13 +77,14 @@ src/app/
 │   └── store/         # Stores Signals: auth, profile, caché/selección y CRUD
 ├── features/
 │   ├── auth/          # Login (/login) y registro de clientes (/register)
-│   ├── shop/          # Tienda pública: inicio, catálogo y detalle
+│   ├── shop/          # Tienda pública: inicio, catálogo, detalle y valoraciones
 │   ├── profile/       # Perfil del usuario
 │   ├── dashboard/     # Inicio del panel (/inicio)
 │   ├── impresions/    # Impresiones (nombre histórico de la carpeta)
 │   ├── categories/
 │   ├── materials/
 │   ├── print-variants/
+│   ├── reviews/       # Comentarios del panel (moderación y sentimiento)
 │   ├── roles/
 │   └── users/
 ├── layouts/
@@ -139,6 +150,7 @@ En el panel, la cabecera sustituye a la antigua topbar. En móvil no hay botón 
 | Variantes | `/admin/print-variants` | `/admin/print-variants/nueva` | — | `/admin/print-variants/:id/editar` |
 | Roles | `/admin/roles` | `/admin/roles/nuevo` | — | `/admin/roles/:id/editar` |
 | Usuarios | `/admin/users` | `/admin/users/nuevo` | — | `/admin/users/:id/editar` |
+| Comentarios | `/admin/reviews` (impresiones con comentarios) | — | `/admin/reviews/:printId` (comentarios y sentimiento) | — |
 
 El perfil de un admin se muestra dentro del panel (con sidebar). El de un cliente se muestra dentro del layout de tienda.
 
@@ -164,6 +176,8 @@ Base URL: `${environment.apiUrl}`. Recursos:
 | Tienda pública | `/shop` |
 | Likes de variantes | `/shop/variants/:slug/likes` (`VariantLikesService`) |
 | Mis likes | `/profiles/likes` (`ProfileLikesService`) |
+| Valoraciones de la tienda | `/shop/prints/:slug/reviews`, `/reviews/summary`, `/reviews/ai-summary`, `/reviews/me` (`PrintReviewsService`) |
+| Comentarios (panel) | `/reviews`, `/reviews/prints`, `/reviews/prints/:printId/sentiment` (`AdminReviewsService`) |
 | Impresiones | `/prints` |
 | Categorías | `/categories` |
 | Materiales | `/materials` |

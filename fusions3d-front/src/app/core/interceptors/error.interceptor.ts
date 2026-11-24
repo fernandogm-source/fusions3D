@@ -14,11 +14,13 @@ import { getErrorMessage } from '../../shared/utils/error-message.util';
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const isAuthRoute = req.url.startsWith(`${environment.apiUrl}/auth/`);
+  // Los comentarios muestran sus errores dentro del modal, así que no duplicamos el aviso.
+  const isReviewRoute = req.url.includes('/shop/prints/') && req.url.includes('/reviews');
 
   return next(req).pipe(
     catchError((error: unknown) => {
       const isUnauthorized = error instanceof HttpErrorResponse && error.status === 401;
-      if (!isAuthRoute && !isUnauthorized) {
+      if (!isAuthRoute && !isUnauthorized && !isReviewRoute) {
         showError(getErrorMessage(error));
       }
       return throwError(() => error);

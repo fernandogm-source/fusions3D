@@ -37,6 +37,8 @@ export interface ShopVariant {
   salePrice: number;
   printTime: number;
   likesCount: number;
+  ratingAverage: number;
+  ratingCount: number;
   materialId: { _id: string; name: string; slug: string } | null;
 }
 
@@ -44,6 +46,54 @@ export interface ShopVariant {
 export interface ShopVariantLike {
   liked: boolean;
   likesCount: number;
+}
+
+/** Media de valoraciones de una variante, tras crear, editar o borrar un comentario. */
+export interface ShopVariantRatingStats {
+  slug: string;
+  ratingAverage: number;
+  ratingCount: number;
+}
+
+/** Comentario de una impresión, con el autor y la variante a la que hace referencia. */
+export interface ShopReview {
+  _id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  username: string | null;
+  avatarUrl: string | null;
+  variantSlug: string | null;
+  variantColor: string | null;
+  variantSku: string | null;
+  materialName: string | null;
+}
+
+/** Reparto de comentarios por estrellas de una impresión (sin aplicar filtros). */
+export interface ShopReviewSummary {
+  total: number;
+  distribution: { stars: number; count: number; percentage: number }[];
+}
+
+/** Resumen en lenguaje natural de los comentarios de una impresión (`summary` es null si no hay comentarios). */
+export interface ShopReviewAiSummary {
+  summary: string | null;
+  reviewCount: number;
+  sampleSize: number;
+  updatedAt: string | null;
+}
+
+export interface ShopReviewResult {
+  review: ShopReview;
+  variant: ShopVariantRatingStats;
+}
+
+export interface ShopReviewInput {
+  variantSlug: string;
+  rating: number;
+  comment: string;
 }
 
 /** Detalle de impresión por slug. */

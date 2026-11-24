@@ -1,0 +1,35 @@
+<ng-template #icon let-filled="filled">
+  <svg
+    viewBox="0 0 24 24"
+    class="h-5 w-5"
+    [attr.fill]="filled ? 'currentColor' : 'none'"
+    stroke="currentColor"
+    stroke-width="1.5"
+    aria-hidden="true"
+  >
+    <path stroke-linejoin="round" d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.3l-5.9 3.2 1.2-6.5-4.8-4.6 6.6-.9z" />
+  </svg>
+</ng-template>
+
+<span class="inline-flex items-center gap-0.5">
+  <span class="sr-only">{{ value() | number: '1.0-1' }} de 5 estrellas</span>
+  @for (star of stars; track star) {
+    @if (interactive()) {
+      <button
+        type="button"
+        class="rounded p-0.5 transition-colors hover:text-brand-light focus-visible:outline-2 focus-visible:outline-brand"
+        [class.text-brand]="star <= filled()"
+        [class.text-ink-faint]="star > filled()"
+        [attr.aria-label]="star + (star === 1 ? ' estrella' : ' estrellas')"
+        [attr.aria-pressed]="star <= value()"
+        (click)="valueChange.emit(star)"
+      >
+        <ng-container *ngTemplateOutlet="icon; context: { filled: star <= filled() }" />
+      </button>
+    } @else {
+      <span [class.text-brand]="star <= filled()" [class.text-ink-faint]="star > filled()">
+        <ng-container *ngTemplateOutlet="icon; context: { filled: star <= filled() }" />
+      </span>
+    }
+  }
+</span>

@@ -17,6 +17,8 @@ function variant(id: string, likesCount: number): ShopVariant {
     salePrice: 10,
     printTime: 60,
     likesCount,
+    ratingAverage: 0,
+    ratingCount: 0,
     materialId: null,
   };
 }

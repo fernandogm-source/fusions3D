@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+@layer base {
+  a,
+  button,
+  label,
+  select,
+  summary,
+  [role="button"],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="button"],
+  input[type="submit"] {
+    cursor: pointer;
+  }
+
+  :is(a, button, select, summary, [role="button"], input)[disabled],
+  :is(button, input, select)[aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
 @theme {
   /* Marca */
   --color-brand: #ff6000;

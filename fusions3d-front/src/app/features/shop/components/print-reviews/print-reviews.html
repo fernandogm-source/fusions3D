@@ -1,0 +1,212 @@
+<section class="flex flex-col gap-6" aria-labelledby="valoraciones-titulo">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <h2 id="valoraciones-titulo" class="font-display text-lg font-semibold text-ink">Valoraciones</h2>
+
+    @if (auth.isAuthenticated()) {
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="allRated()"
+        [attr.title]="allRated() ? 'Ya has valorado todas las variantes de esta impresión' : null"
+        (click)="openCreate()"
+      >
+        Escribir valoración
+      </button>
+    }
+  </div>
+
+  @if (!auth.isAuthenticated()) {
+    <p class="card p-5 text-sm text-ink-muted">
+      Para escribir una valoración,
+      <a [routerLink]="['/login']" [queryParams]="{ returnUrl: '/shop/' + printSlug() }" class="font-medium text-brand-light hover:underline">inicia sesión</a>.
+    </p>
+  }
+
+  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-6">
+
+  @if (store.aiSummaryLoading()) {
+    <div class="h-20 animate-pulse rounded-2xl border border-line bg-surface" aria-busy="true" aria-label="Generando resumen de los comentarios"></div>
+  } @else if (store.aiSummary(); as ai) {
+    @if (ai.summary) {
+      <div class="card flex flex-col gap-2 p-5">
+        <h3 class="text-sm font-semibold text-ink">Resumen de los comentarios</h3>
+        <p class="text-sm leading-relaxed text-ink-muted">{{ ai.summary }}</p>
+        <span class="text-xs text-ink-faint">Generado con IA a partir de {{ ai.sampleSize }} de {{ ai.reviewCount }} comentarios</span>
+      </div>
+    }
+  }
+
+  @if (store.loading() && store.reviews().length === 0) {
+    <div class="flex flex-col gap-4" aria-busy="true" aria-label="Cargando valoraciones">
+      <div class="h-24 animate-pulse rounded-2xl border border-line bg-surface"></div>
+      <div class="h-24 animate-pulse rounded-2xl border border-line bg-surface"></div>
+    </div>
+  } @else if (store.error(); as message) {
+    <p class="text-sm text-red-400" role="alert">{{ message }}</p>
+  } @else if (store.reviews().length === 0) {
+    <p class="text-sm text-ink-muted">
+      {{ store.hasFilter() ? 'No hay valoraciones con las estrellas seleccionadas.' : 'Todavía no hay valoraciones para esta impresión.' }}
+    </p>
+  } @else {
+    <ul class="flex flex-col gap-4">
+      @for (review of store.reviews(); track review._id) {
+        <li class="card flex flex-col gap-4 p-5" [class.border-brand]="store.canEdit(review)">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <app-user-avatar
+                class="h-10 w-10 text-sm"
+                [url]="review.avatarUrl"
+                [initial]="initialOf(review.username)"
+              />
+              <div class="flex flex-col">
+                <span class="font-medium text-ink">
+                  {{ review.username ?? 'Usuario' }}
+                  @if (store.canEdit(review)) {
+                    <span class="ml-1 text-xs text-brand-light">(tú)</span>
+                  }
+                </span>
+                <span class="text-xs text-ink-faint">
+                  {{ reviewVariantLabel(review) }} · {{ review.createdAt | date: 'dd/MM/yyyy' }}
+                </span>
+              </div>
+            </div>
+            <app-star-rating [value]="review.rating" />
+          </div>
+
+          <p class="whitespace-pre-line text-sm leading-relaxed text-ink-muted">{{ review.comment }}</p>
+
+          @if (store.canEdit(review) || store.canDelete(review)) {
+            <div class="flex justify-end gap-2">
+              @if (store.canEdit(review)) {
+                <button type="button" class="btn btn-action btn-action-edit" (click)="openEdit(review)">Editar</button>
+              }
+              @if (store.canDelete(review)) {
+                <button type="button" class="btn btn-action btn-action-delete" (click)="remove(review)">Borrar</button>
+              }
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+  </div>
+
+  <aside class="card order-first flex flex-col gap-4 p-5" aria-labelledby="reparto-titulo">
+    <h3 id="reparto-titulo" class="font-display text-base font-semibold text-ink">Reparto de estrellas</h3>
+
+    @if (store.summary(); as summary) {
+      <table class="w-full text-sm">
+        <caption class="sr-only">Porcentaje de comentarios con cada número de estrellas</caption>
+        <thead class="sr-only">
+          <tr>
+            <th scope="col">Estrellas</th>
+            <th scope="col">Barra</th>
+            <th scope="col">Porcentaje</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of summary.distribution; track row.stars) {
+            <tr [class]="store.stars().has(row.stars) ? 'bg-brand/10' : ''">
+              <th scope="row" class="w-12 py-2 pr-3 text-left font-medium text-ink">{{ row.stars }} ★</th>
+              <td class="py-2 pr-3">
+                <button
+                  type="button"
+                  class="w-full cursor-pointer rounded-md p-1 text-left transition-colors hover:bg-surface disabled:cursor-not-allowed"
+                  [attr.aria-pressed]="store.stars().has(row.stars)"
+                  [attr.aria-label]="'Filtrar por ' + row.stars + (row.stars === 1 ? ' estrella' : ' estrellas')"
+                  [disabled]="row.count === 0 && !store.stars().has(row.stars)"
+                  (click)="toggleStar(row.stars)"
+                >
+                  <div class="h-2.5 w-full overflow-hidden rounded-full bg-surface">
+                    <div
+                      class="h-full rounded-full transition-all"
+                      [class]="store.stars().has(row.stars) ? 'bg-brand-light' : 'bg-brand'"
+                      [style.width.%]="row.percentage"
+                    ></div>
+                  </div>
+                </button>
+              </td>
+              <td class="w-28 whitespace-nowrap py-2 text-right text-ink-muted">
+                {{ row.percentage | number: '1.0-1' }} %
+                <span class="text-ink-faint">({{ row.count }})</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <p class="text-xs text-ink-faint">
+        {{ summary.total === 0 ? 'Todavía no hay valoraciones.' : 'Sobre ' + summary.total + ' valoraciones en total.' }}
+      </p>
+      @if (store.hasFilter()) {
+        <p class="text-xs text-brand-light">Mostrando solo las valoraciones seleccionadas. Pulsa la barra otra vez para quitar el filtro.</p>
+      } @else {
+        <p class="text-xs text-ink-faint">Pulsa una barra para ver solo las valoraciones de esas estrellas.</p>
+      }
+    } @else {
+      <div class="h-40 animate-pulse rounded-xl bg-surface" aria-busy="true"></div>
+    }
+  </aside>
+  </div>
+
+  <dialog
+    #dialog
+    class="m-auto w-[min(92vw,36rem)] rounded-2xl border border-line bg-elevated p-0 text-ink shadow-2xl backdrop:bg-black/70"
+    aria-labelledby="review-modal-title"
+    (close)="onDialogClosed()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-5 p-6">
+      <h3 id="review-modal-title" class="font-display text-lg font-semibold text-ink">
+        {{ store.editing() ? 'Editar mi valoración' : 'Escribir valoración' }}
+      </h3>
+
+      <div class="flex flex-col gap-2">
+        <label for="review-variant" class="label">Variante</label>
+        <select id="review-variant" formControlName="variantSlug" class="input">
+          @for (variant of variants(); track variant.slug) {
+            <option [value]="variant.slug" [disabled]="!store.editing() && isRated(variant)">
+              {{ variantLabel(variant) }}{{ !store.editing() && isRated(variant) ? ' (ya valorada)' : '' }}
+            </option>
+          }
+        </select>
+        @if (store.editing()) {
+          <p class="text-xs text-ink-faint">La variante no se puede cambiar. Para valorar otra, borra este comentario y escribe uno nuevo.</p>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <span class="label">Estrellas</span>
+        <app-star-rating [value]="form.controls.rating.value" [interactive]="true" (valueChange)="setRating($event)" />
+        @if (fieldError('rating'); as message) {
+          <p class="text-xs text-red-400">{{ message }}</p>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="review-comment" class="label">Comentario</label>
+        <textarea
+          id="review-comment"
+          formControlName="comment"
+          rows="4"
+          maxlength="1000"
+          class="input"
+          placeholder="Cuéntanos qué te ha parecido esta impresión"
+        ></textarea>
+        @if (fieldError('comment'); as message) {
+          <p class="text-xs text-red-400">{{ message }}</p>
+        }
+      </div>
+
+      @if (store.formError(); as message) {
+        <p class="rounded-lg border border-red-400/40 bg-red-400/10 px-3 py-2 text-sm text-red-300" role="alert">{{ message }}</p>
+      }
+
+      <div class="flex flex-wrap justify-end gap-3">
+        <button type="button" class="btn btn-ghost" [disabled]="store.saving()" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary" [disabled]="store.saving()">
+          {{ store.saving() ? 'Guardando…' : store.editing() ? 'Confirmar cambios' : 'Publicar valoración' }}
+        </button>
+      </div>
+    </form>
+  </dialog>
+</section>

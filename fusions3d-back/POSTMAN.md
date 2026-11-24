@@ -312,6 +312,60 @@ Ejemplo de referencia inactiva en la respuesta de un listado:
 }
 ```
 
+## Comentarios de variantes
+
+Las lecturas de comentarios son públicas. Escribir, editar y borrar el propio comentario requiere sesión (cualquier usuario activo). Hay que iniciar sesión antes de las peticiones POST, PATCH y DELETE.
+
+```http
+GET {{baseUrl}}/api/shop/prints/soporte-para-movil/reviews?stars=4,5
+GET {{baseUrl}}/api/shop/prints/soporte-para-movil/reviews/summary
+GET {{baseUrl}}/api/shop/prints/soporte-para-movil/reviews/ai-summary
+GET {{baseUrl}}/api/shop/prints/soporte-para-movil/reviews/me
+```
+
+Crear un comentario sobre una variante de la impresión (un usuario solo puede tener uno por variante):
+
+```http
+POST {{baseUrl}}/api/shop/prints/soporte-para-movil/reviews
+Content-Type: application/json
+```
+
+```json
+{
+  "variantSlug": "soporte-para-movil-negro-pla",
+  "rating": 5,
+  "comment": "Muy buena calidad y el ajuste es perfecto."
+}
+```
+
+Editar solo la valoración o el texto (solo el autor):
+
+```http
+PATCH {{baseUrl}}/api/shop/reviews/<REVIEW_ID>
+Content-Type: application/json
+```
+
+```json
+{ "rating": 4 }
+```
+
+Borrar (el autor o ADMIN):
+
+```http
+DELETE {{baseUrl}}/api/shop/reviews/<REVIEW_ID>
+```
+
+Los endpoints de administración están en `/api/reviews`, con sesión de ADMIN:
+
+```http
+GET    {{baseUrl}}/api/reviews/prints
+GET    {{baseUrl}}/api/reviews?page=1&limit=20&stars=1,2
+GET    {{baseUrl}}/api/reviews/prints/<PRINT_ID>/sentiment
+DELETE {{baseUrl}}/api/reviews/<REVIEW_ID>
+```
+
+El análisis de sentimiento y el resumen con IA necesitan `AI_SERVICE_URL` y `AI_SERVICE_KEY` configuradas y el servicio `fusions3d-ai` en marcha. Si no lo están, responden `503`.
+
 ## Respuestas y errores
 
 Éxito:

@@ -1,6 +1,6 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { ShopPrintDetail, ShopVariant } from '../../../core/models/shop.model';
+import { ShopPrintDetail, ShopVariant, ShopVariantRatingStats } from '../../../core/models/shop.model';
 import { getShopErrorMessage, isAbortError, ShopApiError } from '../../../core/services/shop-api.client';
 import { ShopService } from '../../../core/services/shop.service';
 import { VariantLikesService } from '../../../core/services/variant-likes.service';
@@ -131,6 +131,11 @@ export class ShopPrintStore {
     } catch {
       // El recuento ya se muestra desde el detalle; si falla el estado, el botón queda sin marcar.
     }
+  }
+
+  /** Refleja la media de valoraciones que devuelve la API tras un cambio en los comentarios. */
+  applyRatingStats({ slug, ratingAverage, ratingCount }: ShopVariantRatingStats): void {
+    this.patchVariant(slug, () => ({ ratingAverage, ratingCount }));
   }
 
   private setLiked(variantSlug: string, liked: boolean): void {

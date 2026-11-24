@@ -1,0 +1,42 @@
+<section class="page-enter flex flex-col gap-8">
+  <app-page-header
+    eyebrow="Administración"
+    title="Comentarios"
+    description="Elige una impresión para ver los comentarios de todas sus variantes."
+  />
+
+  @if (loading()) {
+    <div class="card p-10 text-center text-ink-muted">Cargando impresiones…</div>
+  } @else if (error(); as message) {
+    <app-error-state title="No se pudieron cargar las impresiones" [message]="message" (retry)="load()" />
+  } @else if (!prints().length) {
+    <app-empty-state title="No hay comentarios" message="Cuando los clientes valoren impresiones, aparecerán aquí." />
+  } @else {
+    <div class="card overflow-x-auto p-0">
+      <table class="w-full min-w-[520px] border-collapse text-left text-sm">
+        <thead>
+          <tr class="table-head">
+            <th class="px-5 py-3.5">Impresión</th>
+            <th class="px-5 py-3.5">Comentarios</th>
+            <th class="px-5 py-3.5">Media</th>
+            <th class="px-5 py-3.5 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (print of prints(); track print._id) {
+            <tr class="table-row">
+              <td class="px-5 py-4 font-semibold text-ink">{{ print.name }}</td>
+              <td class="px-5 py-4 text-ink-muted">{{ print.reviewCount }}</td>
+              <td class="px-5 py-4 text-ink-muted">{{ print.ratingAverage | number: '1.1-1' }} ★</td>
+              <td class="px-5 py-4">
+                <div class="flex justify-end">
+                  <a [routerLink]="['/admin/reviews', print._id]" class="btn btn-action btn-action-edit">Ver comentarios</a>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

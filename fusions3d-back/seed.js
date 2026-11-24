@@ -11,6 +11,9 @@ const Profile = require("./src/models/profile.model");
 const Image = require("./src/models/image.model");
 const RevokedToken = require("./src/models/revoked-token.model");
 const RefreshToken = require("./src/models/refresh-token.model");
+const VariantReview = require("./src/models/variant-review.model");
+const PrintSentiment = require("./src/models/print-sentiment.model");
+const PrintReviewSummary = require("./src/models/print-review-summary.model");
 const { hashPassword } = require("./src/utils/password.util");
 const { buildSkuBase } = require("./src/utils/sku.util");
 const { toSlug } = require("./src/utils/slug.util");
@@ -668,6 +671,65 @@ async function seedCatalog() {
     imageCount += images.length;
   }
   console.log(`${imageCount} imágenes de ejemplo preparadas.`);
+  return printBySlug;
+}
+
+const REVIEW_TEXTS = {
+  5: [
+    "Excelente acabado, se nota que está bien impresa.",
+    "Justo lo que buscaba, calidad muy buena.",
+    "Muy resistente y bonita. Repetiría sin dudarlo.",
+  ],
+  4: [
+    "Buena pieza, aunque la base podría ser un poco más firme.",
+    "Muy bien en general, el color es fiel a la foto.",
+    "Cumple lo que promete y el precio es razonable.",
+  ],
+  3: [
+    "Correcta, pero esperaba un acabado algo más fino.",
+    "Sirve para lo que es, sin más.",
+  ],
+  2: [
+    "El ajuste no es tan bueno como esperaba.",
+    "Se nota la capa de impresión y se ve algo frágil.",
+  ],
+};
+const REVIEW_RATINGS = [5, 4, 4, 5, 3, 4, 2, 5];
+
+async function seedReviews(printIdsBySlug) {
+  const reviewers = await User.find({ email: { $in: sampleUsers.map((user) => user.email) } }).select("_id").lean();
+  const publishedPrintIds = printData
+    .filter((print) => print.status === "published" && print.isActive !== false)
+    .map((print) => printIdsBySlug[print.slug]);
+  const variants = await PrintVariant.find({ printId: { $in: publishedPrintIds }, isActive: true }).select("_id").lean();
+
+  let reviewCount = 0;
+  for (const variant of variants) {
+    const seed = [...String(variant._id)].reduce((total, char) => total + char.charCodeAt(0), 0);
+
+    for (const [index, reviewer] of reviewers.entries()) {
+      const rating = REVIEW_RATINGS[(seed + index) % REVIEW_RATINGS.length];
+      const texts = REVIEW_TEXTS[rating];
+      const comment = texts[(seed + index) % texts.length];
+
+      await VariantReview.updateOne(
+        { variantId: variant._id, userId: reviewer._id },
+        { $set: { rating, comment } },
+        { upsert: true, runValidators: true, setDefaultsOnInsert: true }
+      );
+      reviewCount++;
+    }
+
+    const [stats] = await VariantReview.aggregate([
+      { $match: { variantId: variant._id } },
+      { $group: { _id: null, average: { $avg: "$rating" }, count: { $sum: 1 } } },
+    ]);
+    await PrintVariant.updateOne(
+      { _id: variant._id },
+      { $set: { ratingAverage: stats?.average ?? 0, ratingCount: stats?.count ?? 0 } }
+    );
+  }
+  console.log(`${reviewCount} comentarios de ejemplo preparados en ${variants.length} variantes.`);
 }
 
 async function seed({ reset = false } = {}) {
@@ -689,7 +751,7 @@ async function seed({ reset = false } = {}) {
 
     if (reset) {
       console.warn("Modo destructivo: vaciando las colecciones de Fusions3D antes de sembrar…");
-      const collections = [Category, Material, Print, PrintVariant, Role, Image, User, Profile, RevokedToken, RefreshToken];
+      const collections = [Category, Material, Print, PrintVariant, Role, Image, User, Profile, RevokedToken, RefreshToken, VariantReview, PrintSentiment, PrintReviewSummary];
       const deleteResults = await Promise.all(collections.map((Model) => Model.deleteMany({})));
       const deletedCount = deleteResults.reduce((total, result) => total + result.deletedCount, 0);
       console.log(`${deletedCount} documentos eliminados de ${collections.length} colecciones.`);
@@ -698,7 +760,7 @@ async function seed({ reset = false } = {}) {
     }
 
     const roleIdByName = await seedRoles();
-    await seedCatalog();
+    const printBySlug = await seedCatalog();
 
     await ensureUser({
       email: adminAccount.email,
@@ -717,6 +779,8 @@ async function seed({ reset = false } = {}) {
         profile: { name: user.name, phone: user.phone, addresses: user.addresses },
       });
     }
+
+    await seedReviews(printBySlug);
 
     console.log(`Cuentas preparadas: 1 administrador (${adminAccount.email}) y ${sampleUsers.length} usuarios de prueba.`);
     console.log(reset

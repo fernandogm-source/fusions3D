@@ -11,6 +11,14 @@ class AiService {
     return this.post('/chat', input, 'No se pudo responder en este momento');
   }
 
+  async analyzeSentiment(input) {
+    return this.post('/prints/sentiment', input, 'No se pudo analizar el sentimiento de los comentarios');
+  }
+
+  async summarizeReviews(input) {
+    return this.post('/prints/reviews/summary', input, 'No se pudo generar el resumen de los comentarios');
+  }
+
   async post(path, input, fallbackMessage) {
     const baseUrl = process.env.AI_SERVICE_URL;
     const apiKey = process.env.AI_SERVICE_KEY;
