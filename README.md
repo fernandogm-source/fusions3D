@@ -14,6 +14,7 @@ Aplicación full-stack para gestionar un catálogo de piezas impresas en 3D. El 
 - Registro público de clientes (`/register`): crea una cuenta con rol `USER` y su perfil, y lleva al login.
 - Autenticación JWT con dos tokens en cookies `HttpOnly`: un access token de 1 hora y un refresh token de 7 días. Si el access token caduca, el frontend lo renueva en silencio; si la sesión ha terminado, cierra sesión y pide iniciarla de nuevo.
 - Login, consulta de la sesión, logout y perfil propio. La misma pantalla de login sirve a admins y clientes; tras entrar, los admins van al panel y los clientes a la tienda, salvo que haya una página de origen.
+- Likes en variantes: cualquier usuario con sesión puede marcar o desmarcar "me gusta" en una variante desde la tienda. Cada usuario puede dar un solo like por variante, y el contador `likesCount` se actualiza al dar o quitar el like. El catálogo muestra el total de likes de cada impresión y cada usuario tiene su página "Mis likes" (`/perfil/likes`) con las variantes que ha marcado.
 - Alta y edición de los recursos; las impresiones también tienen vista de detalle.
 - Activación/desactivación y borrado lógico con restauración desde la papelera. Desactivar o borrar lógicamente una categoría, impresión, material o rol se bloquea si conserva dependientes (`409 DEPENDENTS_EXIST`); no se aplica una cascada.
 - Slugs para impresiones y categorías; SKU generado como identificador de variantes (sin nombre personalizado).
@@ -123,6 +124,8 @@ Todos los recursos están bajo `/api`; la tabla completa está en el [README del
 | Roles | `/api/roles` |
 | Usuarios | `/api/users` |
 | Tienda pública | `/api/shop` |
+| Likes de variantes | `/api/shop/variants/:variantSlug/likes` |
+| Mis likes | `/api/profiles/likes` |
 | Health check | `/health` |
 
 Los recursos CRUD incluyen listados, consulta individual, creación, actualización, activación, borrado lógico y restauración. Impresiones/categorías tienen consulta por slug; las variantes, por SKU y por impresión.
@@ -136,7 +139,7 @@ Las altas, los cambios de referencia y las reactivaciones requieren dependencias
 
 ## Seguridad y despliegue
 
-La API protege sus rutas con JWT: todas las rutas de negocio (`/api/*`, salvo login, registro, renovación, logout, tienda pública y Profile) requieren un token de un usuario con rol `ADMIN`. Antes de publicarla, revisa `JWT_SECRET`, `JWT_REFRESH_SECRET`, `CORS_ORIGIN` y `TRUST_PROXY`.
+La API protege sus rutas con JWT: todas las rutas de negocio (`/api/*`, salvo login, registro, renovación, logout, tienda pública y Profile) requieren un token de un usuario con rol `ADMIN`. Los likes de variantes y la lista "Mis likes" requieren sesión de cualquier usuario activo, no solo de ADMIN. Antes de publicarla, revisa `JWT_SECRET`, `JWT_REFRESH_SECRET`, `CORS_ORIGIN` y `TRUST_PROXY`.
 
 La sesión se guarda en dos cookies `HttpOnly`: `fusions3d_access` (1 hora, ruta `/api`) y `fusions3d_refresh` (7 días, ruta `/api/auth`). El frontend gestiona los 401: si el access token ha caducado, pide `/api/auth/refresh` y reintenta la petición; si la sesión ha terminado, pide `/api/auth/logout` y lleva al login con un aviso. Detalles en el [README del backend](./fusions3d-back/README.md#notas-importantes).
 

@@ -146,6 +146,7 @@ Base URL: `http://localhost:3000`. Todos los recursos de negocio usan el prefijo
 | POST | `/api/auth/logout` | Cerrar la sesión actual (público; revoca los tokens que haya en las cookies) |
 | GET | `/api/profiles/getprofile` | Consultar el propio perfil |
 | PATCH | `/api/profiles/updateprofile` | Actualizar el propio perfil (incluye `username`) |
+| GET | `/api/profiles/likes` | Variantes marcadas por el usuario con me gusta (paginado) |
 | GET | `/api/{resource}` | Listar registros no eliminados |
 | GET | `/api/{resource}/active` | Listar activos |
 | GET | `/api/{resource}/inactive` | Listar inactivos |
@@ -171,6 +172,20 @@ Estas rutas no requieren sesión.
 | GET | `/api/shop/filters` | Opciones de filtrado del catálogo |
 | GET | `/api/shop/prints` | Listado público de impresiones (acepta parámetros de búsqueda y filtrado) |
 | GET | `/api/shop/prints/:slug` | Detalle público de una impresión por slug |
+| POST | `/api/shop/chat` | Mensaje al asistente de la tienda (límite de 20 mensajes por hora y IP) |
+
+### Likes de variantes
+
+Las rutas de likes están bajo la tienda pública, pero requieren sesión de cualquier usuario activo (`_auth`). Se identifican por el `slug` de la variante, que solo es válido si la variante es visible en la tienda (activa, de una impresión publicada con categoría publicada y material activo); en otro caso responde `404 VARIANT_NOT_FOUND`.
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/api/shop/variants/:variantSlug/likes/me` | Indica si el usuario actual ha dado like: `{ liked }` |
+| POST | `/api/shop/variants/:variantSlug/likes` | Da like. Es idempotente: si ya existía, no cambia nada |
+| DELETE | `/api/shop/variants/:variantSlug/likes` | Quita el like. Es idempotente: si no existía, no cambia nada |
+| GET | `/api/profiles/likes?page=1&limit=12` | Lista paginada de las variantes con like del usuario, más recientes primero. `limit` máximo 48 |
+
+POST y DELETE responden con el resumen `{ liked, likesCount }`. La lista `/api/profiles/likes` devuelve `{ items, meta }`; cada elemento incluye el slug, SKU, color, precio, material, nombre y slug de la impresión, la portada y `likedAt`. Solo aparecen las variantes que siguen visibles. Un usuario solo ve sus propios likes.
 
 ### Rutas adicionales
 
@@ -188,7 +203,8 @@ Estas rutas no requieren sesión.
 | Print | `name`, `description`, `categoryId`, `slug`, `status`, `isActive`, `deletedAt` |
 | Category | `name`, `slug`, `status`, `isActive`, `deletedAt` |
 | Material | `name`, `isActive`, `deletedAt` |
-| PrintVariant | `printId`, `sku` (generado), `materialId`, `color`, `salePrice`, `costPrice`, `printTime`, `isActive`, `deletedAt`, `createdAt`, `updatedAt` |
+| PrintVariant | `printId`, `sku` (generado), `materialId`, `color`, `salePrice`, `costPrice`, `printTime`, `likesCount`, `isActive`, `deletedAt`, `createdAt`, `updatedAt` |
+| VariantLike | `variantId`, `userId`, `createdAt` (colección `variant_likes`, único por `variantId` + `userId`) |
 | Role | `name` (único), `isActive`, `deletedAt` |
 | User | `email`, `username` (único), `passwordHash` (Argon2id), `role` (ObjectId de `Role`), `isActive`, `deletedAt` |
 | Profile | `userId` (único), `name`, `phone`, `addresses`, `avatarUrl` |
@@ -204,6 +220,8 @@ Las imágenes se asocian mediante `entityType` y `entityId`, y se devuelven pobl
 - Las impresiones requieren una categoría activa; las variantes, una impresión y un material activos. Las altas, los cambios de referencia y las reactivaciones fallan con `409 DEPENDENCY_UNAVAILABLE` si falta alguna dependencia.
 - Los listados de impresiones y variantes incluyen `dependencyIssues` cuando una referencia está ausente, eliminada o inactiva. Es un dato calculado para la respuesta, no un campo persistido en MongoDB.
 - Los `ref` de Mongoose guardan referencias `ObjectId`, pero MongoDB no impone claves foráneas. Las comprobaciones se realizan en los servicios de la API; `dependencyIssues` permite identificar relaciones inválidas ya existentes.
+- Los likes se guardan en `variant_likes`, con un índice único por variante y usuario, así que un usuario no puede duplicar un like aunque haga peticiones simultáneas. `PrintVariant.likesCount` es un contador desnormalizado que se incrementa o decrementa al dar o quitar el like; no se puede enviar desde el cuerpo de las peticiones de variantes.
+- En el listado público de impresiones, `totalLikes` es la suma de `likesCount` de sus variantes visibles.
 - El borrado es lógico (`deletedAt`) y no elimina documentos físicamente.
 - Las contraseñas se hashean con Argon2id mediante `src/utils/password.util.js`; la lógica JWT está centralizada en `src/utils/jwt.util.js`.
 - La sesión usa dos tokens JWT, ambos en cookies `HttpOnly` (`SameSite=Lax`, `Secure` en producción) y ninguno aparece en el cuerpo de la respuesta:

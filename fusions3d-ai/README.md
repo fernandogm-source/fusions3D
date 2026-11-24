@@ -19,6 +19,7 @@ El servicio queda en `http://localhost:3001`.
 |---|---|---|
 | GET | `/health` | Estado del servicio (público) |
 | POST | `/ai/v1/prints/describe` | Genera descripción comercial de una impresión |
+| POST | `/ai/v1/chat` | Respuesta del asistente de la tienda a partir del historial de mensajes enviado en la petición |
 
 Todas las rutas `/ai/v1/*` requieren la cabecera `X-Internal-Api-Key` con el valor de `AI_SERVICE_KEY`.
 

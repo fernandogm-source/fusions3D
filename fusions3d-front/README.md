@@ -49,6 +49,8 @@ La sesión la gestiona la API con dos cookies `HttpOnly` que el frontend nunca l
 
 Las rutas `/auth/login`, `/auth/register`, `/auth/refresh` y `/auth/logout` no entran en esta lógica, para evitar bucles. `/auth/me` sí puede renovar la sesión, porque se llama al arrancar la aplicación.
 
+Los likes de variantes necesitan sesión: si el visitante pulsa "me gusta" en la tienda, se le lleva al login conservando la página actual. `VariantLikesService` consulta el estado (`likes/me`), da y quita el like, y devuelve `{ liked, likesCount }`. El componente `shop/components/variant-like/` muestra el botón y el contador en el detalle de impresión (`/shop/:slug`). La página `/perfil/likes` (`features/profile/pages/profile-likes/`) lista las variantes marcadas, paginadas, con `ProfileLikesStore`.
+
 El registro (`/register`) valida email, nombre de usuario (3 a 30 caracteres) y contraseña de al menos 12 caracteres, con confirmación. Al crear la cuenta lleva a `/login?registered=1`; no inicia sesión automáticamente.
 
 ## Organización
@@ -123,6 +125,7 @@ En el panel, la cabecera sustituye a la antigua topbar. En móvil no hay botón 
 | Página | Ruta | Notas |
 |---|---|---|
 | Perfil | `/perfil` | Dentro del layout de tienda, con la cabecera compartida |
+| Mis likes | `/perfil/likes` | Variantes marcadas con me gusta, paginadas |
 
 ### Panel de administración (solo ADMIN)
 
@@ -159,6 +162,8 @@ Base URL: `${environment.apiUrl}`. Recursos:
 | Autenticación | `/auth` (`login`, `me`, `logout`) |
 | Perfil | `/profiles` |
 | Tienda pública | `/shop` |
+| Likes de variantes | `/shop/variants/:slug/likes` (`VariantLikesService`) |
+| Mis likes | `/profiles/likes` (`ProfileLikesService`) |
 | Impresiones | `/prints` |
 | Categorías | `/categories` |
 | Materiales | `/materials` |
